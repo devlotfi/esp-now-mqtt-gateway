@@ -1,61 +1,14 @@
-
-
-#include <Arduino.h>
-#include <WiFi.h>
 #include <time.h>
+#include <esp_now.h>
 #include "Properties.h"
 #include "Vars.h"
 #include "Api.h"
-
-const char *mqtt_topic = "ethernet/test";
 
 void setupStorage()
 {
   preferences.begin(PREFERENCES_NAMESAPCE, false);
 }
 
-void mqttCallback(char *topic, byte *payload, unsigned int length)
-{
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.print("]: ");
-
-  for (unsigned int i = 0; i < length; i++)
-    Serial.print((char)payload[i]);
-
-  Serial.println();
-}
-
-void connectMQTT()
-{
-  if (!ethernetConnected)
-    return;
-
-  if (mqttClient.connected())
-    return;
-
-  if (millis() - lastReconnectAttempt < 3000)
-    return;
-
-  lastReconnectAttempt = millis();
-
-  Serial.print("Connecting MQTT... ");
-
-  if (mqttClient.connect("ESP32_W5500_Client", mqtt_user, mqtt_password))
-  {
-    Serial.println("connected");
-    mqttClient.subscribe(mqtt_topic);
-  }
-  else
-  {
-    Serial.print("failed rc=");
-    Serial.println(mqttClient.state());
-  }
-}
-
-/* =========================
-   Core Functions
-   ========================= */
 void syncTime()
 {
   Serial.println("Syncing time with NTP...");
@@ -137,35 +90,14 @@ void setup()
             WIZNET_SCLK_PIN, WIZNET_MISO_PIN, WIZNET_MOSI_PIN);
 
   // setupEndpoints();
-  server.begin();
-  Serial.println("HTTP server started");
-
-  sslClient.setCACert(rootCA);
-  sslClient.setBufferSizes(4096, 2048);
-  sslClient.setClient(&ethClient);
-
-  mqttClient.setServer(mqtt_server, mqtt_port);
-  mqttClient.setCallback(mqttCallback);
+  setupServer();
+  Serial.println("HTTP server ready");
 }
 
 void loop()
 {
   if (ethernetConnected)
   {
-    server.handleClient();
     timeClient.update(); // Only update when we have a connection
-  }
-
-  connectMQTT();
-
-  mqttClient.loop();
-
-  static unsigned long lastMsg = 0;
-
-  if (mqttClient.connected() && millis() - lastMsg > 30000)
-  {
-    lastMsg = millis();
-    mqttClient.publish(mqtt_topic,
-                       "Secure TLS message from ESP32 + W5500");
   }
 }

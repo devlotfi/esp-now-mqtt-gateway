@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Arduino.h>
-#include <WebServer.h>
 #include "mbedtls/md.h"
 #include "mbedtls/base64.h"
 #include "mbedtls/sha256.h"
@@ -178,39 +177,6 @@ bool verifyToken(const char *token)
       expected_sig);
 
   return secure_compare(sig, expected_sig, TOKEN_SIGNATURE_SIZE);
-}
-
-bool checkAuthorization(WebServer &server)
-{
-  if (!server.hasHeader("Authorization"))
-  {
-    server.send(401);
-    return false;
-  }
-
-  const String &header = server.header("Authorization");
-  const char *auth = header.c_str();
-
-  const char prefix[] = "Bearer ";
-
-  if (strncmp(auth, prefix, sizeof(prefix) - 1) != 0)
-  {
-    server.send(401);
-    return false;
-  }
-
-  const char *token = auth + sizeof(prefix) - 1;
-
-  Serial.print("Extracted Token: ");
-  Serial.println(token);
-
-  if (!verifyToken(token))
-  {
-    server.send(401);
-    return false;
-  }
-
-  return true;
 }
 
 static bool isHexChar(char c)

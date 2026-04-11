@@ -5,6 +5,8 @@
 // ----------------------
 // Data config
 // ----------------------
+#define API_BUFFER 8192
+
 #define TOKEN_PAYLOAD_SIZE 16
 #define TOKEN_SIGNATURE_SIZE 32
 
@@ -14,6 +16,7 @@
 #define NAME_SIZE 32
 #define UUID_V4_SIZE 37
 #define MAC_SIZE_BYTES 6
+#define MAC_SIZE_STRING 18
 #define ESP_NOW_KEY_SIZE_BYTES 16
 #define PEER_LIST_SIZE 10
 #define TOPIC_LIST_SIZE 10

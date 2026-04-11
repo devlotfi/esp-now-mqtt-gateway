@@ -1,38 +1,4 @@
 export interface paths {
-    "/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Health check / Index */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/login": {
         parameters: {
             query?: never;
@@ -42,7 +8,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Authenticate and receive a token */
+        /** Authenticate and receive a JWT token */
         post: {
             parameters: {
                 query?: never;
@@ -52,9 +18,7 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": {
-                        password: string;
-                    };
+                    "application/json": components["schemas"]["PasswordRequest"];
                 };
             };
             responses: {
@@ -64,19 +28,17 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
-                            token?: string;
-                        };
+                        "application/json": components["schemas"]["LoginResponse"];
                     };
                 };
-                /** @description Bad request (invalid JSON or missing password) */
+                /** @description Bad Request - Missing or invalid password format */
                 400: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                /** @description Forbidden (incorrect password) */
+                /** @description Forbidden - Incorrect password */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -91,7 +53,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/change-password": {
+    "/set-password": {
         parameters: {
             query?: never;
             header?: never;
@@ -100,7 +62,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Change the authentication password */
+        /** Set a new authentication password */
         post: {
             parameters: {
                 query?: never;
@@ -110,21 +72,26 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": {
-                        password: string;
-                    };
+                    "application/json": components["schemas"]["PasswordRequest"];
                 };
             };
             responses: {
-                /** @description Password changed successfully */
+                /** @description Password updated successfully */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                /** @description Bad request */
+                /** @description Bad Request - Missing or invalid password format */
                 400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized - Missing or invalid JWT token */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -138,7 +105,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/change-pmk": {
+    "/set-pmk": {
         parameters: {
             query?: never;
             header?: never;
@@ -147,7 +114,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Change Primary Master Key (PMK) */
+        /** Set the Primary Master Key (PMK) for ESP-NOW */
         post: {
             parameters: {
                 query?: never;
@@ -157,27 +124,32 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": {
-                        pmk: string;
-                    };
+                    "application/json": components["schemas"]["SetPmkRequest"];
                 };
             };
             responses: {
-                /** @description PMK changed successfully */
+                /** @description PMK set successfully */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                /** @description Bad request (invalid key format) */
+                /** @description Bad Request - Missing or invalid PMK */
                 400: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                /** @description Internal server error setting PMK */
+                /** @description Unauthorized - Missing or invalid JWT token */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Internal Server Error - Failed to set PMK in ESP-NOW */
                 500: {
                     headers: {
                         [name: string]: unknown;
@@ -199,7 +171,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List all configured peers */
+        /** Get a list of all ESP-NOW peers */
         get: {
             parameters: {
                 query?: never;
@@ -209,20 +181,21 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description A list of ESP-NOW peers */
+                /** @description List of peers */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
-                            peers?: {
-                                id?: string;
-                                name?: string;
-                                mac?: string;
-                            }[];
-                        };
+                        "application/json": components["schemas"]["PeersListResponse"];
                     };
+                };
+                /** @description Unauthorized - Missing or invalid JWT token */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
                 };
             };
         };
@@ -237,11 +210,7 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": {
-                        name: string;
-                        mac: string;
-                        lmk: string;
-                    };
+                    "application/json": components["schemas"]["AddPeerRequest"];
                 };
             };
             responses: {
@@ -252,21 +221,28 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Bad request (invalid MAC or LMK) */
+                /** @description Bad Request - Missing fields, invalid keys, or invalid MAC address */
                 400: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                /** @description Forbidden (Peer name or MAC already exists) */
+                /** @description Unauthorized - Missing or invalid JWT token */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Forbidden - Peer with the same name or MAC already exists */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                /** @description Server error (peer limit reached or ESP-NOW failure) */
+                /** @description Internal Server Error - Peer list full or ESP-NOW add failed */
                 500: {
                     headers: {
                         [name: string]: unknown;
@@ -291,13 +267,13 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Delete a peer by ID */
+        /** Delete an ESP-NOW peer by ID */
         delete: {
             parameters: {
                 query?: never;
                 header?: never;
                 path: {
-                    /** @description The UUID of the peer to delete */
+                    /** @description UUID of the peer */
                     id: string;
                 };
                 cookie?: never;
@@ -311,7 +287,14 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Peer not found */
+                /** @description Unauthorized - Missing or invalid JWT token */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Found - Peer with the specified ID does not exist */
                 404: {
                     headers: {
                         [name: string]: unknown;
@@ -325,37 +308,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/peers/{id}/topics": {
+    "/topics/{id}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get the topic list for a specific peer */
+        /** Get topics associated with a specific peer */
         get: {
             parameters: {
                 query?: never;
                 header?: never;
                 path: {
+                    /** @description UUID of the peer */
                     id: string;
                 };
                 cookie?: never;
             };
             requestBody?: never;
             responses: {
-                /** @description Successful response */
+                /** @description List of topics */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
-                            topicList?: string[];
-                        };
+                        "application/json": components["schemas"]["TopicList"];
                     };
                 };
-                /** @description Peer not found */
+                /** @description Unauthorized - Missing or invalid JWT token */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Found - Peer with the specified ID does not exist */
                 404: {
                     headers: {
                         [name: string]: unknown;
@@ -365,39 +354,45 @@ export interface paths {
             };
         };
         put?: never;
-        /** Set the topic list for a specific peer */
+        /** Set topics for a specific peer */
         post: {
             parameters: {
                 query?: never;
                 header?: never;
                 path: {
+                    /** @description UUID of the peer */
                     id: string;
                 };
                 cookie?: never;
             };
             requestBody: {
                 content: {
-                    "application/json": {
-                        topicList: string[];
-                    };
+                    "application/json": components["schemas"]["TopicList"];
                 };
             };
             responses: {
-                /** @description Topic list updated */
+                /** @description Topics set successfully */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                /** @description Bad request (invalid array format) */
+                /** @description Bad Request - Invalid payload format (array must contain only strings) */
                 400: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                /** @description Peer not found */
+                /** @description Unauthorized - Missing or invalid JWT token */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Found - Peer with the specified ID does not exist */
                 404: {
                     headers: {
                         [name: string]: unknown;
@@ -415,7 +410,38 @@ export interface paths {
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: never;
+    schemas: {
+        PasswordRequest: {
+            password: string;
+        };
+        LoginResponse: {
+            /** @description JWT authentication token */
+            token?: string;
+        };
+        SetPmkRequest: {
+            /** @description Primary Master Key (hex format) */
+            pmk: string;
+        };
+        Peer: {
+            /** Format: uuid */
+            id?: string;
+            name?: string;
+            mac?: string;
+        };
+        PeersListResponse: {
+            peers?: components["schemas"]["Peer"][];
+        };
+        AddPeerRequest: {
+            name: string;
+            /** @description Unicast MAC address */
+            mac: string;
+            /** @description Local Master Key (hex format) */
+            lmk: string;
+        };
+        TopicList: {
+            topicList: string[];
+        };
+    };
     responses: never;
     parameters: never;
     requestBodies: never;

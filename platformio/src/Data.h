@@ -11,20 +11,22 @@ struct AuthData
   uint8_t passwordHash[PASSWORD_HASH_SIZE];
 };
 
-void saveAuthData(AuthData &data)
+void saveAuthData(const AuthData *data)
 {
-  preferences.putBytes("auth_data", &data, sizeof(AuthData));
+  preferences.putBytes("auth_data", data, sizeof(AuthData));
 }
 
-AuthData loadAuthData()
+AuthData *loadAuthData()
 {
-  AuthData data;
+  AuthData *data = (AuthData *)malloc(sizeof(AuthData));
+  if (!data)
+    return nullptr;
   uint8_t salt[PASSWORD_SALT_SIZE];
   uint8_t hash[PASSWORD_HASH_SIZE];
   hashPassword("admin", salt, hash);
-  memcpy(data.passwordSalt, salt, PASSWORD_SALT_SIZE);
-  memcpy(data.passwordHash, hash, PASSWORD_HASH_SIZE);
-  preferences.getBytes("auth_data", &data, sizeof(AuthData));
+  memcpy(data->passwordSalt, salt, PASSWORD_SALT_SIZE);
+  memcpy(data->passwordHash, hash, PASSWORD_HASH_SIZE);
+  preferences.getBytes("auth_data", data, sizeof(AuthData));
   return data;
 }
 
@@ -46,14 +48,18 @@ struct EspNowData
   Peer peerList[PEER_LIST_SIZE];
 };
 
-void saveEspNowData(EspNowData &data)
+void saveEspNowData(const EspNowData *data)
 {
-  preferences.putBytes("esp_now_data", &data, sizeof(EspNowData));
+  preferences.putBytes("esp_now_data", data, sizeof(EspNowData));
 }
 
-void loadEspNowData(EspNowData &data)
+EspNowData *loadEspNowData()
 {
-  data.pmkSet = false;
-  data.peerCount = 0;
-  preferences.getBytes("esp_now_data", &data, sizeof(EspNowData));
+  EspNowData *data = (EspNowData *)malloc(sizeof(EspNowData));
+  if (!data)
+    return nullptr;
+  data->pmkSet = false;
+  data->peerCount = 0;
+  preferences.getBytes("esp_now_data", data, sizeof(EspNowData));
+  return data;
 }
