@@ -1,4 +1,4 @@
-import { Button, cn } from "@heroui/react";
+import { Button, Chip, cn } from "@heroui/react";
 import { ChevronsLeft, Download, LogOut } from "lucide-react";
 import { useContext } from "react";
 import { AppContext } from "../context/app-context";
@@ -7,12 +7,13 @@ import LogoSVG from "./svg/LogoSVG";
 import { AuthContext } from "../context/auth-context";
 
 export default function Navbar() {
-  const { setAuthData } = useContext(AuthContext);
+  const { authData, setAuthData } = useContext(AuthContext);
+  if (!authData) throw new Error("Missing auth data");
   const { sidebarOpen, setSidebarOpen } = useContext(AppContext);
   const { beforeInstallPromptEvent } = useContext(PWAContext);
 
   return (
-    <div className="flex md:hidden flex-1 justify-between items-center min-h-[4rem] px-[0.7rem] bg-surface">
+    <div className="flex flex-1 justify-between items-center min-h-[4rem] max-h-[4rem]  px-[0.7rem] bg-surface">
       <div className="flex items-center gap-[1rem]">
         <Button
           isIconOnly
@@ -36,7 +37,7 @@ export default function Navbar() {
           )}
         >
           <LogoSVG className="h-[2.5rem] ml-[0.5rem]" />
-          <div className="flex flex-col whitespace-nowrap leading-[1.2rem]">
+          <div className="hidden md:flex flex-col whitespace-nowrap leading-[1.2rem]">
             <div className="flex text-[12pt] md:text-[14pt] font-bold">
               ESP-NOW
             </div>
@@ -45,7 +46,28 @@ export default function Navbar() {
         </div>
       </div>
 
-      <div className="flex gap-[1rem]">
+      <div className="flex gap-[0.5rem]">
+        <Chip
+          color="accent"
+          variant="soft"
+          style={{
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
+          <div
+            className="text-[11pt] max-w-[12rem]"
+            style={{
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {authData.apiUrl}
+          </div>
+        </Chip>
+
         {beforeInstallPromptEvent ? (
           <Button
             isIconOnly

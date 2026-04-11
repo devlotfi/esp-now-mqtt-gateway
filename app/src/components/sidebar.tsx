@@ -11,10 +11,6 @@ import {
 import { useTranslation } from "react-i18next";
 import { useMediaQuery } from "../hooks/use-media-query";
 import LogoSVG from "./svg/LogoSVG";
-import { PWAContext } from "../context/pwa-context";
-import { ChevronsLeft, ChevronsRight, Download, LogOut } from "lucide-react";
-import { AuthContext } from "../context/auth-context";
-import { t } from "i18next";
 
 function SidebarButton({
   path,
@@ -167,125 +163,9 @@ function GithubButton({ className, ...props }: Omit<ButtonProps, "children">) {
   );
 }
 
-function InstallButton({ className, ...props }: Omit<ButtonProps, "children">) {
-  const { beforeInstallPromptEvent } = useContext(PWAContext);
-  const { sidebarOpen } = useContext(AppContext);
-  const isLarge = useMediaQuery("(min-width: 1024px)");
-
-  if (!beforeInstallPromptEvent) return;
-
-  return (
-    <Tooltip delay={0} isDisabled={isLarge && sidebarOpen}>
-      <Button
-        variant="outline"
-        className={cn(
-          "justify-between h-auto p-[0.4rem] py-[0.35rem] border border-border",
-          "transition-all duration-300",
-          sidebarOpen ? "lg:w-full" : "gap-0 w-auto",
-          className,
-        )}
-        onPress={() => beforeInstallPromptEvent.prompt()}
-        {...props}
-      >
-        <>
-          <div
-            className={cn(
-              "flex justify-center items-center min-h-[2.2rem] min-w-[2.2rem] rounded-2xl",
-              "transition-colors duration-300",
-            )}
-          >
-            <Download className="size-[1.5rem]"></Download>
-          </div>
-
-          <motion.div
-            initial={false}
-            animate={{
-              width: sidebarOpen ? "auto" : 0,
-              opacity: sidebarOpen ? 1 : 0,
-            }}
-            transition={{ duration: 0.3 }}
-            className="hidden lg:flex overflow-hidden flex-1 justify-center text-center"
-          >
-            <div
-              className={cn(
-                "whitespace-nowrap text-[11pt] font-medium text-foreground",
-                "transition-colors duration-300",
-              )}
-            >
-              {t("install")}
-            </div>
-          </motion.div>
-        </>
-      </Button>
-
-      <Tooltip.Content showArrow placement="right">
-        <Tooltip.Arrow />
-        {t("install")}
-      </Tooltip.Content>
-    </Tooltip>
-  );
-}
-
-function LogoutButton({ className, ...props }: Omit<ButtonProps, "children">) {
-  const { setAuthData } = useContext(AuthContext);
-  const { sidebarOpen } = useContext(AppContext);
-  const isLarge = useMediaQuery("(min-width: 1024px)");
-
-  return (
-    <Tooltip delay={0} isDisabled={isLarge && sidebarOpen}>
-      <Button
-        variant="outline"
-        className={cn(
-          "justify-between h-auto p-[0.4rem] py-[0.35rem] border border-border text-danger",
-          "transition-all duration-300",
-          sidebarOpen ? "lg:w-full" : "gap-0 w-auto",
-          className,
-        )}
-        onPress={() => setAuthData(null)}
-        {...props}
-      >
-        <>
-          <div
-            className={cn(
-              "flex justify-center items-center min-h-[2.2rem] min-w-[2.2rem] rounded-2xl",
-              "transition-colors duration-300",
-            )}
-          >
-            <LogOut className="size-[1.5rem]"></LogOut>
-          </div>
-
-          <motion.div
-            initial={false}
-            animate={{
-              width: sidebarOpen ? "auto" : 0,
-              opacity: sidebarOpen ? 1 : 0,
-            }}
-            transition={{ duration: 0.3 }}
-            className="hidden lg:flex overflow-hidden flex-1 justify-center text-center"
-          >
-            <div
-              className={cn(
-                "whitespace-nowrap text-[11pt] font-medium",
-                "transition-colors duration-300",
-              )}
-            >
-              {t("logout")}
-            </div>
-          </motion.div>
-        </>
-      </Button>
-
-      <Tooltip.Content showArrow placement="right">
-        <Tooltip.Arrow />
-        {t("logout")}
-      </Tooltip.Content>
-    </Tooltip>
-  );
-}
-
 export default function Sidebar() {
   const { t } = useTranslation();
-  const { sidebarOpen, setSidebarOpen } = useContext(AppContext);
+  const { sidebarOpen } = useContext(AppContext);
 
   return (
     <div
@@ -294,56 +174,20 @@ export default function Sidebar() {
         sidebarOpen ? "lg:w-[16rem]" : "w-[5rem]",
       )}
     >
-      <div
-        className={cn(
-          "flex items-center justify-between px-[1rem] h-[4rem] w-full absolute top-0 duration-300 transition-opacity opacity-100",
-          !sidebarOpen && "opacity-0 pointer-events-none",
-        )}
-      >
+      <div className="hidden lg:flex h-[4rem] justify-center items-center w-full absolute top-0">
         <div
           className={cn(
             "flex items-center gap-[1rem] duration-300 transition-opacity",
-            !sidebarOpen && "opacity-0",
+            !sidebarOpen && "lg:opacity-0",
           )}
         >
-          <LogoSVG className="h-[2.5rem]" />
-          <div className="hidden lg:flex flex-col whitespace-nowrap leading-[1.2rem]">
+          <LogoSVG className="h-[2.5rem] ml-[0.5rem]" />
+          <div className="flex flex-col whitespace-nowrap leading-[1.2rem]">
             <div className="flex text-[12pt] md:text-[14pt] font-bold">
               ESP-NOW
             </div>
             <div className="flex text-[10pt] md:text-[12pt]">MQTT Gateway</div>
           </div>
-        </div>
-
-        <Button
-          isIconOnly
-          variant="outline"
-          className="hidden lg:flex min-h-[2.5rem] min-w-[2.5rem] h-[2.5rem] w-[2.5rem]"
-          size="lg"
-          onPress={() => setSidebarOpen(!sidebarOpen)}
-        >
-          <ChevronsLeft className="size-[1.5rem] duration-300" />
-        </Button>
-      </div>
-      <div
-        className={cn(
-          "flex flex-col items-center w-full absolute top-0 duration-300 transition-opacity opacity-100",
-          sidebarOpen && "opacity-0 pointer-events-none",
-        )}
-      >
-        <div className="hidden lg:flex w-full h-[4rem] justify-center items-center">
-          <Button
-            isIconOnly
-            variant="outline"
-            className="hidden lg:flex min-h-[2.5rem] min-w-[2.5rem] h-[2.5rem] w-[2.5rem] mx-[0.5rem]"
-            size="lg"
-            onPress={() => setSidebarOpen(!sidebarOpen)}
-          >
-            <ChevronsRight className="size-[1.5rem] duration-300" />
-          </Button>
-        </div>
-        <div className="flex w-full h-[4rem] justify-center items-center">
-          <LogoSVG className="h-[2.5rem]" />
         </div>
       </div>
 
@@ -357,11 +201,9 @@ export default function Sidebar() {
         <SidebarButton path="/dashboard/settings" icon={"settings"}>
           {t("settings")}
         </SidebarButton>
-        <LogoutButton></LogoutButton>
       </div>
 
       <div className="flex flex-col gap-[0.7rem] p-[0.7rem] items-center w-full absolute bottom-0">
-        <InstallButton></InstallButton>
         <GithubButton></GithubButton>
       </div>
     </div>
