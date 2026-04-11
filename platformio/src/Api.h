@@ -26,7 +26,7 @@ public:
     if (
         !json["password"].is<const char *>())
     {
-      request->send(400);
+      request->send(400, "application/json", "{\"error\":\"INVALID_REQUEST\"}");
       return;
     }
 
@@ -35,7 +35,7 @@ public:
     if (!verifyPassword(password, authData->passwordSalt, authData->passwordHash))
     {
       free(authData);
-      request->send(403);
+      request->send(403, "application/json", "{\"error\":\"WRONG_PASSWORD\"}");
       return;
     }
 
@@ -56,7 +56,7 @@ public:
     if (
         !json["password"].is<const char *>())
     {
-      request->send(400);
+      request->send(400, "application/json", "{\"error\":\"INVALID_REQUEST\"}");
       return;
     }
 
@@ -76,13 +76,13 @@ public:
     if (
         !json["pmk"].is<const char *>())
     {
-      request->send(400);
+      request->send(400, "application/json", "{\"error\":\"INVALID_REQUEST\"}");
       return;
     }
     const char *pmkStr = json["pmk"].as<const char *>();
     if (!isValidEspNowKey(pmkStr))
     {
-      request->send(400);
+      request->send(400, "application/json", "{\"error\":\"INVALID_REQUEST\"}");
       return;
     }
 
@@ -95,7 +95,7 @@ public:
     if (result != ESP_OK)
     {
       free(espNowData);
-      request->send(500);
+      request->send(500, "application/json", "{\"error\":\"CANNOT_SET_PMK_TO_ESP_NOW\"}");
       return;
     }
 
@@ -137,7 +137,7 @@ public:
         !json["mac"].is<const char *>() ||
         !json["lmk"].is<const char *>())
     {
-      request->send(400);
+      request->send(400, "application/json", "{\"error\":\"INVALID_REQUEST\"}");
       return;
     }
     const char *name = json["name"].as<const char *>();
@@ -145,7 +145,7 @@ public:
     const char *lmkStr = json["lmk"].as<const char *>();
     if (!isValidEspNowKey(lmkStr) || !isUnicastMacAddress(macStr))
     {
-      request->send(400);
+      request->send(400, "application/json", "{\"error\":\"INVALID_REQUEST\"}");
       return;
     }
 
@@ -155,7 +155,7 @@ public:
     if (espNowData->peerCount >= PEER_LIST_SIZE)
     {
       free(espNowData);
-      request->send(500);
+      request->send(500, "application/json", "{\"error\":\"MAX_PEERS_REACHED\"}");
       return;
     }
     for (size_t i = 0; i < espNowData->peerCount; i++)
@@ -166,7 +166,7 @@ public:
       if (strcmp(peer.name, name) == 0 || strcmp(macStrItem, macStr) == 0)
       {
         free(espNowData);
-        request->send(403);
+        request->send(403, "application/json", "{\"error\":\"EXISTS\"}");
         return;
       }
     }
@@ -191,7 +191,7 @@ public:
     if (esp_now_add_peer(&peerInfo) != ESP_OK)
     {
       free(espNowData);
-      request->send(500);
+      request->send(500, "application/json", "{\"error\":\"CANNOT_ADD_TO_ESP_NOW\"}");
       return;
     }
 
@@ -317,7 +317,7 @@ public:
     if (!allStrings)
     {
       free(espNowData);
-      request->send(400);
+      request->send(400, "application/json", "{\"error\":\"INVALID_REQUEST\"}");
       return;
     }
 
@@ -352,17 +352,17 @@ static AsyncCorsMiddleware cors;
 AsyncMiddlewareFunction jwtAuth([](AsyncWebServerRequest *request, ArMiddlewareNext next)
                                 {
   if (!request->hasHeader("Authorization")) {
-    request->send(401);
+    request->send(401, "application/json", "{\"error\":\"UNAUTHORIZED\"}");
     return;
   }
   String header = request->getHeader("Authorization")->value();
   if (!header.startsWith("Bearer ")) {
     request->send(401);
-    return;
+    request->send(401, "application/json", "{\"error\":\"UNAUTHORIZED\"}");
   }
   String token = header.substring(7);
   if (!verifyToken(token.c_str())) {
-    request->send(401);
+    request->send(401, "application/json", "{\"error\":\"UNAUTHORIZED\"}");
     return;
   }
   request->setAttribute("jwt", token);

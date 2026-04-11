@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
 import {
   Button,
   Card,
@@ -9,7 +9,6 @@ import {
   toast,
 } from "@heroui/react";
 import {
-  Check,
   Computer,
   Download,
   Eye,
@@ -28,11 +27,12 @@ import { useFormik } from "formik";
 import ValidatedTextField from "../components/validated-text-field";
 import { useTranslation } from "react-i18next";
 import { SectionTitle } from "../components/section-title";
-import ServerSVG from "../components/svg/ServerSVG";
 import { ThemeContext } from "../context/theme-context";
 import { ThemeOptions } from "../types/theme-options";
 import { renderFlag } from "../utils/render-flag";
 import { $api } from "../api/openapi-client";
+import { AuthContext } from "../context/auth-context";
+import { Constants } from "../constants";
 
 export const Route = createFileRoute("/login")({
   component: RouteComponent,
@@ -177,14 +177,21 @@ function SettingsTab() {
 }
 
 function RouteComponent() {
+  const { authData, setAuthData } = useContext(AuthContext);
   const { t } = useTranslation();
 
   const { mutate, isPending } = $api.useMutation("post", "/login", {
-    onSuccess() {
-      toast(t("actionSuccess"), {
-        indicator: <Check />,
-        variant: "success",
-      });
+    onSuccess(data) {
+      if (data.token) {
+        localStorage.setItem(
+          Constants.API_URL_STORAGE_KEY,
+          formik.values.apiUrl,
+        );
+        setAuthData({
+          token: data.token,
+          apiUrl: formik.values.apiUrl,
+        });
+      }
     },
     onError(error) {
       console.error(error);
@@ -197,7 +204,7 @@ function RouteComponent() {
 
   const formik = useFormik({
     initialValues: {
-      apiUrl: "",
+      apiUrl: localStorage.getItem(Constants.API_URL_STORAGE_KEY) || "",
       password: "",
     },
     validationSchema: yup.object({
@@ -216,6 +223,8 @@ function RouteComponent() {
 
   const [isVisible, setIsVisible] = useState(false);
   const toggleVisibility = () => setIsVisible(!isVisible);
+
+  if (authData) return <Navigate to="/dashboard"></Navigate>;
 
   return (
     <div className="flex flex-col flex-1 h-dvh w-dvw">

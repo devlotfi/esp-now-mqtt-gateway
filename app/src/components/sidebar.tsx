@@ -5,7 +5,6 @@ import { Button, cn, Tooltip, type ButtonProps } from "@heroui/react";
 import { DynamicIcon, type IconName } from "lucide-react/dynamic";
 import {
   useLocation,
-  useMatch,
   useNavigate,
   type FileRouteTypes,
 } from "@tanstack/react-router";
@@ -13,7 +12,9 @@ import { useTranslation } from "react-i18next";
 import { useMediaQuery } from "../hooks/use-media-query";
 import LogoSVG from "./svg/LogoSVG";
 import { PWAContext } from "../context/pwa-context";
-import { ChevronsLeft, ChevronsRight, Download } from "lucide-react";
+import { ChevronsLeft, ChevronsRight, Download, LogOut } from "lucide-react";
+import { AuthContext } from "../context/auth-context";
+import { t } from "i18next";
 
 function SidebarButton({
   path,
@@ -40,7 +41,7 @@ function SidebarButton({
           "justify-between h-auto p-[0.4rem] border border-transparent",
           "transition-all duration-300",
           sidebarOpen ? "lg:w-full" : "gap-0 w-auto",
-          isActive && "bg-background",
+          isActive && "bg-background border border-border",
           !isActive && "shadow-none",
           className,
         )}
@@ -110,7 +111,7 @@ function GithubButton({ className, ...props }: Omit<ButtonProps, "children">) {
         <Button
           variant="outline"
           className={cn(
-            "justify-between h-auto p-[0.4rem] py-[0.2rem] bg-[color-mix(in_srgb,var(--surface),transparent_80%)] border border-border",
+            "justify-between h-auto p-[0.4rem] py-[0.2rem] border border-border",
             "transition-all duration-300",
             sidebarOpen ? "lg:w-full" : "gap-0 w-auto",
             className,
@@ -178,7 +179,7 @@ function InstallButton({ className, ...props }: Omit<ButtonProps, "children">) {
       <Button
         variant="outline"
         className={cn(
-          "justify-between h-auto p-[0.4rem] py-[0.35rem] bg-[color-mix(in_srgb,var(--surface),transparent_80%)] border border-border",
+          "justify-between h-auto p-[0.4rem] py-[0.35rem] border border-border",
           "transition-all duration-300",
           sidebarOpen ? "lg:w-full" : "gap-0 w-auto",
           className,
@@ -211,7 +212,7 @@ function InstallButton({ className, ...props }: Omit<ButtonProps, "children">) {
                 "transition-colors duration-300",
               )}
             >
-              Install
+              {t("install")}
             </div>
           </motion.div>
         </>
@@ -219,7 +220,64 @@ function InstallButton({ className, ...props }: Omit<ButtonProps, "children">) {
 
       <Tooltip.Content showArrow placement="right">
         <Tooltip.Arrow />
-        Install
+        {t("install")}
+      </Tooltip.Content>
+    </Tooltip>
+  );
+}
+
+function LogoutButton({ className, ...props }: Omit<ButtonProps, "children">) {
+  const { setAuthData } = useContext(AuthContext);
+  const { sidebarOpen } = useContext(AppContext);
+  const isLarge = useMediaQuery("(min-width: 1024px)");
+
+  return (
+    <Tooltip delay={0} isDisabled={isLarge && sidebarOpen}>
+      <Button
+        variant="outline"
+        className={cn(
+          "justify-between h-auto p-[0.4rem] py-[0.35rem] border border-border text-danger",
+          "transition-all duration-300",
+          sidebarOpen ? "lg:w-full" : "gap-0 w-auto",
+          className,
+        )}
+        onPress={() => setAuthData(null)}
+        {...props}
+      >
+        <>
+          <div
+            className={cn(
+              "flex justify-center items-center min-h-[2.2rem] min-w-[2.2rem] rounded-2xl",
+              "transition-colors duration-300",
+            )}
+          >
+            <LogOut className="size-[1.5rem]"></LogOut>
+          </div>
+
+          <motion.div
+            initial={false}
+            animate={{
+              width: sidebarOpen ? "auto" : 0,
+              opacity: sidebarOpen ? 1 : 0,
+            }}
+            transition={{ duration: 0.3 }}
+            className="hidden lg:flex overflow-hidden flex-1 justify-center text-center"
+          >
+            <div
+              className={cn(
+                "whitespace-nowrap text-[11pt] font-medium",
+                "transition-colors duration-300",
+              )}
+            >
+              {t("logout")}
+            </div>
+          </motion.div>
+        </>
+      </Button>
+
+      <Tooltip.Content showArrow placement="right">
+        <Tooltip.Arrow />
+        {t("logout")}
       </Tooltip.Content>
     </Tooltip>
   );
@@ -299,6 +357,7 @@ export default function Sidebar() {
         <SidebarButton path="/dashboard/settings" icon={"settings"}>
           {t("settings")}
         </SidebarButton>
+        <LogoutButton></LogoutButton>
       </div>
 
       <div className="flex flex-col gap-[0.7rem] p-[0.7rem] items-center w-full absolute bottom-0">

@@ -2,8 +2,8 @@
   "openapi": "3.0.0",
   "info": {
     "title": "ESP32 ESP-NOW Management API",
-    "description": "API for managing ESP-NOW peers, topics, and authentication on an ESP32 device.",
-    "version": "1.0.0"
+    "description": "API for managing ESP-NOW peers, topics, and authentication with detailed error reporting.",
+    "version": "1.1.0"
   },
   "servers": [
     {
@@ -20,17 +20,26 @@
       }
     },
     "schemas": {
+      "Error": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "INVALID_REQUEST"
+          }
+        }
+      },
       "PasswordRequest": {
         "type": "object",
         "required": ["password"],
         "properties": {
-          "password": {
-            "type": "string"
-          }
+          "password": { "type": "string" }
         }
       },
       "LoginResponse": {
         "type": "object",
+        "required": ["token"],
         "properties": {
           "token": {
             "type": "string",
@@ -50,27 +59,20 @@
       },
       "Peer": {
         "type": "object",
+        "required": ["id", "name", "mac"],
         "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string"
-          },
-          "mac": {
-            "type": "string"
-          }
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "mac": { "type": "string" }
         }
       },
       "PeersListResponse": {
         "type": "object",
+        "required": ["peers"],
         "properties": {
           "peers": {
             "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Peer"
-            }
+            "items": { "$ref": "#/components/schemas/Peer" }
           }
         }
       },
@@ -78,17 +80,9 @@
         "type": "object",
         "required": ["name", "mac", "lmk"],
         "properties": {
-          "name": {
-            "type": "string"
-          },
-          "mac": {
-            "type": "string",
-            "description": "Unicast MAC address"
-          },
-          "lmk": {
-            "type": "string",
-            "description": "Local Master Key (hex format)"
-          }
+          "name": { "type": "string" },
+          "mac": { "type": "string" },
+          "lmk": { "type": "string" }
         }
       },
       "TopicList": {
@@ -97,19 +91,33 @@
         "properties": {
           "topicList": {
             "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "responses": {
+      "UnauthorizedError": {
+        "description": "Unauthorized - Missing or invalid JWT token",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" },
+            "example": { "error": "UNAUTHORIZED" }
+          }
+        }
+      },
+      "InvalidRequestError": {
+        "description": "Bad Request - Invalid parameters or missing fields",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" },
+            "example": { "error": "INVALID_REQUEST" }
           }
         }
       }
     }
   },
-  "security": [
-    {
-      "bearerAuth": []
-    }
-  ],
+  "security": [{ "bearerAuth": [] }],
   "paths": {
     "/login": {
       "post": {
@@ -120,9 +128,7 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PasswordRequest"
-              }
+              "schema": { "$ref": "#/components/schemas/PasswordRequest" }
             }
           }
         },
@@ -131,17 +137,19 @@
             "description": "Successful login",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LoginResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/LoginResponse" }
               }
             }
           },
-          "400": {
-            "description": "Bad Request - Missing or invalid password format"
-          },
+          "400": { "$ref": "#/components/responses/InvalidRequestError" },
           "403": {
-            "description": "Forbidden - Incorrect password"
+            "description": "Forbidden - Incorrect password",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" },
+                "example": { "error": "WRONG_PASSWORD" }
+              }
+            }
           }
         }
       }
@@ -154,51 +162,41 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PasswordRequest"
-              }
+              "schema": { "$ref": "#/components/schemas/PasswordRequest" }
             }
           }
         },
         "responses": {
-          "200": {
-            "description": "Password updated successfully"
-          },
-          "400": {
-            "description": "Bad Request - Missing or invalid password format"
-          },
-          "401": {
-            "description": "Unauthorized - Missing or invalid JWT token"
-          }
+          "200": { "description": "Password updated successfully" },
+          "400": { "$ref": "#/components/responses/InvalidRequestError" },
+          "401": { "$ref": "#/components/responses/UnauthorizedError" }
         }
       }
     },
     "/set-pmk": {
       "post": {
         "tags": ["Configuration"],
-        "summary": "Set the Primary Master Key (PMK) for ESP-NOW",
+        "summary": "Set the Primary Master Key (PMK)",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SetPmkRequest"
-              }
+              "schema": { "$ref": "#/components/schemas/SetPmkRequest" }
             }
           }
         },
         "responses": {
-          "200": {
-            "description": "PMK set successfully"
-          },
-          "400": {
-            "description": "Bad Request - Missing or invalid PMK"
-          },
-          "401": {
-            "description": "Unauthorized - Missing or invalid JWT token"
-          },
+          "200": { "description": "PMK set successfully" },
+          "400": { "$ref": "#/components/responses/InvalidRequestError" },
+          "401": { "$ref": "#/components/responses/UnauthorizedError" },
           "500": {
-            "description": "Internal Server Error - Failed to set PMK in ESP-NOW"
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" },
+                "example": { "error": "CANNOT_SET_PMK_TO_ESP_NOW" }
+              }
+            }
           }
         }
       }
@@ -206,51 +204,56 @@
     "/peers": {
       "get": {
         "tags": ["Peers"],
-        "summary": "Get a list of all ESP-NOW peers",
+        "summary": "Get list of peers",
         "responses": {
           "200": {
             "description": "List of peers",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PeersListResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/PeersListResponse" }
               }
             }
           },
-          "401": {
-            "description": "Unauthorized - Missing or invalid JWT token"
-          }
+          "401": { "$ref": "#/components/responses/UnauthorizedError" }
         }
       },
       "post": {
         "tags": ["Peers"],
-        "summary": "Add a new ESP-NOW peer",
+        "summary": "Add a new peer",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AddPeerRequest"
-              }
+              "schema": { "$ref": "#/components/schemas/AddPeerRequest" }
             }
           }
         },
         "responses": {
-          "200": {
-            "description": "Peer added successfully"
-          },
-          "400": {
-            "description": "Bad Request - Missing fields, invalid keys, or invalid MAC address"
-          },
-          "401": {
-            "description": "Unauthorized - Missing or invalid JWT token"
-          },
+          "200": { "description": "Peer added successfully" },
+          "400": { "$ref": "#/components/responses/InvalidRequestError" },
+          "401": { "$ref": "#/components/responses/UnauthorizedError" },
           "403": {
-            "description": "Forbidden - Peer with the same name or MAC already exists"
+            "description": "Forbidden - Duplicate peer",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" },
+                "example": { "error": "EXISTS" }
+              }
+            }
           },
           "500": {
-            "description": "Internal Server Error - Peer list full or ESP-NOW add failed"
+            "description": "Server Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" },
+                "examples": {
+                  "LimitReached": { "value": { "error": "MAX_PEERS_REACHED" } },
+                  "EspNowFail": {
+                    "value": { "error": "CANNOT_ADD_TO_ESP_NOW" }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -258,13 +261,11 @@
     "/peers/{id}": {
       "delete": {
         "tags": ["Peers"],
-        "summary": "Delete an ESP-NOW peer by ID",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "description": "UUID of the peer",
             "schema": {
               "type": "string",
               "format": "uuid",
@@ -273,93 +274,59 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Peer deleted successfully"
-          },
-          "401": {
-            "description": "Unauthorized - Missing or invalid JWT token"
-          },
-          "404": {
-            "description": "Not Found - Peer with the specified ID does not exist"
-          }
+          "200": { "description": "Deleted" },
+          "401": { "$ref": "#/components/responses/UnauthorizedError" },
+          "404": { "description": "Not Found" }
         }
       }
     },
     "/topics/{id}": {
       "get": {
         "tags": ["Topics"],
-        "summary": "Get topics associated with a specific peer",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "description": "UUID of the peer",
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "pattern": "^[0-9a-fA-F-]{36}$"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           }
         ],
         "responses": {
           "200": {
-            "description": "List of topics",
+            "description": "Success",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TopicList"
-                }
+                "schema": { "$ref": "#/components/schemas/TopicList" }
               }
             }
           },
-          "401": {
-            "description": "Unauthorized - Missing or invalid JWT token"
-          },
-          "404": {
-            "description": "Not Found - Peer with the specified ID does not exist"
-          }
+          "401": { "$ref": "#/components/responses/UnauthorizedError" },
+          "404": { "description": "Not Found" }
         }
       },
       "post": {
         "tags": ["Topics"],
-        "summary": "Set topics for a specific peer",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "description": "UUID of the peer",
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "pattern": "^[0-9a-fA-F-]{36}$"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TopicList"
-              }
+              "schema": { "$ref": "#/components/schemas/TopicList" }
             }
           }
         },
         "responses": {
-          "200": {
-            "description": "Topics set successfully"
-          },
-          "400": {
-            "description": "Bad Request - Invalid payload format (array must contain only strings)"
-          },
-          "401": {
-            "description": "Unauthorized - Missing or invalid JWT token"
-          },
-          "404": {
-            "description": "Not Found - Peer with the specified ID does not exist"
-          }
+          "200": { "description": "Topics updated" },
+          "400": { "$ref": "#/components/responses/InvalidRequestError" },
+          "401": { "$ref": "#/components/responses/UnauthorizedError" },
+          "404": { "description": "Not Found" }
         }
       }
     }

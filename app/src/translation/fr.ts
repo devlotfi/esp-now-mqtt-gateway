@@ -1,87 +1,47 @@
 import type { AppTranslation } from "../types/app-translation";
 
 export const FR: AppTranslation = {
-  // Navigation
-  dashboard: "Tableau de bord",
+  peers: "Appareils pairs",
   settings: "Paramètres",
-  information: "Informations",
+  auth: "Authentification",
+  notFound: "Introuvable",
 
-  // General actions
   save: "Enregistrer",
+  name: "Nom",
+  emptyList: "Liste vide",
   cancel: "Annuler",
+  password: "Mot de passe",
+  login: "Connexion",
+  install: "Installer",
+  logout: "Déconnexion",
+
   add: "Ajouter",
   edit: "Modifier",
   delete: "Supprimer",
-  allow: "Autoriser",
-  test: "Tester",
-  notFound: "Page introuvable",
-  landingPage: "Accueil",
 
-  // User / Profile
-  name: "Nom",
-  enabledDescription: "Activer ou désactiver le compte à rebours des alertes",
-  nameSaved: "Nom enregistré",
-  email: "Email",
-  systemDisabled: "Le système est désactivé",
-  alertsWillNotBesent: "Les alertes ne seront pas envoyées",
-  nameMissing: "Nom manquant",
-
-  // API / Config
-  apiKey: "Clé API",
-  apiKeyDescription: "Entrez votre clé API",
-  apiKeySaved: "Clé API enregistrée",
-  baseUrl: "URL de base",
-  baseUrlDescription: "Entrez l’URL de base",
-  baseUrlSaved: "URL de base enregistrée",
-  apiUrl: "URL API",
-  apiSecret: "Secret API",
-  vapidPublicKey: "Clé publique VAPID",
-
-  // Lists / States
-  emptyList: "Aucun élément",
-
-  // Alerts / Timer
-  nextAlert: "Prochaine alerte",
-  alertCountdown: "Compte à rebours",
-  timerElapsed: "Temps écoulé",
-  timerUpdated: "Minuteur mis à jour",
-
-  // Notifications
-  notifications1: "Activer les notifications",
-  notifications2: "Vous recevrez des alertes et des mises à jour",
-
-  // Errors / Status
   connectionError: "Erreur de connexion",
   permissionRequired: "Permission requise",
-  unknownError: "Une erreur inconnue s’est produite",
-  requestError: "Échec de la requête",
-  error: "Erreur",
-  actionSuccess: "Action réussie",
+  unknownError: "Erreur inconnue",
+  requestError: "Erreur de requête",
 
-  // Appearance
   theme: "Thème",
   system: "Système",
   light: "Clair",
   dark: "Sombre",
   accentColor: "Couleur d’accent",
   language: "Langue",
+
   display: "Affichage",
-
-  // API Subscription
-  apiSubscription: "Abonnement API",
-  subscribe: "S’abonner",
-  unsubscribe: "Se désabonner",
-  apiSubscribed: "Abonné à l’API",
-  apiNotSubscribed: "Non abonné à l’API",
-  subscribeApi1: "S’abonner à une API",
-  subscribeApi2: "Vérifiez vos paramètres API",
-
-  // Contacts
-  contacts: "Contacts",
-  enabled: "Activé",
-  nameDescription: "Nom affiché dans l’e-mail d’alerte",
-  addContact: "Ajouter un contact",
-  deleteContact: "Supprimer le contact",
-  deleteConfirmation: "Voulez-vous vraiment supprimer ceci ?",
-  editContact: "Modifier le contact",
+  test: "Test",
+  apiUrl: "URL de l’API",
+  actionSuccess: "Action réussie",
+  error: "Erreur",
+  deleteConfirmation: "Voulez-vous vraiment supprimer ?",
+  setPassword: "Définir le mot de passe",
+  setPMK: "Définir le PMK",
+  topic: "Sujet",
+  topicSubscriptions: "Abonnements aux sujets",
+  deletePeer: "Supprimer le pair",
+  addPeer: "Ajouter un pair",
+  topics: "Sujets",
 };

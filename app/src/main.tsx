@@ -14,6 +14,7 @@ import { Toast } from "@heroui/react";
 import PWAProvider from "./provider/pwa-provider.tsx";
 import AppProvider from "./provider/app-provider.tsx";
 import NotFound from "./components/not-found.tsx";
+import AuthProvider from "./provider/auth-provider.tsx";
 
 const history = createHashHistory();
 
@@ -38,9 +39,11 @@ createRoot(document.getElementById("root")!).render(
         <QueryClientProvider client={queryClient}>
           <Toast.Provider placement="top"></Toast.Provider>
           <PWAProvider>
-            <AppProvider>
-              <RouterProvider router={router}></RouterProvider>
-            </AppProvider>
+            <AuthProvider>
+              <AppProvider>
+                <RouterProvider router={router}></RouterProvider>
+              </AppProvider>
+            </AuthProvider>
           </PWAProvider>
         </QueryClientProvider>
       </div>

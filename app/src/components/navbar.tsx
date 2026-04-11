@@ -1,11 +1,13 @@
 import { Button, cn } from "@heroui/react";
-import { ChevronsLeft, Download } from "lucide-react";
+import { ChevronsLeft, Download, LogOut } from "lucide-react";
 import { useContext } from "react";
 import { AppContext } from "../context/app-context";
 import { PWAContext } from "../context/pwa-context";
 import LogoSVG from "./svg/LogoSVG";
+import { AuthContext } from "../context/auth-context";
 
 export default function Navbar() {
+  const { setAuthData } = useContext(AuthContext);
   const { sidebarOpen, setSidebarOpen } = useContext(AppContext);
   const { beforeInstallPromptEvent } = useContext(PWAContext);
 
@@ -54,6 +56,14 @@ export default function Navbar() {
             <Download className="size-[1.4rem]"></Download>
           </Button>
         ) : null}
+        <Button
+          isIconOnly
+          variant="outline"
+          className="size-[2.5rem] text-danger bg-[color-mix(in_srgb,var(--surface),transparent_60%)]"
+          onPress={() => setAuthData(null)}
+        >
+          <LogOut className="size-[1.4rem]"></LogOut>
+        </Button>
       </div>
     </div>
   );

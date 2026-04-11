@@ -45,7 +45,11 @@ export default function ValidatedTextField({
       <Label {...labelProps}></Label>
 
       <InputGroup>
-        {prefix ? <InputGroup.Prefix>{prefix}</InputGroup.Prefix> : null}
+        {prefix ? (
+          <InputGroup.Prefix className="px-[0.5rem]">
+            {prefix}
+          </InputGroup.Prefix>
+        ) : null}
         <InputGroup.Input
           name={name}
           value={formik.values[name]}
@@ -53,7 +57,11 @@ export default function ValidatedTextField({
           onChange={formik.handleChange}
           {...inputProps}
         />
-        {suffix ? <InputGroup.Suffix>{suffix}</InputGroup.Suffix> : null}
+        {suffix ? (
+          <InputGroup.Suffix className="px-[0.5rem]">
+            {suffix}
+          </InputGroup.Suffix>
+        ) : null}
       </InputGroup>
       <FieldError {...fieldErrorProps}>{formik.errors[name]}</FieldError>
     </TextField>
