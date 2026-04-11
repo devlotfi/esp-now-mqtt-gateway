@@ -1,0 +1,143 @@
+@import "tailwindcss";
+@import "@heroui/styles";
+
+@font-face {
+  font-family: "Rubik";
+  font-style: normal;
+  font-display: block;
+  src: url("./assets/Rubik.ttf");
+}
+
+* {
+  font-family: "Rubik", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+}
+
+@layer components {
+  .card {
+    @apply border border-border;
+  }
+
+  .input-group {
+    @apply border border-border bg-background;
+  }
+
+  .alert {
+    @apply border border-border bg-background;
+  }
+
+  .select__trigger {
+    @apply border border-border bg-background;
+  }
+
+  .toast {
+    @apply border border-border shadow-2xl;
+  }
+
+  .modal__dialog {
+    @apply border border-border bg-surface;
+  }
+
+  .tabs__indicator {
+    @apply bg-accent;
+  }
+  .tabs__tab[aria-selected="true"] {
+    @apply text-accent-foreground;
+  }
+  .tabs__list {
+    @apply bg-background border border-border;
+  }
+  .tabs__panel {
+    @apply mt-[2rem];
+  }
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+
+    --spacing: 0.25rem;
+    --radius: 0.3rem;
+
+    --background: #f5f5f5;
+    --foreground: #536077;
+
+    --surface: #ffffff;
+    --surface-foreground: #536077;
+
+    --success: #1dbe63;
+    --success-foreground: var(--snow);
+
+    --danger: #d42326;
+    --danger-foreground: var(--snow);
+
+    --accent: #1d97de;
+
+    --border: #e6e6e6;
+    --separator: #c0c4cf;
+
+    --field-background: var(--background);
+    --field-foreground: var(--foreground);
+    --field-placeholder: color-mix(in srgb, var(--muted), transparent 30%);
+    --field-border: var(--border);
+
+    --surface-shadow: 0 0 0 0 transparent inset;
+    --field-shadow: 0 0 0 0 transparent inset;
+  }
+
+  .dark,
+  [data-theme="dark"] {
+    color-scheme: dark;
+
+    --spacing: 0.25rem;
+    --radius: 0.3rem;
+
+    --background: #1b283a;
+    --foreground: #b7bdc9;
+
+    --surface: #203147;
+    --surface-foreground: var(--foreground);
+
+    --success: #1dbe63;
+    --success-foreground: var(--snow);
+
+    --danger: #d42326;
+    --danger-foreground: var(--snow);
+
+    --default: #273c58;
+    --default-foreground: var(--foreground);
+
+    --overlay: var(--background);
+    --overlay-foreground: var(--foreground);
+
+    --accent: #1d97de;
+
+    --border: #344261;
+    --separator: #57688d;
+
+    --field-background: var(--surface);
+    --field-foreground: var(--foreground);
+    --field-placeholder: color-mix(in srgb, var(--muted), transparent 30%);
+    --field-border: var(--border);
+
+    --surface-shadow: 0 0 0 0 transparent inset;
+    --field-shadow: 0 0 0 0 transparent inset;
+  }
+}
+
+@keyframes loading-slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(150%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}
+
+.animate-loading {
+  animation: loading-slide 1.2s infinite ease-in-out;
+}

@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"name": "esp-now-mqtt-gateway",
+			"path": "esp-now-mqtt-gateway"
+		}
+	],
+	"settings": {}
+}
