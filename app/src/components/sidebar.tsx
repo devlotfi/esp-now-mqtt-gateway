@@ -100,7 +100,7 @@ function GithubButton({ className, ...props }: Omit<ButtonProps, "children">) {
   return (
     <Tooltip delay={0} isDisabled={isLarge && sidebarOpen}>
       <a
-        href="https://github.com/devlotfi/life-ping"
+        href="https://github.com/devlotfi/esp-now-mqtt-gateway"
         target="_blank"
         className="flex flex-1 w-full justify-center items-center"
       >
