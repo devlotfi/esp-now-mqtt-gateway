@@ -11,11 +11,7 @@ interface AuthContext {
 }
 
 export const AuthContextInitialValue: AuthContext = {
-  authData: {
-    token:
-      "x0At7iH4ZGPn0bHaQct8vA==.3KV78ityr9HA5ZyXcXW6LGKB15hb8BVyeyAW8emXW+w=",
-    apiUrl: "http://192.168.1.15/",
-  },
+  authData: null,
   setAuthData() {},
 };
 
