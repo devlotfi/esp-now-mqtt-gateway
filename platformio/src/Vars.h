@@ -8,6 +8,7 @@
 #include <NTPClient.h>
 #include <NetworkUdp.h>
 #include <Preferences.h>
+#include "mqtt_client.h"
 #include "Properties.h"
 
 Preferences preferences;
@@ -17,3 +18,5 @@ AsyncWebServer server(80);
 NTPClient timeClient(ntpUDP, "pool.ntp.org", 0, 60000);
 bool ethernetConnected = false;
 unsigned long lastReconnectAttempt = 0;
+esp_mqtt_client_handle_t mqttClient = nullptr;
+bool mqttStarted = false;

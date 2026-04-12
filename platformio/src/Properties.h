@@ -40,8 +40,7 @@
 // ----------------------
 // MQTT credentials
 // ----------------------
-const char *mqtt_server = "x9cb5c45.ala.eu-central-1.emqxsl.com";
-const int mqtt_port = 8883;
+const char *mqtt_uri = "mqtts://x9cb5c45.ala.eu-central-1.emqxsl.com:8883";
 const char *mqtt_user = "test";
 const char *mqtt_password = "test";
 
