@@ -67,31 +67,60 @@ void WiFiEvent(arduino_event_id_t event)
   }
 }
 
+void initPeers()
+{
+  EspNowData *espNowData = loadEspNowData();
+  for (size_t i = 0; i < espNowData->peerCount; i++)
+  {
+    auto &peer = espNowData->peerList[i];
+    esp_now_peer_info_t peerInfo{};
+    peerInfo.channel = 1;
+    peerInfo.encrypt = true;
+    memcpy(peerInfo.peer_addr, peer.mac, MAC_SIZE_BYTES);
+    memcpy(peerInfo.lmk, peer.lmk, ESP_NOW_KEY_SIZE_BYTES);
+    if (esp_now_add_peer(&peerInfo) != ESP_OK)
+    {
+      free(espNowData);
+      Serial.println("ESP-NOW: Cannot add peer");
+      return;
+    }
+  }
+}
+
 void setup()
 {
   Serial.begin(115200);
 
+  // NVS setup
+  Serial.println("NVS: Setup started");
   setupStorage();
+  Serial.println("NVS: Setup completed");
 
+  // esp-now setup
+  Serial.println("ESP-NOW: Setup started");
   WiFi.mode(WIFI_STA);
-
   if (esp_now_init() != ESP_OK)
   {
-    Serial.println("ESP-NOW init failed");
+    Serial.println("ESP-NOW: init failed");
     return;
   }
+  Serial.println("ESP-NOW: Init peers");
+  initPeers();
+  Serial.println("ESP-NOW: Init peers completed");
+  Serial.println("ESP-NOW: Setup completed");
 
+  // ethernet setup
   // Register Event Callback
+  Serial.println("ETHERNET: Setup started");
   Network.onEvent(WiFiEvent);
-
-  // Initialize W5500 via ETH.h
-  // Params: PHY_TYPE, ADDR, CS, INT, RESET, SPI_HOST
   ETH.begin(ETH_PHY_W5500, 1, WIZNET_CS_PIN, WIZNET_INT_PIN, WIZNET_RESET_PIN, SPI2_HOST,
             WIZNET_SCLK_PIN, WIZNET_MISO_PIN, WIZNET_MOSI_PIN);
+  Serial.println("ETHERNET: Setup completed");
 
-  // setupEndpoints();
+  // http server setup
+  Serial.println("HTTP-SERVER: Setup started");
   setupServer();
-  Serial.println("HTTP server ready");
+  Serial.println("HTTP-SERVER: Setup completed");
 }
 
 void loop()
