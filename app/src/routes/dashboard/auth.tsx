@@ -6,10 +6,11 @@ import { SectionTitle } from "../../components/section-title";
 import { useFormik } from "formik";
 import * as yup from "yup";
 import { $api } from "../../api/openapi-client";
-import { Check, Eye, EyeOff, Save } from "lucide-react";
+import { Check, Eye, EyeOff, RefreshCw, Save } from "lucide-react";
 import { useContext, useState } from "react";
 import { AuthContext } from "../../context/auth-context";
 import ValidatedTextField from "../../components/validated-text-field";
+import { generateEspNowKey } from "../../utils/generate-esp-now-key";
 
 export const Route = createFileRoute("/dashboard/auth")({
   component: RouteComponent,
@@ -168,14 +169,26 @@ function PMKOption() {
             }}
             textFieldProps={{ isRequired: true }}
             suffix={
-              <Button
-                isIconOnly
-                variant="ghost"
-                size="sm"
-                onPress={toggleVisibility}
-              >
-                {isVisible ? <EyeOff></EyeOff> : <Eye></Eye>}
-              </Button>
+              <div className="flex items-center gap-[0.1rem]">
+                <Button
+                  isIconOnly
+                  variant="ghost"
+                  size="sm"
+                  onPress={toggleVisibility}
+                >
+                  {isVisible ? <EyeOff></EyeOff> : <Eye></Eye>}
+                </Button>
+                <Button
+                  isIconOnly
+                  variant="ghost"
+                  size="sm"
+                  onPress={() => {
+                    formik.setFieldValue("pmk", generateEspNowKey());
+                  }}
+                >
+                  <RefreshCw></RefreshCw>
+                </Button>
+              </div>
             }
           ></ValidatedTextField>
 

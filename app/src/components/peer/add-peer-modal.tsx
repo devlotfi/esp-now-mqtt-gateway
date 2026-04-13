@@ -6,13 +6,13 @@ import {
   type UseOverlayStateReturn,
 } from "@heroui/react";
 import { useQueryClient } from "@tanstack/react-query";
-import { InfoIcon, Plus, RefreshCw } from "lucide-react";
+import { Eye, EyeOff, InfoIcon, Plus, RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import * as yup from "yup";
 import { useFormik } from "formik";
 import ValidatedTextField from "../validated-text-field";
 import { $api } from "../../api/openapi-client";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { AuthContext } from "../../context/auth-context";
 import { generateUnicastMac } from "../../utils/generate-unicast-mac";
 import { generateEspNowKey } from "../../utils/generate-esp-now-key";
@@ -77,6 +77,9 @@ export default function AddPeerModal({ state }: AddPeerModalProps) {
     },
   });
 
+  const [isVisible, setIsVisible] = useState(false);
+  const toggleVisibility = () => setIsVisible(!isVisible);
+
   return (
     <Modal.Backdrop
       isOpen={state.isOpen}
@@ -126,17 +129,30 @@ export default function AddPeerModal({ state }: AddPeerModalProps) {
                 name="lmk"
                 textFieldProps={{ isRequired: true }}
                 labelProps={{ children: "LMK" }}
+                inputProps={{
+                  type: isVisible ? "text" : "password",
+                }}
                 suffix={
-                  <Button
-                    isIconOnly
-                    variant="ghost"
-                    size="sm"
-                    onPress={() => {
-                      formik.setFieldValue("lmk", generateEspNowKey());
-                    }}
-                  >
-                    <RefreshCw></RefreshCw>
-                  </Button>
+                  <div className="flex items-center gap-[0.1rem]">
+                    <Button
+                      isIconOnly
+                      variant="ghost"
+                      size="sm"
+                      onPress={toggleVisibility}
+                    >
+                      {isVisible ? <EyeOff></EyeOff> : <Eye></Eye>}
+                    </Button>
+                    <Button
+                      isIconOnly
+                      variant="ghost"
+                      size="sm"
+                      onPress={() => {
+                        formik.setFieldValue("lmk", generateEspNowKey());
+                      }}
+                    >
+                      <RefreshCw></RefreshCw>
+                    </Button>
+                  </div>
                 }
               ></ValidatedTextField>
 

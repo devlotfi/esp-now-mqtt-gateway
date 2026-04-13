@@ -12,6 +12,7 @@
 #include "Utils.h"
 #include "StaticBufferAllocator.h"
 #include "Data.h"
+#include "Lookup.h"
 
 class AuthController
 {
@@ -191,10 +192,11 @@ public:
     if (esp_now_add_peer(&peerInfo) != ESP_OK)
     {
       free(espNowData);
-      request->send(500, "application/json", "{\"error\":\"CANNOT_ADD_TO_ESP_NOW\"}");
+      Serial.println("ESP-NOW: Cannot add peer");
       return;
     }
-
+    topicSet.init(espNowData);
+    topicToMacsMap.init(espNowData);
     free(espNowData);
     request->send(200);
   }
@@ -231,13 +233,15 @@ public:
     if (found)
     {
       saveEspNowData(espNowData);
+      topicSet.init(espNowData);
+      topicToMacsMap.init(espNowData);
       free(espNowData);
       request->send(200);
     }
     else
     {
       free(espNowData);
-      request->send(404);
+      request->send(404, "application/json", "{\"error\":\"NOT_FOUND\"}");
     }
   }
 
@@ -277,49 +281,24 @@ public:
     else
     {
       delete response;
-      request->send(404);
+      request->send(404, "application/json", "{\"error\":\"NOT_FOUND\"}");
     }
   }
 
-  static void setTopics(AsyncWebServerRequest *request, ArduinoJson::JsonVariant &json)
+  static void addTopic(AsyncWebServerRequest *request, ArduinoJson::JsonVariant &json)
   {
     String idStr = request->pathArg(0);
     const char *id = idStr.c_str();
 
-    bool found = false;
-    EspNowData *espNowData = loadEspNowData();
-
-    auto topicListJson = json["topicList"].as<ArduinoJson::JsonArray>();
-    char topicList[TOPIC_LIST_SIZE][TOPIC_SIZE];
-    bool allStrings = true;
-    size_t topicCount = 0;
-
-    for (auto v : topicListJson)
+    if (!json["topic"].is<const char *>())
     {
-      // FIX: Prevent array out-of-bounds memory corruption
-      if (topicCount >= TOPIC_LIST_SIZE)
-      {
-        break;
-      }
-
-      if (!v.is<const char *>())
-      {
-        allStrings = false;
-        break;
-      }
-      else
-      {
-        strncpy(topicList[topicCount], v.as<const char *>(), TOPIC_SIZE - 1);
-        topicList[topicCount][TOPIC_SIZE - 1] = '\0'; // Ensure null-termination
-      }
-      topicCount++;
-    }
-    if (!allStrings)
-    {
-      free(espNowData);
       request->send(400, "application/json", "{\"error\":\"INVALID_REQUEST\"}");
       return;
     }
+    const char *topic = json["topic"].as<const char *>();
+
+    EspNowData *espNowData = loadEspNowData();
+    bool found = false;
 
     for (size_t i = 0; i < espNowData->peerCount; i++)
     {
@@ -327,8 +306,28 @@ public:
       if (strcmp(peer.id, id) == 0)
       {
         found = true;
-        memcpy(peer.topicList, topicList, sizeof(topicList));
-        peer.topicCount = topicCount;
+
+        if (peer.topicCount >= TOPIC_LIST_SIZE)
+        {
+          free(espNowData);
+          request->send(500, "application/json", "{\"error\":\"MAX_TOPICS_REACHED\"}");
+          return;
+        }
+
+        for (size_t j = 0; j < peer.topicCount; j++)
+        {
+          if (strcmp(peer.topicList[j], topic) == 0)
+          {
+            free(espNowData);
+            request->send(403, "application/json", "{\"error\":\"EXISTS\"}");
+            return;
+          }
+        }
+
+        strncpy(peer.topicList[peer.topicCount], topic, TOPIC_SIZE - 1);
+        peer.topicList[peer.topicCount][TOPIC_SIZE - 1] = '\0';
+        peer.topicCount++;
+        esp_mqtt_client_subscribe(mqttClient, topic, 1);
         break;
       }
     }
@@ -336,14 +335,93 @@ public:
     if (found)
     {
       saveEspNowData(espNowData);
+      topicSet.init(espNowData);
+      topicToMacsMap.init(espNowData);
       free(espNowData);
       request->send(200);
     }
     else
     {
       free(espNowData);
-      request->send(404);
+      request->send(404, "application/json", "{\"error\":\"NOT_FOUND\"}");
     }
+  }
+
+  static void deleteTopic(AsyncWebServerRequest *request, ArduinoJson::JsonVariant &json)
+  {
+    String idStr = request->pathArg(0);
+    const char *id = idStr.c_str();
+
+    if (!json["topic"].is<const char *>())
+    {
+      request->send(400, "application/json", "{\"error\":\"INVALID_REQUEST\"}");
+      return;
+    }
+    const char *topic = json["topic"].as<const char *>();
+
+    EspNowData *espNowData = loadEspNowData();
+    bool peerFound = false;
+    bool topicFound = false;
+
+    for (size_t i = 0; i < espNowData->peerCount; i++)
+    {
+      auto &peer = espNowData->peerList[i];
+      if (strcmp(peer.id, id) == 0)
+      {
+        peerFound = true;
+
+        for (size_t j = 0; j < peer.topicCount; j++)
+        {
+          if (strcmp(peer.topicList[j], topic) == 0)
+          {
+            topic = peer.topicList[j];
+
+            topicFound = true;
+            for (size_t k = j; k < (size_t)peer.topicCount - 1; k++)
+            {
+              memcpy(peer.topicList[k], peer.topicList[k + 1], TOPIC_SIZE);
+            }
+            peer.topicCount--;
+            break;
+          }
+        }
+        break;
+      }
+    }
+
+    if (!peerFound || !topicFound)
+    {
+      free(espNowData);
+      request->send(404, "application/json", "{\"error\":\"NOT_FOUND\"}");
+      return;
+    }
+
+    // if no subscribers unsubscribe
+    bool topicExists = false;
+    for (size_t i = 0; i < espNowData->peerCount; i++)
+    {
+      auto &peer = espNowData->peerList[i];
+      for (size_t j = 0; j < peer.topicCount; j++)
+      {
+        auto &topicCurrent = peer.topicList[j];
+        if (strcmp(topicCurrent, topic) == 0)
+        {
+          topicExists = true;
+          break;
+        }
+      }
+      if (!topicExists)
+      {
+        esp_mqtt_client_unsubscribe(mqttClient, topic);
+        break;
+      }
+    }
+
+    saveEspNowData(espNowData);
+    topicSet.init(espNowData);
+    topicToMacsMap.init(espNowData);
+    free(espNowData);
+    request->send(200);
   }
 };
 
@@ -385,7 +463,8 @@ void setupServer()
   server.on(AsyncURIMatcher::exact("/peers"), HTTP_POST, PeerController::addPeer).addMiddleware(&jwtAuth);
   server.on(AsyncURIMatcher::regex("^/peers/([0-9a-fA-F-]{36})$"), HTTP_DELETE, PeerController::deletePeer).addMiddleware(&jwtAuth);
   server.on(AsyncURIMatcher::regex("^/topics/([0-9a-fA-F-]{36})$"), HTTP_GET, PeerController::topics).addMiddleware(&jwtAuth);
-  server.on(AsyncURIMatcher::regex("^/topics/([0-9a-fA-F-]{36})$"), HTTP_POST, PeerController::setTopics).addMiddleware(&jwtAuth);
+  server.on(AsyncURIMatcher::regex("^/topics/([0-9a-fA-F-]{36})$"), HTTP_POST, PeerController::addTopic).addMiddleware(&jwtAuth);
+  server.on(AsyncURIMatcher::regex("^/topics/([0-9a-fA-F-]{36})$"), HTTP_DELETE, PeerController::deleteTopic).addMiddleware(&jwtAuth);
 
   server.begin();
 }

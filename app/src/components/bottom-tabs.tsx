@@ -1,6 +1,6 @@
 import { Button, cn, type ButtonProps } from "@heroui/react";
 import {
-  useMatch,
+  useLocation,
   useNavigate,
   type FileRouteTypes,
 } from "@tanstack/react-router";
@@ -20,7 +20,8 @@ function BottomTabsButton({
     icon: IconName;
   }>) {
   const navigate = useNavigate();
-  const isActive = useMatch({ from: path, shouldThrow: false });
+  const { pathname } = useLocation();
+  const isActive = pathname === path;
 
   return (
     <Button

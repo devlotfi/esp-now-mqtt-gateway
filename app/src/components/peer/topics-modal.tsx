@@ -6,10 +6,10 @@ import {
   type UseOverlayStateReturn,
 } from "@heroui/react";
 import type { paths } from "../../__generated__/schema";
-import { Check, InfoIcon, Mails, Plus, Save, Trash } from "lucide-react";
+import { Check, InfoIcon, Mails, Plus, Trash } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { $api } from "../../api/openapi-client";
-import { useContext, useEffect, useState } from "react";
+import { useContext } from "react";
 import { AuthContext } from "../../context/auth-context";
 import LoadingScreen from "../loading-screen";
 import ErrorScreen from "../error-screen";
@@ -18,7 +18,6 @@ import { useFormik } from "formik";
 import * as yup from "yup";
 import ValidatedTextField from "../validated-text-field";
 import { useQueryClient } from "@tanstack/react-query";
-import { sameElements } from "../../utils/same-elements";
 
 interface TopicsModalProps {
   state: UseOverlayStateReturn;
@@ -27,11 +26,35 @@ interface TopicsModalProps {
 
 function TopicComponent({
   topic,
-  deleteTopic,
+  peer,
 }: {
   topic: string;
-  deleteTopic: (topic: string) => void;
+  peer: paths["/peers"]["get"]["responses"]["200"]["content"]["application/json"]["peers"][number];
 }) {
+  const { t } = useTranslation();
+  const { authData } = useContext(AuthContext);
+  if (!authData) throw new Error("Missing auth data");
+  const queryClient = useQueryClient();
+
+  const deleteTopicMutation = $api.useMutation("delete", "/topics/{id}", {
+    onSuccess() {
+      queryClient.resetQueries({
+        queryKey: ["get", "/topics/{id}"],
+      });
+      toast(t("actionSuccess"), {
+        indicator: <Check />,
+        variant: "success",
+      });
+    },
+    onError(error) {
+      console.error(error);
+      toast(`${t("error")}`, {
+        indicator: <InfoIcon />,
+        variant: "danger",
+      });
+    },
+  });
+
   return (
     <Surface className="flex items-center justify-between border border-border rounded-xl p-[0.5rem]">
       <div className="flex">{topic}</div>
@@ -39,8 +62,24 @@ function TopicComponent({
         isIconOnly
         size="sm"
         variant="outline"
+        isPending={deleteTopicMutation.isPending}
         className="text-danger rounded-full"
-        onPress={() => deleteTopic(topic)}
+        onPress={() =>
+          deleteTopicMutation.mutate({
+            params: {
+              path: {
+                id: peer.id,
+              },
+            },
+            body: {
+              topic: topic,
+            },
+            baseUrl: authData.apiUrl,
+            headers: {
+              Authorization: `Bearer ${authData.token}`,
+            },
+          })
+        }
       >
         <Trash></Trash>
       </Button>
@@ -74,14 +113,8 @@ export default function TopicsModal({ state, peer }: TopicsModalProps) {
       refetchOnReconnect: false,
     },
   );
-  const [topics, setTopics] = useState<string[]>([]);
-  useEffect(() => {
-    if (topicsQuery.data?.topicList) {
-      setTopics(topicsQuery.data.topicList);
-    }
-  }, [topicsQuery.data]);
 
-  const setTopicsMutation = $api.useMutation("post", "/topics/{id}", {
+  const addTopicMutation = $api.useMutation("post", "/topics/{id}", {
     onSuccess() {
       queryClient.resetQueries({
         queryKey: ["get", "/topics/{id}"],
@@ -108,9 +141,20 @@ export default function TopicsModal({ state, peer }: TopicsModalProps) {
       topic: yup.string().max(48).required(),
     }),
     onSubmit(values) {
-      if (!topics.includes(values.topic)) {
-        setTopics([...topics, values.topic]);
-      }
+      addTopicMutation.mutate({
+        params: {
+          path: {
+            id: peer.id,
+          },
+        },
+        body: {
+          topic: values.topic,
+        },
+        baseUrl: authData.apiUrl,
+        headers: {
+          Authorization: `Bearer ${authData.token}`,
+        },
+      });
     },
   });
 
@@ -149,6 +193,7 @@ export default function TopicsModal({ state, peer }: TopicsModalProps) {
                         isIconOnly
                         variant="primary"
                         size="sm"
+                        isPending={addTopicMutation.isPending}
                         type="submit"
                         className="rounded-full"
                       >
@@ -158,49 +203,17 @@ export default function TopicsModal({ state, peer }: TopicsModalProps) {
                   ></ValidatedTextField>
                 </form>
 
-                {topics.length ? (
+                {topicsQuery.data?.topicList.length ? (
                   <div className="flex flex-col pt-[1rem]">
                     <div className="flex flex-col gap-[0.5rem]">
-                      {topics.map((topic, index) => (
+                      {topicsQuery.data.topicList.map((topic, index) => (
                         <TopicComponent
                           key={`${index}-${topic}`}
+                          peer={peer}
                           topic={topic}
-                          deleteTopic={(topic) => {
-                            setTopics(topics.filter((it) => it !== topic));
-                          }}
                         ></TopicComponent>
                       ))}
                     </div>
-
-                    {!sameElements(
-                      topics,
-                      topicsQuery.data?.topicList || [],
-                    ) ? (
-                      <Button
-                        fullWidth
-                        isPending={setTopicsMutation.isPending}
-                        className="mt-[1rem]"
-                        onPress={() =>
-                          setTopicsMutation.mutate({
-                            params: {
-                              path: {
-                                id: peer.id,
-                              },
-                            },
-                            body: {
-                              topicList: topics,
-                            },
-                            baseUrl: authData.apiUrl,
-                            headers: {
-                              Authorization: `Bearer ${authData.token}`,
-                            },
-                          })
-                        }
-                      >
-                        {t("save")}
-                        <Save></Save>
-                      </Button>
-                    ) : null}
                   </div>
                 ) : (
                   <div className="flex flex-1 py-[2rem] text-center justify-center items-center flex-col gap-[1rem] px-[0.5rem]">

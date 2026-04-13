@@ -21,6 +21,7 @@
 #define PEER_LIST_SIZE 10
 #define TOPIC_LIST_SIZE 10
 #define TOPIC_SIZE 48
+#define ESP_NOW_TEXT_PAYLOAD_SIZE 1300
 
 // ----------------------
 // Preferences namespace
@@ -43,6 +44,11 @@
 const char *mqtt_uri = "mqtts://x9cb5c45.ala.eu-central-1.emqxsl.com:8883";
 const char *mqtt_user = "test";
 const char *mqtt_password = "test";
+
+// ----------------------
+// ESP-NOW
+// ----------------------
+uint8_t deviceMac[6] = {0x30, 0xAE, 0xA4, 0x11, 0x22, 0x33};
 
 // ----------------------
 // JWT Secret

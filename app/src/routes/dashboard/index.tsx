@@ -34,7 +34,7 @@ function RouteComponent() {
     <>
       <AddPeerModal state={addPeerModalState}></AddPeerModal>
 
-      <div className="flex flex-1 flex-col items-center">
+      <div className="flex flex-1 flex-col items-center md:px-[1rem]">
         <div className="flex flex-1 flex-col max-w-screen-lg w-full">
           <div className="flex justify-between items-center z-10 py-[1rem] px-[2rem]">
             <SectionHeader icon="microchip">{t("peers")}</SectionHeader>

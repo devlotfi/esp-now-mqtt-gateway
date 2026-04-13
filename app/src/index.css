@@ -40,7 +40,7 @@
   }
 
   .tabs__indicator {
-    @apply bg-accent;
+    @apply bg-accent rounded-2xl;
   }
   .tabs__tab[aria-selected="true"] {
     @apply text-accent-foreground;

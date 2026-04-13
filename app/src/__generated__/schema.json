@@ -2,8 +2,8 @@
   "openapi": "3.0.0",
   "info": {
     "title": "ESP32 ESP-NOW Management API",
-    "description": "API for managing ESP-NOW peers, topics, and authentication with detailed error reporting.",
-    "version": "1.1.0"
+    "description": "API for managing ESP-NOW peers, individual topics, and authentication.",
+    "version": "1.2.0"
   },
   "servers": [
     {
@@ -41,20 +41,14 @@
         "type": "object",
         "required": ["token"],
         "properties": {
-          "token": {
-            "type": "string",
-            "description": "JWT authentication token"
-          }
+          "token": { "type": "string" }
         }
       },
       "SetPmkRequest": {
         "type": "object",
         "required": ["pmk"],
         "properties": {
-          "pmk": {
-            "type": "string",
-            "description": "Primary Master Key (hex format)"
-          }
+          "pmk": { "type": "string" }
         }
       },
       "Peer": {
@@ -85,7 +79,14 @@
           "lmk": { "type": "string" }
         }
       },
-      "TopicList": {
+      "TopicItem": {
+        "type": "object",
+        "required": ["topic"],
+        "properties": {
+          "topic": { "type": "string" }
+        }
+      },
+      "TopicListResponse": {
         "type": "object",
         "required": ["topicList"],
         "properties": {
@@ -98,7 +99,7 @@
     },
     "responses": {
       "UnauthorizedError": {
-        "description": "Unauthorized - Missing or invalid JWT token",
+        "description": "Unauthorized",
         "content": {
           "application/json": {
             "schema": { "$ref": "#/components/schemas/Error" },
@@ -106,12 +107,12 @@
           }
         }
       },
-      "InvalidRequestError": {
-        "description": "Bad Request - Invalid parameters or missing fields",
+      "NotFoundError": {
+        "description": "Not Found",
         "content": {
           "application/json": {
             "schema": { "$ref": "#/components/schemas/Error" },
-            "example": { "error": "INVALID_REQUEST" }
+            "example": { "error": "NOT_FOUND" }
           }
         }
       }
@@ -122,7 +123,7 @@
     "/login": {
       "post": {
         "tags": ["Authentication"],
-        "summary": "Authenticate and receive a JWT token",
+        "summary": "Login",
         "security": [],
         "requestBody": {
           "required": true,
@@ -134,16 +135,15 @@
         },
         "responses": {
           "200": {
-            "description": "Successful login",
+            "description": "Success",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/LoginResponse" }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/InvalidRequestError" },
           "403": {
-            "description": "Forbidden - Incorrect password",
+            "description": "Wrong Password",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" },
@@ -157,7 +157,7 @@
     "/set-password": {
       "post": {
         "tags": ["Authentication"],
-        "summary": "Set a new authentication password",
+        "summary": "Update password",
         "requestBody": {
           "required": true,
           "content": {
@@ -167,8 +167,7 @@
           }
         },
         "responses": {
-          "200": { "description": "Password updated successfully" },
-          "400": { "$ref": "#/components/responses/InvalidRequestError" },
+          "200": { "description": "Updated" },
           "401": { "$ref": "#/components/responses/UnauthorizedError" }
         }
       }
@@ -176,7 +175,7 @@
     "/set-pmk": {
       "post": {
         "tags": ["Configuration"],
-        "summary": "Set the Primary Master Key (PMK)",
+        "summary": "Set PMK",
         "requestBody": {
           "required": true,
           "content": {
@@ -186,11 +185,9 @@
           }
         },
         "responses": {
-          "200": { "description": "PMK set successfully" },
-          "400": { "$ref": "#/components/responses/InvalidRequestError" },
-          "401": { "$ref": "#/components/responses/UnauthorizedError" },
+          "200": { "description": "Set" },
           "500": {
-            "description": "Internal Server Error",
+            "description": "ESP_NOW Error",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" },
@@ -204,22 +201,21 @@
     "/peers": {
       "get": {
         "tags": ["Peers"],
-        "summary": "Get list of peers",
+        "summary": "List peers",
         "responses": {
           "200": {
-            "description": "List of peers",
+            "description": "List",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/PeersListResponse" }
               }
             }
-          },
-          "401": { "$ref": "#/components/responses/UnauthorizedError" }
+          }
         }
       },
       "post": {
         "tags": ["Peers"],
-        "summary": "Add a new peer",
+        "summary": "Add peer",
         "requestBody": {
           "required": true,
           "content": {
@@ -229,11 +225,9 @@
           }
         },
         "responses": {
-          "200": { "description": "Peer added successfully" },
-          "400": { "$ref": "#/components/responses/InvalidRequestError" },
-          "401": { "$ref": "#/components/responses/UnauthorizedError" },
+          "200": { "description": "Added" },
           "403": {
-            "description": "Forbidden - Duplicate peer",
+            "description": "Duplicate",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" },
@@ -242,16 +236,11 @@
             }
           },
           "500": {
-            "description": "Server Error",
+            "description": "Limit Reached",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" },
-                "examples": {
-                  "LimitReached": { "value": { "error": "MAX_PEERS_REACHED" } },
-                  "EspNowFail": {
-                    "value": { "error": "CANNOT_ADD_TO_ESP_NOW" }
-                  }
-                }
+                "example": { "error": "MAX_PEERS_REACHED" }
               }
             }
           }
@@ -266,17 +255,12 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "pattern": "^[0-9a-fA-F-]{36}$"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           }
         ],
         "responses": {
           "200": { "description": "Deleted" },
-          "401": { "$ref": "#/components/responses/UnauthorizedError" },
-          "404": { "description": "Not Found" }
+          "404": { "$ref": "#/components/responses/NotFoundError" }
         }
       }
     },
@@ -293,19 +277,19 @@
         ],
         "responses": {
           "200": {
-            "description": "Success",
+            "description": "Topics list",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/TopicList" }
+                "schema": { "$ref": "#/components/schemas/TopicListResponse" }
               }
             }
           },
-          "401": { "$ref": "#/components/responses/UnauthorizedError" },
-          "404": { "description": "Not Found" }
+          "404": { "$ref": "#/components/responses/NotFoundError" }
         }
       },
       "post": {
         "tags": ["Topics"],
+        "summary": "Add single topic",
         "parameters": [
           {
             "name": "id",
@@ -318,15 +302,55 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/TopicList" }
+              "schema": { "$ref": "#/components/schemas/TopicItem" }
             }
           }
         },
         "responses": {
-          "200": { "description": "Topics updated" },
-          "400": { "$ref": "#/components/responses/InvalidRequestError" },
-          "401": { "$ref": "#/components/responses/UnauthorizedError" },
-          "404": { "description": "Not Found" }
+          "200": { "description": "Topic added" },
+          "403": {
+            "description": "Topic exists",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" },
+                "example": { "error": "EXISTS" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFoundError" },
+          "500": {
+            "description": "Max topics",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" },
+                "example": { "error": "MAX_TOPICS_REACHED" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Topics"],
+        "summary": "Delete single topic",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TopicItem" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Topic deleted" },
+          "404": { "$ref": "#/components/responses/NotFoundError" }
         }
       }
     }

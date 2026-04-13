@@ -8,7 +8,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Authenticate and receive a JWT token */
+        /** Login */
         post: {
             parameters: {
                 query?: never;
@@ -22,7 +22,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Successful login */
+                /** @description Success */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -31,8 +31,7 @@ export interface paths {
                         "application/json": components["schemas"]["LoginResponse"];
                     };
                 };
-                400: components["responses"]["InvalidRequestError"];
-                /** @description Forbidden - Incorrect password */
+                /** @description Wrong Password */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -63,7 +62,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Set a new authentication password */
+        /** Update password */
         post: {
             parameters: {
                 query?: never;
@@ -77,14 +76,13 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Password updated successfully */
+                /** @description Updated */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                400: components["responses"]["InvalidRequestError"];
                 401: components["responses"]["UnauthorizedError"];
             };
         };
@@ -103,7 +101,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Set the Primary Master Key (PMK) */
+        /** Set PMK */
         post: {
             parameters: {
                 query?: never;
@@ -117,16 +115,14 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description PMK set successfully */
+                /** @description Set */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                400: components["responses"]["InvalidRequestError"];
-                401: components["responses"]["UnauthorizedError"];
-                /** @description Internal Server Error */
+                /** @description ESP_NOW Error */
                 500: {
                     headers: {
                         [name: string]: unknown;
@@ -155,7 +151,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get list of peers */
+        /** List peers */
         get: {
             parameters: {
                 query?: never;
@@ -165,7 +161,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description List of peers */
+                /** @description List */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -174,11 +170,10 @@ export interface paths {
                         "application/json": components["schemas"]["PeersListResponse"];
                     };
                 };
-                401: components["responses"]["UnauthorizedError"];
             };
         };
         put?: never;
-        /** Add a new peer */
+        /** Add peer */
         post: {
             parameters: {
                 query?: never;
@@ -192,16 +187,14 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Peer added successfully */
+                /** @description Added */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                400: components["responses"]["InvalidRequestError"];
-                401: components["responses"]["UnauthorizedError"];
-                /** @description Forbidden - Duplicate peer */
+                /** @description Duplicate */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -215,12 +208,17 @@ export interface paths {
                         "application/json": components["schemas"]["Error"];
                     };
                 };
-                /** @description Server Error */
+                /** @description Limit Reached */
                 500: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
+                        /**
+                         * @example {
+                         *       "error": "MAX_PEERS_REACHED"
+                         *     }
+                         */
                         "application/json": components["schemas"]["Error"];
                     };
                 };
@@ -260,14 +258,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                401: components["responses"]["UnauthorizedError"];
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
+                404: components["responses"]["NotFoundError"];
             };
         };
         options?: never;
@@ -293,26 +284,20 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Success */
+                /** @description Topics list */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["TopicList"];
+                        "application/json": components["schemas"]["TopicListResponse"];
                     };
                 };
-                401: components["responses"]["UnauthorizedError"];
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
+                404: components["responses"]["NotFoundError"];
             };
         };
         put?: never;
+        /** Add single topic */
         post: {
             parameters: {
                 query?: never;
@@ -324,29 +309,74 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": components["schemas"]["TopicList"];
+                    "application/json": components["schemas"]["TopicItem"];
                 };
             };
             responses: {
-                /** @description Topics updated */
+                /** @description Topic added */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                400: components["responses"]["InvalidRequestError"];
-                401: components["responses"]["UnauthorizedError"];
-                /** @description Not Found */
-                404: {
+                /** @description Topic exists */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        /**
+                         * @example {
+                         *       "error": "EXISTS"
+                         *     }
+                         */
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                404: components["responses"]["NotFoundError"];
+                /** @description Max topics */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        /**
+                         * @example {
+                         *       "error": "MAX_TOPICS_REACHED"
+                         *     }
+                         */
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        /** Delete single topic */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["TopicItem"];
+                };
+            };
+            responses: {
+                /** @description Topic deleted */
+                200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
+                404: components["responses"]["NotFoundError"];
             };
         };
-        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -364,11 +394,9 @@ export interface components {
             password: string;
         };
         LoginResponse: {
-            /** @description JWT authentication token */
             token: string;
         };
         SetPmkRequest: {
-            /** @description Primary Master Key (hex format) */
             pmk: string;
         };
         Peer: {
@@ -385,12 +413,15 @@ export interface components {
             mac: string;
             lmk: string;
         };
-        TopicList: {
+        TopicItem: {
+            topic: string;
+        };
+        TopicListResponse: {
             topicList: string[];
         };
     };
     responses: {
-        /** @description Unauthorized - Missing or invalid JWT token */
+        /** @description Unauthorized */
         UnauthorizedError: {
             headers: {
                 [name: string]: unknown;
@@ -404,15 +435,15 @@ export interface components {
                 "application/json": components["schemas"]["Error"];
             };
         };
-        /** @description Bad Request - Invalid parameters or missing fields */
-        InvalidRequestError: {
+        /** @description Not Found */
+        NotFoundError: {
             headers: {
                 [name: string]: unknown;
             };
             content: {
                 /**
                  * @example {
-                 *       "error": "INVALID_REQUEST"
+                 *       "error": "NOT_FOUND"
                  *     }
                  */
                 "application/json": components["schemas"]["Error"];
