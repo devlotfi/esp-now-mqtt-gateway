@@ -10,9 +10,9 @@
 #include "Properties.h"
 #include "Vars.h"
 #include "Utils.h"
-#include "StaticBufferAllocator.h"
 #include "Data.h"
 #include "Lookup.h"
+#include "EspNow.h"
 
 class AuthController
 {
@@ -100,6 +100,9 @@ public:
       return;
     }
 
+    clearPeers();
+    initPeers();
+
     free(espNowData);
     request->send(200);
   }
@@ -174,7 +177,8 @@ public:
 
     // saving in NVS
     Peer peer;
-    strncpy(peer.name, name, NAME_SIZE);
+    strncpy(peer.name, name, NAME_SIZE - 1);
+    peer.name[NAME_SIZE - 1] = '\0';
     uuid(peer.id);
     macStringToBytes(macStr, peer.mac);
     keyHexToBytes(lmkStr, peer.lmk);
@@ -193,7 +197,6 @@ public:
     {
       free(espNowData);
       Serial.println("ESP-NOW: Cannot add peer");
-      return;
     }
     topicSet.init(espNowData);
     topicToMacsMap.init(espNowData);
@@ -435,8 +438,8 @@ AsyncMiddlewareFunction jwtAuth([](AsyncWebServerRequest *request, ArMiddlewareN
   }
   String header = request->getHeader("Authorization")->value();
   if (!header.startsWith("Bearer ")) {
-    request->send(401);
     request->send(401, "application/json", "{\"error\":\"UNAUTHORIZED\"}");
+    return;
   }
   String token = header.substring(7);
   if (!verifyToken(token.c_str())) {

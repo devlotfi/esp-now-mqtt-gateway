@@ -8,10 +8,6 @@
 #include <NTPClient.h>
 #include <NetworkUdp.h>
 #include <Preferences.h>
-#include <etl/set.h>
-#include <etl/vector.h>
-#include <etl/map.h>
-#include <etl/string.h>
 #include "mqtt_client.h"
 #include "Properties.h"
 

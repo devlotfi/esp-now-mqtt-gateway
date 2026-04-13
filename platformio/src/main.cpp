@@ -5,6 +5,7 @@
 #include "Vars.h"
 #include "Api.h"
 #include "Lookup.h"
+#include "EspNow.h"
 
 void setupStorage()
 {
@@ -69,23 +70,51 @@ static void mqttEventHandler(void *args, esp_event_base_t base,
 
   case MQTT_EVENT_DATA:
   {
-    // ── dispatch incoming commands here ─────────────────────────────
+    if (event->current_data_offset != 0 || event->data_len != event->total_data_len)
+    {
+      Serial.println("MQTT: Chunked message not supported, dropping");
+      break;
+    }
+
     String topic = String(event->topic, event->topic_len);
     String message = String(event->data, event->data_len);
-    Serial.printf("MQTT: topic -> %s, data -> %s\n", topic, message);
+    Serial.printf("MQTT: topic -> %s, data -> %s\n", topic.c_str(), message.c_str());
+
     auto mapping = topicToMacsMap.getMapping(topic.c_str());
     if (mapping == nullptr)
       break;
 
-    // prepare message
-    EspNowMessage espNowMessage;
+    // Build the ESP-NOW frame
+    EspNowMessage espNowMessage = {};
+    espNowMessage.type = MessageType::TEXT_MESSAGE;
+
+    MqttEspNowMessage &mqttMsg = espNowMessage.payload.mqttEspNowMessage;
+    strncpy(mqttMsg.topic, topic.c_str(), TOPIC_SIZE - 1);
+    mqttMsg.topic[TOPIC_SIZE - 1] = '\0';
+
+    size_t textLen = message.length();
+    if (textLen >= ESP_NOW_TEXT_PAYLOAD_SIZE)
+    {
+      Serial.println("ESP-NOW: Message truncated (payload too large)");
+      textLen = ESP_NOW_TEXT_PAYLOAD_SIZE - 1;
+    }
+    memcpy(mqttMsg.text, message.c_str(), textLen);
+    // no null terminator needed — receiver derives length from frame size
+
+    size_t sendSize = offsetof(EspNowMessage, payload) + offsetof(MqttEspNowMessage, text) + textLen; // <-- no +1 anymore
 
     for (size_t i = 0; i < mapping->macSet.count; i++)
     {
-      auto &mac = mapping->macSet.set[i];
-      // send to all subscribed devices
+      char lol[MAC_SIZE_STRING];
+      macBytesToString(mapping->macSet.set[i], lol);
+      Serial.printf("Sending espnow message to %s\n", lol);
+      Serial.printf("topic %s\n", espNowMessage.payload.mqttEspNowMessage.topic);
+      Serial.printf("payload %s\n", espNowMessage.payload.mqttEspNowMessage.text);
+      esp_err_t err = esp_now_send(mapping->macSet.set[i],
+                                   (const uint8_t *)&espNowMessage, sendSize);
+      if (err != ESP_OK)
+        Serial.printf("ESP-NOW: Send failed, err=0x%x\n", err);
     }
-
     break;
   }
 
@@ -161,88 +190,6 @@ void WiFiEvent(arduino_event_id_t event)
   }
 }
 
-enum MessageType
-{
-  TEXT_MESSAGE = 1
-};
-
-struct MqttEspNowMessage
-{
-  uint16_t size;
-  char topic[TOPIC_SIZE];
-  char text[ESP_NOW_TEXT_PAYLOAD_SIZE];
-};
-
-struct EspNowMessage
-{
-  MessageType type;
-  union
-  {
-    MqttEspNowMessage mqttEspNowMessage;
-  } payload;
-};
-
-void onReceive(const esp_now_recv_info_t *info, const uint8_t *data, int len)
-{
-  EspNowMessage incomingMsg;
-
-  // Safety check to ensure we don't overflow our local struct
-  int actualLen = (len > sizeof(EspNowMessage)) ? sizeof(EspNowMessage) : len;
-  memcpy(&incomingMsg, data, actualLen);
-
-  if (incomingMsg.type == MessageType::TEXT_MESSAGE)
-  {
-    Serial.println("------------------------------------------");
-    Serial.printf("Data Length: %d\n", len);
-    Serial.println("Message Content:");
-
-    // Print the payload as a string
-    Serial.println(incomingMsg.payload.mqttEspNowMessage.text);
-    Serial.println("------------------------------------------\n");
-  }
-}
-
-void onSent(const esp_now_send_info_t *tx_info, esp_now_send_status_t status)
-{
-  Serial.print("ESP-NOW: Send status -> ");
-  Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Success" : "Fail");
-}
-
-void initEspNow()
-{
-  WiFi.mode(WIFI_STA);
-  esp_wifi_set_mac(WIFI_IF_STA, deviceMac);
-  esp_wifi_set_channel(1, WIFI_SECOND_CHAN_NONE);
-  if (esp_now_init() != ESP_OK)
-  {
-    Serial.println("ESP-NOW: init failed");
-    return;
-  }
-  esp_now_register_recv_cb(onReceive);
-  esp_now_register_send_cb(onSent);
-}
-
-void initPeers()
-{
-  EspNowData *espNowData = loadEspNowData();
-  for (size_t i = 0; i < espNowData->peerCount; i++)
-  {
-    auto &peer = espNowData->peerList[i];
-    esp_now_peer_info_t peerInfo{};
-    peerInfo.channel = 1;
-    peerInfo.encrypt = true;
-    memcpy(peerInfo.peer_addr, peer.mac, MAC_SIZE_BYTES);
-    memcpy(peerInfo.lmk, peer.lmk, ESP_NOW_KEY_SIZE_BYTES);
-    if (esp_now_add_peer(&peerInfo) != ESP_OK)
-    {
-      free(espNowData);
-      Serial.println("ESP-NOW: Cannot add peer");
-      return;
-    }
-  }
-  free(espNowData);
-}
-
 void setup()
 {
   Serial.begin(115200);
@@ -277,6 +224,22 @@ void setup()
   Serial.println("HTTP-SERVER: Setup started");
   setupServer();
   Serial.println("HTTP-SERVER: Setup completed");
+
+  /* uint8_t reciever[6] = {0x30, 0xAE, 0xA4, 0x11, 0x22, 0x23};
+  esp_now_peer_info_t peerInfo = {};
+  memcpy(peerInfo.peer_addr, reciever, 6);
+  peerInfo.encrypt = true;
+  peerInfo.channel = 1;
+  uint8_t pmk[16];
+  keyHexToBytes("66536886DB697F700F780F3920F690A9", pmk);
+  uint8_t lmk[16];
+  keyHexToBytes("66536886DB697F700F780F3920F690A0", lmk);
+  esp_now_set_pmk(pmk);
+  memcpy(peerInfo.lmk, lmk, 16);
+  if (esp_now_add_peer(&peerInfo) != ESP_OK)
+  {
+    Serial.println("Failed to add peer");
+  } */
 }
 
 void loop()
@@ -288,7 +251,7 @@ void loop()
 
   // ── Periodic MQTT telemetry publish ───────────────────────────────────
   static uint32_t lastPublish = 0;
-  if (!true)
+  if (mqttStarted && (millis() - lastPublish >= 10000) && !true)
   {
     lastPublish = millis();
 
@@ -296,10 +259,10 @@ void loop()
 
     EspNowMessage msg = {};
     msg.type = MessageType::TEXT_MESSAGE;
-    msg.payload.mqttEspNowMessage.size = strlen(txt);
     strcpy(msg.payload.mqttEspNowMessage.text, txt);
     // espnow
     uint8_t reciever[6] = {0x30, 0xAE, 0xA4, 0x11, 0x22, 0x23};
+
     auto result = esp_now_send(reciever, (uint8_t *)&msg, sizeof(msg));
     if (result == ESP_OK)
     {

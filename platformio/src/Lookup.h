@@ -37,7 +37,8 @@ public:
 
         if (!exists)
         {
-          strcpy(set[count], topic);
+          strncpy(set[count], topic, TOPIC_SIZE - 1);
+          set[count][TOPIC_SIZE - 1] = '\0';
           count++;
         }
       }
