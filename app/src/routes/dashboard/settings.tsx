@@ -1,37 +1,6 @@
-import {
-  Button,
-  Card,
-  Label,
-  ListBox,
-  Select,
-  Skeleton,
-  toast,
-} from "@heroui/react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ThemeContext } from "../../context/theme-context";
-import { ThemeOptions } from "../../types/theme-options";
-import {
-  Check,
-  Computer,
-  Eye,
-  EyeOff,
-  InfoIcon,
-  Moon,
-  RefreshCw,
-  Save,
-  Sun,
-} from "lucide-react";
 import SectionHeader from "../../components/section-header";
-import { SectionTitle } from "../../components/section-title";
-import { renderFlag } from "../../utils/render-flag";
-import { useFormik } from "formik";
-import * as yup from "yup";
-import { $api } from "../../api/openapi-client";
-import ValidatedTextField from "../../components/validated-text-field";
-import { AuthContext } from "../../context/auth-context";
-import { generateEspNowKey } from "../../utils/generate-esp-now-key";
 import DisplaySettings from "../../components/settings/display-settings";
 import PMKSettings from "../../components/settings/pmk-settings";
 import PasswordSettings from "../../components/settings/password-settings";

@@ -20,7 +20,7 @@ export default function NotificationsSettings() {
       apiUrl: yup.string().url().required(),
       apiSecret: yup.string().required(),
     }),
-    onSubmit(values) {},
+    onSubmit() {},
   });
 
   const [isVisible, setIsVisible] = useState(false);

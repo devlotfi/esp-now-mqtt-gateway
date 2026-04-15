@@ -9,7 +9,8 @@
 
 enum MessageType
 {
-  TEXT_MESSAGE = 1
+  TEXT_MESSAGE = 1,
+  NOTIFICATION_MESSAGE = 2
 };
 
 struct __attribute__((packed)) MqttEspNowMessage
