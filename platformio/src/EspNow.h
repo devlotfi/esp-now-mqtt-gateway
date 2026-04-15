@@ -12,53 +12,61 @@ enum MessageType
   TEXT_MESSAGE = 1
 };
 
-struct MqttEspNowMessage
+struct __attribute__((packed)) MqttEspNowMessage
 {
   char topic[TOPIC_SIZE];
-  char text[ESP_NOW_TEXT_PAYLOAD_SIZE];
+  char text[MQTT_MESSAGE_TEXT_PAYLOAD_SIZE];
 };
 
-struct EspNowMessage
+struct __attribute__((packed)) NotificationEspNowMessage
+{
+  char title[NOTIFICATION_TITLE_SIZE];
+  char body[NOTIFICATION_BODY_SIZE];
+};
+
+struct __attribute__((packed)) EspNowMessage
 {
   MessageType type;
   union
   {
     MqttEspNowMessage mqttEspNowMessage;
+    NotificationEspNowMessage notificationEspNowMessage;
   } payload;
 };
 
 void onReceive(const esp_now_recv_info_t *info, const uint8_t *data, int len)
 {
-  if (!data || len < (int)sizeof(MessageType))
+  if (!data || len != sizeof(EspNowMessage))
+  {
+    Serial.println("ESP-NOW: Invalid frame size");
     return;
+  }
 
   const EspNowMessage *msg = reinterpret_cast<const EspNowMessage *>(data);
 
   switch (msg->type)
   {
-  case MessageType::TEXT_MESSAGE:
+  case TEXT_MESSAGE:
   {
-    constexpr int kHeaderSize = (int)(offsetof(EspNowMessage, payload) + offsetof(MqttEspNowMessage, text));
-    if (len < kHeaderSize)
-    {
-      Serial.println("ESP-NOW: Frame too short, dropping");
-      return;
-    }
-
     const MqttEspNowMessage &mqttMsg = msg->payload.mqttEspNowMessage;
 
     char safeTopic[TOPIC_SIZE];
     memcpy(safeTopic, mqttMsg.topic, TOPIC_SIZE - 1);
     safeTopic[TOPIC_SIZE - 1] = '\0';
 
-    int textLen = len - kHeaderSize;
-    esp_mqtt_client_publish(mqttClient, safeTopic, mqttMsg.text, textLen, 1, 0);
+    esp_mqtt_client_publish(
+        mqttClient,
+        safeTopic,
+        mqttMsg.text,
+        0,
+        1,
+        0);
+
     break;
   }
 
   default:
-    Serial.printf("ESP-NOW: Unknown type %d, dropping\n", msg->type);
-    break;
+    Serial.printf("ESP-NOW: Unknown type %d\n", msg->type);
   }
 }
 

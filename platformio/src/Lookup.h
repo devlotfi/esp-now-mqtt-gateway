@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include "Properties.h"
-#include "Data.h"
+#include "NvsData.h"
 
 class TopicSet
 {

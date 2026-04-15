@@ -32,8 +32,10 @@ export const AR: AppTranslation = {
   language: "اللغة",
 
   display: "العرض",
-  test: "اختبار",
-  apiUrl: "رابط الـ API",
+  notifications: "الإشعارات",
+  test: "تجربة",
+  apiUrl: "رابط API",
+  apiSecret: "سر API",
   actionSuccess: "تمت العملية بنجاح",
   error: "خطأ",
   deleteConfirmation: "هل أنت متأكد أنك تريد الحذف؟",

@@ -32,8 +32,10 @@ export const FR: AppTranslation = {
   language: "Langue",
 
   display: "Affichage",
-  test: "Test",
-  apiUrl: "URL de l’API",
+  notifications: "Notifications",
+  test: "Tester",
+  apiUrl: "URL de l'API",
+  apiSecret: "Secret de l'API",
   actionSuccess: "Action réussie",
   error: "Erreur",
   deleteConfirmation: "Voulez-vous vraiment supprimer ?",

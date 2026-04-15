@@ -30,8 +30,10 @@ export interface AppTranslation {
   language: string;
 
   display: string;
+  notifications: string;
   test: string;
   apiUrl: string;
+  apiSecret: string;
   actionSuccess: string;
   error: string;
   deleteConfirmation: string;

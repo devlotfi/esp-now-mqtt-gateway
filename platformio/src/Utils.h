@@ -394,3 +394,59 @@ void uuid(char uuid[37])
           data[8], data[9],
           data[10], data[11], data[12], data[13], data[14], data[15]);
 }
+
+static bool isValidUrl(const char *url)
+{
+  if (!url)
+    return false;
+
+  size_t len = strlen(url);
+  if (len < 10 || len > 200)
+    return false;
+
+  // Must start with http:// or https://
+  if (strncmp(url, "http://", 7) != 0 &&
+      strncmp(url, "https://", 8) != 0)
+    return false;
+
+  const char *p = strstr(url, "://");
+  if (!p)
+    return false;
+
+  p += 3; // skip ://
+
+  // Host must exist
+  if (*p == '\0')
+    return false;
+
+  while (*p && *p != '/' && *p != ':')
+  {
+    char c = *p;
+
+    if (!(
+            (c >= 'a' && c <= 'z') ||
+            (c >= 'A' && c <= 'Z') ||
+            (c >= '0' && c <= '9') ||
+            c == '.' || c == '-'))
+      return false;
+
+    p++;
+  }
+
+  // Optional port
+  if (*p == ':')
+  {
+    p++;
+    if (!isdigit(*p))
+      return false;
+
+    while (*p && *p != '/')
+    {
+      if (!isdigit(*p))
+        return false;
+      p++;
+    }
+  }
+
+  return true;
+}
