@@ -10,13 +10,48 @@
 #include "Properties.h"
 #include "Vars.h"
 #include "Utils.h"
-#include "NvsData.h"
+#include "preferences/EspNow.h"
 #include "Lookup.h"
 #include "EspNow.h"
 
-class PeerController
+class EspNowController
 {
 public:
+  static void setPMK(AsyncWebServerRequest *request, ArduinoJson::JsonVariant &json)
+  {
+    if (
+        !json["pmk"].is<const char *>())
+    {
+      request->send(400, "application/json", "{\"error\":\"INVALID_REQUEST\"}");
+      return;
+    }
+    const char *pmkStr = json["pmk"].as<const char *>();
+    if (!isValidEspNowKey(pmkStr))
+    {
+      request->send(400, "application/json", "{\"error\":\"INVALID_REQUEST\"}");
+      return;
+    }
+
+    EspNowData *espNowData = loadEspNowData();
+    espNowData->pmkSet = true;
+    keyHexToBytes(pmkStr, espNowData->pmk);
+    saveEspNowData(espNowData);
+
+    esp_err_t result = esp_now_set_pmk(espNowData->pmk);
+    if (result != ESP_OK)
+    {
+      free(espNowData);
+      request->send(500, "application/json", "{\"error\":\"CANNOT_SET_PMK_TO_ESP_NOW\"}");
+      return;
+    }
+
+    clearPeers();
+    initPeers();
+
+    free(espNowData);
+    request->send(200);
+  }
+
   static void peers(AsyncWebServerRequest *request)
   {
     EspNowData *espNowData = loadEspNowData();

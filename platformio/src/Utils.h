@@ -450,3 +450,22 @@ static bool isValidUrl(const char *url)
 
   return true;
 }
+
+void delayedRestart()
+{
+  xTaskCreatePinnedToCoreWithCaps(
+      [](void *param)
+      {
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        Serial.println("Rebooting now...");
+        esp_restart();
+        vTaskDelete(NULL);
+      },
+      "reboot_task",
+      2048,
+      NULL,
+      1,
+      NULL,
+      1,
+      MALLOC_CAP_INTERNAL);
+}

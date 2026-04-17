@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include "Properties.h"
-#include "NvsData.h"
+#include "preferences/EspNow.h"
 
 class TopicSet
 {

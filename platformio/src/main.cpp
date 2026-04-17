@@ -7,10 +7,19 @@
 #include "Lookup.h"
 #include "Mqtt.h"
 #include "EspNow.h"
+#include "TempSensor.h"
 
 void setupStorage()
 {
   preferences.begin(PREFERENCES_NAMESAPCE, false);
+}
+
+void setupLookup()
+{
+  EspNowData *espNowData = loadEspNowData();
+  topicSet.init(espNowData);
+  topicToMacsMap.init(espNowData);
+  free(espNowData);
 }
 
 void syncTime()
@@ -37,14 +46,6 @@ void syncTime()
   {
     Serial.println("\nNTP sync failed.");
   }
-}
-
-void setupLookup()
-{
-  EspNowData *espNowData = loadEspNowData();
-  topicSet.init(espNowData);
-  topicToMacsMap.init(espNowData);
-  free(espNowData);
 }
 
 void WiFiEvent(arduino_event_id_t event)
@@ -93,11 +94,16 @@ void setup()
   Serial.begin(115200);
 
   // NVS setup
+  Serial.println("TEMP-SENSOR: Setup started");
+  setupTempSensor();
+  Serial.println("TEMP-SENSOR: Setup completed");
+
+  // NVS setup
   Serial.println("NVS: Setup started");
   setupStorage();
   Serial.println("NVS: Setup completed");
 
-  // NVS setup
+  // Lookup setup
   Serial.println("LOOKUP: Setup started");
   setupLookup();
   Serial.println("LOOKUP: Setup completed");

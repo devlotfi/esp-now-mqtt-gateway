@@ -10,12 +10,12 @@
 #include "Properties.h"
 #include "Vars.h"
 #include "Utils.h"
-#include "NvsData.h"
 #include "Lookup.h"
 #include "EspNow.h"
 #include "controllers/AuthController.h"
 #include "controllers/NotificationsController.h"
-#include "controllers/PeerController.h"
+#include "controllers/EspNowController.h"
+#include "controllers/DeviceController.h"
 #include "middlewares/JwtMiddleware.h"
 
 static AsyncCorsMiddleware cors;
@@ -29,19 +29,22 @@ void setupServer()
   cors.setAllowCredentials(false);
   server.addMiddleware(&cors);
 
-  server.on(AsyncURIMatcher::exact("/login"), HTTP_POST, AuthController::login);
-  server.on(AsyncURIMatcher::exact("/set-password"), HTTP_POST, AuthController::setPassword).addMiddleware(&jwtAuth);
-  server.on(AsyncURIMatcher::exact("/set-pmk"), HTTP_POST, AuthController::setPMK).addMiddleware(&jwtAuth);
+  server.on(AsyncURIMatcher::exact("/api/device/reboot"), HTTP_GET, DeviceController::reboot).addMiddleware(&jwtAuth);
+  server.on(AsyncURIMatcher::exact("/api/device/status"), HTTP_GET, DeviceController::status).addMiddleware(&jwtAuth);
 
-  server.on(AsyncURIMatcher::exact("/notifications"), HTTP_POST, NotificationsController::configure).addMiddleware(&jwtAuth);
-  server.on(AsyncURIMatcher::exact("/notifications/test"), HTTP_POST, NotificationsController::test).addMiddleware(&jwtAuth);
+  server.on(AsyncURIMatcher::exact("/api/auth/login"), HTTP_POST, AuthController::login);
+  server.on(AsyncURIMatcher::exact("/api/auth/set-password"), HTTP_POST, AuthController::setPassword).addMiddleware(&jwtAuth);
 
-  server.on(AsyncURIMatcher::exact("/peers"), HTTP_GET, PeerController::peers).addMiddleware(&jwtAuth);
-  server.on(AsyncURIMatcher::exact("/peers"), HTTP_POST, PeerController::addPeer).addMiddleware(&jwtAuth);
-  server.on(AsyncURIMatcher::regex("^/peers/([0-9a-fA-F-]{36})$"), HTTP_DELETE, PeerController::deletePeer).addMiddleware(&jwtAuth);
-  server.on(AsyncURIMatcher::regex("^/topics/([0-9a-fA-F-]{36})$"), HTTP_GET, PeerController::topics).addMiddleware(&jwtAuth);
-  server.on(AsyncURIMatcher::regex("^/topics/([0-9a-fA-F-]{36})$"), HTTP_POST, PeerController::addTopic).addMiddleware(&jwtAuth);
-  server.on(AsyncURIMatcher::regex("^/topics/([0-9a-fA-F-]{36})$"), HTTP_DELETE, PeerController::deleteTopic).addMiddleware(&jwtAuth);
+  server.on(AsyncURIMatcher::exact("/api/notifications"), HTTP_POST, NotificationsController::configure).addMiddleware(&jwtAuth);
+  server.on(AsyncURIMatcher::exact("/api/notifications/test"), HTTP_POST, NotificationsController::test).addMiddleware(&jwtAuth);
+
+  server.on(AsyncURIMatcher::exact("/api/esp-now/set-pmk"), HTTP_POST, EspNowController::setPMK).addMiddleware(&jwtAuth);
+  server.on(AsyncURIMatcher::exact("/api/esp-now/peers"), HTTP_GET, EspNowController::peers).addMiddleware(&jwtAuth);
+  server.on(AsyncURIMatcher::exact("/api/esp-now/peers"), HTTP_POST, EspNowController::addPeer).addMiddleware(&jwtAuth);
+  server.on(AsyncURIMatcher::regex("^/api/esp-now/peers/([0-9a-fA-F-]{36})$"), HTTP_DELETE, EspNowController::deletePeer).addMiddleware(&jwtAuth);
+  server.on(AsyncURIMatcher::regex("^/api/esp-now/topics/([0-9a-fA-F-]{36})$"), HTTP_GET, EspNowController::topics).addMiddleware(&jwtAuth);
+  server.on(AsyncURIMatcher::regex("^/api/esp-now/topics/([0-9a-fA-F-]{36})$"), HTTP_POST, EspNowController::addTopic).addMiddleware(&jwtAuth);
+  server.on(AsyncURIMatcher::regex("^/api/esp-now/topics/([0-9a-fA-F-]{36})$"), HTTP_DELETE, EspNowController::deleteTopic).addMiddleware(&jwtAuth);
 
   server.begin();
 }

@@ -10,11 +10,8 @@
 #include "Properties.h"
 #include "Vars.h"
 #include "Utils.h"
-#include "NvsData.h"
 #include "Lookup.h"
 #include "EspNow.h"
-#include "controllers/AuthController.h"
-#include "controllers/PeerController.h"
 
 AsyncMiddlewareFunction jwtAuth([](AsyncWebServerRequest *request, ArMiddlewareNext next)
                                 {
