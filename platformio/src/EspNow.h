@@ -83,6 +83,7 @@ void initEspNow()
   WiFi.mode(WIFI_STA);
   esp_wifi_set_mac(WIFI_IF_STA, deviceMac);
   esp_wifi_set_channel(1, WIFI_SECOND_CHAN_NONE);
+  esp_wifi_set_ps(WIFI_PS_NONE);
   if (esp_now_init() != ESP_OK)
   {
     Serial.println("ESP-NOW: init failed");

@@ -38,12 +38,12 @@
 // ----------------------
 // W5500 Pin Configuration
 // ----------------------
-#define WIZNET_CS_PIN 25
-#define WIZNET_RESET_PIN 33
-#define WIZNET_MISO_PIN 27
-#define WIZNET_MOSI_PIN 26
-#define WIZNET_SCLK_PIN 14
-#define WIZNET_INT_PIN 4
+#define WIZNET_CS_PIN 10
+#define WIZNET_RESET_PIN 9
+#define WIZNET_MISO_PIN 13
+#define WIZNET_MOSI_PIN 11
+#define WIZNET_SCLK_PIN 12
+#define WIZNET_INT_PIN 15
 
 // ----------------------
 // MQTT credentials
