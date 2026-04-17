@@ -8,7 +8,7 @@
 #include "Mqtt.h"
 #include "EspNow.h"
 #include "TempSensor.h"
-#include "NetworkInterface.h"
+#include "NetworkSetup.h"
 
 void setupStorage()
 {

@@ -21,7 +21,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 interface TopicsModalProps {
   state: UseOverlayStateReturn;
-  peer: paths["/peers"]["get"]["responses"]["200"]["content"]["application/json"]["peers"][number];
+  peer: paths["/api/esp-now/peers"]["get"]["responses"]["200"]["content"]["application/json"]["peers"][number];
 }
 
 function TopicComponent({
@@ -29,31 +29,35 @@ function TopicComponent({
   peer,
 }: {
   topic: string;
-  peer: paths["/peers"]["get"]["responses"]["200"]["content"]["application/json"]["peers"][number];
+  peer: paths["/api/esp-now/peers"]["get"]["responses"]["200"]["content"]["application/json"]["peers"][number];
 }) {
   const { t } = useTranslation();
   const { authData } = useContext(AuthContext);
   if (!authData) throw new Error("Missing auth data");
   const queryClient = useQueryClient();
 
-  const deleteTopicMutation = $api.useMutation("delete", "/topics/{id}", {
-    onSuccess() {
-      queryClient.resetQueries({
-        queryKey: ["get", "/topics/{id}"],
-      });
-      toast(t("actionSuccess"), {
-        indicator: <Check />,
-        variant: "success",
-      });
+  const deleteTopicMutation = $api.useMutation(
+    "delete",
+    "/api/esp-now/topics/{id}",
+    {
+      onSuccess() {
+        queryClient.resetQueries({
+          queryKey: ["get", "/api/esp-now/topics/{id}"],
+        });
+        toast(t("actionSuccess"), {
+          indicator: <Check />,
+          variant: "success",
+        });
+      },
+      onError(error) {
+        console.error(error);
+        toast(`${t("error")}`, {
+          indicator: <InfoIcon />,
+          variant: "danger",
+        });
+      },
     },
-    onError(error) {
-      console.error(error);
-      toast(`${t("error")}`, {
-        indicator: <InfoIcon />,
-        variant: "danger",
-      });
-    },
-  });
+  );
 
   return (
     <Surface className="flex items-center justify-between border border-border rounded-xl p-[0.5rem]">
@@ -95,7 +99,7 @@ export default function TopicsModal({ state, peer }: TopicsModalProps) {
 
   const topicsQuery = $api.useQuery(
     "get",
-    "/topics/{id}",
+    "/api/esp-now/topics/{id}",
     {
       params: {
         path: {
@@ -114,24 +118,28 @@ export default function TopicsModal({ state, peer }: TopicsModalProps) {
     },
   );
 
-  const addTopicMutation = $api.useMutation("post", "/topics/{id}", {
-    onSuccess() {
-      queryClient.resetQueries({
-        queryKey: ["get", "/topics/{id}"],
-      });
-      toast(t("actionSuccess"), {
-        indicator: <Check />,
-        variant: "success",
-      });
+  const addTopicMutation = $api.useMutation(
+    "post",
+    "/api/esp-now/topics/{id}",
+    {
+      onSuccess() {
+        queryClient.resetQueries({
+          queryKey: ["get", "/api/esp-now/topics/{id}"],
+        });
+        toast(t("actionSuccess"), {
+          indicator: <Check />,
+          variant: "success",
+        });
+      },
+      onError(error) {
+        console.error(error);
+        toast(`${t("error")}`, {
+          indicator: <InfoIcon />,
+          variant: "danger",
+        });
+      },
     },
-    onError(error) {
-      console.error(error);
-      toast(`${t("error")}`, {
-        indicator: <InfoIcon />,
-        variant: "danger",
-      });
-    },
-  });
+  );
 
   const formik = useFormik({
     initialValues: {

@@ -14,7 +14,7 @@ import { AuthContext } from "../../context/auth-context";
 
 interface DeletePeerModalProps {
   state: UseOverlayStateReturn;
-  peer: paths["/peers"]["get"]["responses"]["200"]["content"]["application/json"]["peers"][number];
+  peer: paths["/api/esp-now/peers"]["get"]["responses"]["200"]["content"]["application/json"]["peers"][number];
 }
 
 export default function DeletePeerModal({ state, peer }: DeletePeerModalProps) {
@@ -23,20 +23,24 @@ export default function DeletePeerModal({ state, peer }: DeletePeerModalProps) {
   if (!authData) throw new Error("Missing auth data");
   const queryClient = useQueryClient();
 
-  const { mutate, isPending } = $api.useMutation("delete", "/peers/{id}", {
-    onError() {
-      toast(t("error"), {
-        indicator: <InfoIcon />,
-        variant: "danger",
-      });
+  const { mutate, isPending } = $api.useMutation(
+    "delete",
+    "/api/esp-now/peers/{id}",
+    {
+      onError() {
+        toast(t("error"), {
+          indicator: <InfoIcon />,
+          variant: "danger",
+        });
+      },
+      onSuccess() {
+        queryClient.resetQueries({
+          queryKey: ["get", "/api/esp-now/peers"],
+        });
+        state.close();
+      },
     },
-    onSuccess() {
-      queryClient.resetQueries({
-        queryKey: ["get", "/peers"],
-      });
-      state.close();
-    },
-  });
+  );
 
   return (
     <Modal.Backdrop

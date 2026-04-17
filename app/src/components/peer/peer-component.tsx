@@ -7,7 +7,7 @@ import DeletePeerModal from "./delete-peer-modal";
 import TopicsModal from "./topics-modal";
 
 interface PeerComponentProps {
-  peer: paths["/peers"]["get"]["responses"]["200"]["content"]["application/json"]["peers"][number];
+  peer: paths["/api/esp-now/peers"]["get"]["responses"]["200"]["content"]["application/json"]["peers"][number];
 }
 
 export default function PeerComponent({ peer }: PeerComponentProps) {

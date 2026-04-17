@@ -180,7 +180,7 @@ function RouteComponent() {
   const { authData, setAuthData } = useContext(AuthContext);
   const { t } = useTranslation();
 
-  const { mutate, isPending } = $api.useMutation("post", "/login", {
+  const { mutate, isPending } = $api.useMutation("post", "/api/auth/login", {
     onSuccess(data) {
       if (data.token) {
         localStorage.setItem(

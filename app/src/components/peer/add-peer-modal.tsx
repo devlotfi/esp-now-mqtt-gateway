@@ -27,7 +27,7 @@ export default function AddPeerModal({ state }: AddPeerModalProps) {
   if (!authData) throw new Error("Missing auth data");
   const queryClient = useQueryClient();
 
-  const { mutate, isPending } = $api.useMutation("post", "/peers", {
+  const { mutate, isPending } = $api.useMutation("post", "/api/esp-now/peers", {
     onError() {
       toast(t("error"), {
         indicator: <InfoIcon />,
@@ -36,7 +36,7 @@ export default function AddPeerModal({ state }: AddPeerModalProps) {
     },
     onSuccess() {
       queryClient.resetQueries({
-        queryKey: ["get", "/peers"],
+        queryKey: ["get", "/api/esp-now/peers"],
       });
       state.close();
     },

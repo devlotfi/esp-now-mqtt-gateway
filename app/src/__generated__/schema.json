@@ -1,9 +1,9 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "ESP32 ESP-NOW Management API",
-    "description": "API for managing ESP-NOW peers, individual topics, and authentication.",
-    "version": "1.2.0"
+    "title": "ESP32 Management API",
+    "description": "API for managing ESP32 device status, networking, ESP-NOW peers, notifications, and authentication.",
+    "version": "2.0.0"
   },
   "servers": [
     {
@@ -24,10 +24,7 @@
         "type": "object",
         "required": ["error"],
         "properties": {
-          "error": {
-            "type": "string",
-            "example": "INVALID_REQUEST"
-          }
+          "error": { "type": "string", "example": "INVALID_REQUEST" }
         }
       },
       "PasswordRequest": {
@@ -42,6 +39,84 @@
         "required": ["token"],
         "properties": {
           "token": { "type": "string" }
+        }
+      },
+      "DeviceStatusResponse": {
+        "type": "object",
+        "properties": {
+          "heap": {
+            "type": "object",
+            "properties": {
+              "freeHeap": { "type": "integer" },
+              "heapSize": { "type": "integer" },
+              "minFreeHeap": { "type": "integer" },
+              "maxAllocHeap": { "type": "integer" }
+            }
+          },
+          "psram": {
+            "type": "object",
+            "properties": {
+              "freePsram": { "type": "integer" },
+              "psramSize": { "type": "integer" },
+              "minFreePsram": { "type": "integer" },
+              "maxAllocPsram": { "type": "integer" }
+            }
+          },
+          "storage": {
+            "type": "object",
+            "properties": {
+              "flashChipSize": { "type": "integer" },
+              "freeSketchSpace": { "type": "integer" }
+            }
+          },
+          "ethernet": {
+            "type": "object",
+            "properties": {
+              "localIP": { "type": "string" },
+              "macAddress": { "type": "string" },
+              "linkUp": { "type": "boolean" },
+              "linkSpeed": { "type": "integer" },
+              "fullDuplex": { "type": "boolean" }
+            }
+          },
+          "general": {
+            "type": "object",
+            "properties": {
+              "uptime": { "type": "integer" },
+              "cpuTemp": { "type": "number", "nullable": true }
+            }
+          }
+        }
+      },
+      "NetworkIPRequest": {
+        "type": "object",
+        "required": ["ipAssignment"],
+        "properties": {
+          "ipAssignment": { "type": "string", "enum": ["DHCP", "STATIC"] },
+          "staticConfig": {
+            "type": "object",
+            "properties": {
+              "ip": { "type": "string" },
+              "gateway": { "type": "string" },
+              "subnet": { "type": "string" },
+              "dns": { "type": "string" }
+            }
+          }
+        }
+      },
+      "NotificationsConfigRequest": {
+        "type": "object",
+        "required": ["apiUrl", "apiSecret"],
+        "properties": {
+          "apiUrl": { "type": "string", "format": "uri" },
+          "apiSecret": { "type": "string" }
+        }
+      },
+      "SetMacRequest": {
+        "type": "object",
+        "required": ["mac"],
+        "properties": {
+          "mac": { "type": "string" }
         }
       },
       "SetPmkRequest": {
@@ -120,7 +195,7 @@
   },
   "security": [{ "bearerAuth": [] }],
   "paths": {
-    "/login": {
+    "/api/auth/login": {
       "post": {
         "tags": ["Authentication"],
         "summary": "Login",
@@ -142,6 +217,7 @@
               }
             }
           },
+          "400": { "description": "Invalid Request" },
           "403": {
             "description": "Wrong Password",
             "content": {
@@ -154,7 +230,7 @@
         }
       }
     },
-    "/set-password": {
+    "/api/auth/set-password": {
       "post": {
         "tags": ["Authentication"],
         "summary": "Update password",
@@ -172,10 +248,109 @@
         }
       }
     },
-    "/set-pmk": {
+    "/api/device/reboot": {
+      "get": {
+        "tags": ["Device"],
+        "summary": "Reboot the device",
+        "responses": {
+          "200": { "description": "Reboot initiated" },
+          "401": { "$ref": "#/components/responses/UnauthorizedError" }
+        }
+      }
+    },
+    "/api/device/status": {
+      "get": {
+        "tags": ["Device"],
+        "summary": "Get device status and telemetry",
+        "responses": {
+          "200": {
+            "description": "Device status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceStatusResponse"
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/UnauthorizedError" }
+        }
+      }
+    },
+    "/api/network/ip": {
       "post": {
-        "tags": ["Configuration"],
-        "summary": "Set PMK",
+        "tags": ["Network"],
+        "summary": "Configure IP assignment (DHCP/Static)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/NetworkIPRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Network configured" },
+          "400": { "description": "Invalid IP config or format" },
+          "401": { "$ref": "#/components/responses/UnauthorizedError" }
+        }
+      }
+    },
+    "/api/notifications": {
+      "post": {
+        "tags": ["Notifications"],
+        "summary": "Configure webhook/API notifications",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotificationsConfigRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Configured" },
+          "400": { "description": "Invalid URL or Request" },
+          "401": { "$ref": "#/components/responses/UnauthorizedError" }
+        }
+      }
+    },
+    "/api/notifications/test": {
+      "post": {
+        "tags": ["Notifications"],
+        "summary": "Send a test notification",
+        "responses": {
+          "200": { "description": "Test sent" },
+          "401": { "$ref": "#/components/responses/UnauthorizedError" },
+          "404": { "$ref": "#/components/responses/NotFoundError" }
+        }
+      }
+    },
+    "/api/esp-now/set-mac": {
+      "post": {
+        "tags": ["ESP-NOW Configuration"],
+        "summary": "Set custom MAC address",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SetMacRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "MAC address set" },
+          "400": { "description": "Invalid MAC" },
+          "401": { "$ref": "#/components/responses/UnauthorizedError" }
+        }
+      }
+    },
+    "/api/esp-now/set-pmk": {
+      "post": {
+        "tags": ["ESP-NOW Configuration"],
+        "summary": "Set Primary Master Key (PMK)",
         "requestBody": {
           "required": true,
           "content": {
@@ -185,22 +360,16 @@
           }
         },
         "responses": {
-          "200": { "description": "Set" },
-          "500": {
-            "description": "ESP_NOW Error",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" },
-                "example": { "error": "CANNOT_SET_PMK_TO_ESP_NOW" }
-              }
-            }
-          }
+          "200": { "description": "PMK set" },
+          "400": { "description": "Invalid key" },
+          "401": { "$ref": "#/components/responses/UnauthorizedError" },
+          "500": { "description": "ESP_NOW Error" }
         }
       }
     },
-    "/peers": {
+    "/api/esp-now/peers": {
       "get": {
-        "tags": ["Peers"],
+        "tags": ["ESP-NOW Peers"],
         "summary": "List peers",
         "responses": {
           "200": {
@@ -210,11 +379,12 @@
                 "schema": { "$ref": "#/components/schemas/PeersListResponse" }
               }
             }
-          }
+          },
+          "401": { "$ref": "#/components/responses/UnauthorizedError" }
         }
       },
       "post": {
-        "tags": ["Peers"],
+        "tags": ["ESP-NOW Peers"],
         "summary": "Add peer",
         "requestBody": {
           "required": true,
@@ -226,30 +396,16 @@
         },
         "responses": {
           "200": { "description": "Added" },
-          "403": {
-            "description": "Duplicate",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" },
-                "example": { "error": "EXISTS" }
-              }
-            }
-          },
-          "500": {
-            "description": "Limit Reached",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" },
-                "example": { "error": "MAX_PEERS_REACHED" }
-              }
-            }
-          }
+          "400": { "description": "Invalid Request" },
+          "401": { "$ref": "#/components/responses/UnauthorizedError" },
+          "403": { "description": "Duplicate" },
+          "500": { "description": "Limit Reached" }
         }
       }
     },
-    "/peers/{id}": {
+    "/api/esp-now/peers/{id}": {
       "delete": {
-        "tags": ["Peers"],
+        "tags": ["ESP-NOW Peers"],
         "parameters": [
           {
             "name": "id",
@@ -260,13 +416,14 @@
         ],
         "responses": {
           "200": { "description": "Deleted" },
+          "401": { "$ref": "#/components/responses/UnauthorizedError" },
           "404": { "$ref": "#/components/responses/NotFoundError" }
         }
       }
     },
-    "/topics/{id}": {
+    "/api/esp-now/topics/{id}": {
       "get": {
-        "tags": ["Topics"],
+        "tags": ["ESP-NOW Topics"],
         "parameters": [
           {
             "name": "id",
@@ -284,11 +441,12 @@
               }
             }
           },
+          "401": { "$ref": "#/components/responses/UnauthorizedError" },
           "404": { "$ref": "#/components/responses/NotFoundError" }
         }
       },
       "post": {
-        "tags": ["Topics"],
+        "tags": ["ESP-NOW Topics"],
         "summary": "Add single topic",
         "parameters": [
           {
@@ -308,29 +466,15 @@
         },
         "responses": {
           "200": { "description": "Topic added" },
-          "403": {
-            "description": "Topic exists",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" },
-                "example": { "error": "EXISTS" }
-              }
-            }
-          },
+          "400": { "description": "Invalid Request" },
+          "401": { "$ref": "#/components/responses/UnauthorizedError" },
+          "403": { "description": "Topic exists" },
           "404": { "$ref": "#/components/responses/NotFoundError" },
-          "500": {
-            "description": "Max topics",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" },
-                "example": { "error": "MAX_TOPICS_REACHED" }
-              }
-            }
-          }
+          "500": { "description": "Max topics" }
         }
       },
       "delete": {
-        "tags": ["Topics"],
+        "tags": ["ESP-NOW Topics"],
         "summary": "Delete single topic",
         "parameters": [
           {
@@ -350,6 +494,8 @@
         },
         "responses": {
           "200": { "description": "Topic deleted" },
+          "400": { "description": "Invalid Request" },
+          "401": { "$ref": "#/components/responses/UnauthorizedError" },
           "404": { "$ref": "#/components/responses/NotFoundError" }
         }
       }

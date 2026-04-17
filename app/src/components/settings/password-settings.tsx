@@ -14,21 +14,25 @@ export default function PasswordSettings() {
   const { authData } = useContext(AuthContext);
   if (!authData) throw new Error("Missing auth data");
 
-  const { mutate, isPending } = $api.useMutation("post", "/set-password", {
-    onSuccess() {
-      toast(t("actionSuccess"), {
-        indicator: <Check />,
-        variant: "success",
-      });
+  const { mutate, isPending } = $api.useMutation(
+    "post",
+    "/api/auth/set-password",
+    {
+      onSuccess() {
+        toast(t("actionSuccess"), {
+          indicator: <Check />,
+          variant: "success",
+        });
+      },
+      onError(error) {
+        console.error(error);
+        toast(`${t("error")}`, {
+          indicator: <InfoIcon />,
+          variant: "danger",
+        });
+      },
     },
-    onError(error) {
-      console.error(error);
-      toast(`${t("error")}`, {
-        indicator: <InfoIcon />,
-        variant: "danger",
-      });
-    },
-  });
+  );
 
   const formik = useFormik({
     initialValues: {

@@ -21,12 +21,16 @@ function RouteComponent() {
   const { authData } = useContext(AuthContext);
   if (!authData) throw new Error("Missing auth data");
 
-  const { data, isLoading, isError } = $api.useQuery("get", "/peers", {
-    baseUrl: authData.apiUrl,
-    headers: {
-      Authorization: `Bearer ${authData.token}`,
+  const { data, isLoading, isError } = $api.useQuery(
+    "get",
+    "/api/esp-now/peers",
+    {
+      baseUrl: authData.apiUrl,
+      headers: {
+        Authorization: `Bearer ${authData.token}`,
+      },
     },
-  });
+  );
 
   const addPeerModalState = useOverlayState();
 

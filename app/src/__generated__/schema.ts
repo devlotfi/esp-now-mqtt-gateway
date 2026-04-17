@@ -1,5 +1,5 @@
 export interface paths {
-    "/login": {
+    "/api/auth/login": {
         parameters: {
             query?: never;
             header?: never;
@@ -31,6 +31,13 @@ export interface paths {
                         "application/json": components["schemas"]["LoginResponse"];
                     };
                 };
+                /** @description Invalid Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description Wrong Password */
                 403: {
                     headers: {
@@ -53,7 +60,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/set-password": {
+    "/api/auth/set-password": {
         parameters: {
             query?: never;
             header?: never;
@@ -92,7 +99,79 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/set-pmk": {
+    "/api/device/reboot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Reboot the device */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Reboot initiated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["UnauthorizedError"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/device/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get device status and telemetry */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Device status */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DeviceStatusResponse"];
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/network/ip": {
         parameters: {
             query?: never;
             header?: never;
@@ -101,7 +180,181 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Set PMK */
+        /** Configure IP assignment (DHCP/Static) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["NetworkIPRequest"];
+                };
+            };
+            responses: {
+                /** @description Network configured */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid IP config or format */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["UnauthorizedError"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Configure webhook/API notifications */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["NotificationsConfigRequest"];
+                };
+            };
+            responses: {
+                /** @description Configured */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid URL or Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["UnauthorizedError"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send a test notification */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Test sent */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["UnauthorizedError"];
+                404: components["responses"]["NotFoundError"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/esp-now/set-mac": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Set custom MAC address */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SetMacRequest"];
+                };
+            };
+            responses: {
+                /** @description MAC address set */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid MAC */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["UnauthorizedError"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/esp-now/set-pmk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Set Primary Master Key (PMK) */
         post: {
             parameters: {
                 query?: never;
@@ -115,26 +368,27 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Set */
+                /** @description PMK set */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
+                /** @description Invalid key */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["UnauthorizedError"];
                 /** @description ESP_NOW Error */
                 500: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        /**
-                         * @example {
-                         *       "error": "CANNOT_SET_PMK_TO_ESP_NOW"
-                         *     }
-                         */
-                        "application/json": components["schemas"]["Error"];
-                    };
+                    content?: never;
                 };
             };
         };
@@ -144,7 +398,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/peers": {
+    "/api/esp-now/peers": {
         parameters: {
             query?: never;
             header?: never;
@@ -170,6 +424,7 @@ export interface paths {
                         "application/json": components["schemas"]["PeersListResponse"];
                     };
                 };
+                401: components["responses"]["UnauthorizedError"];
             };
         };
         put?: never;
@@ -194,33 +449,27 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Invalid Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["UnauthorizedError"];
                 /** @description Duplicate */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        /**
-                         * @example {
-                         *       "error": "EXISTS"
-                         *     }
-                         */
-                        "application/json": components["schemas"]["Error"];
-                    };
+                    content?: never;
                 };
                 /** @description Limit Reached */
                 500: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        /**
-                         * @example {
-                         *       "error": "MAX_PEERS_REACHED"
-                         *     }
-                         */
-                        "application/json": components["schemas"]["Error"];
-                    };
+                    content?: never;
                 };
             };
         };
@@ -230,7 +479,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/peers/{id}": {
+    "/api/esp-now/peers/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -258,6 +507,7 @@ export interface paths {
                     };
                     content?: never;
                 };
+                401: components["responses"]["UnauthorizedError"];
                 404: components["responses"]["NotFoundError"];
             };
         };
@@ -266,7 +516,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/topics/{id}": {
+    "/api/esp-now/topics/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -293,6 +543,7 @@ export interface paths {
                         "application/json": components["schemas"]["TopicListResponse"];
                     };
                 };
+                401: components["responses"]["UnauthorizedError"];
                 404: components["responses"]["NotFoundError"];
             };
         };
@@ -320,19 +571,20 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Invalid Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["UnauthorizedError"];
                 /** @description Topic exists */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        /**
-                         * @example {
-                         *       "error": "EXISTS"
-                         *     }
-                         */
-                        "application/json": components["schemas"]["Error"];
-                    };
+                    content?: never;
                 };
                 404: components["responses"]["NotFoundError"];
                 /** @description Max topics */
@@ -340,14 +592,7 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        /**
-                         * @example {
-                         *       "error": "MAX_TOPICS_REACHED"
-                         *     }
-                         */
-                        "application/json": components["schemas"]["Error"];
-                    };
+                    content?: never;
                 };
             };
         };
@@ -374,6 +619,14 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Invalid Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["UnauthorizedError"];
                 404: components["responses"]["NotFoundError"];
             };
         };
@@ -395,6 +648,53 @@ export interface components {
         };
         LoginResponse: {
             token: string;
+        };
+        DeviceStatusResponse: {
+            heap?: {
+                freeHeap?: number;
+                heapSize?: number;
+                minFreeHeap?: number;
+                maxAllocHeap?: number;
+            };
+            psram?: {
+                freePsram?: number;
+                psramSize?: number;
+                minFreePsram?: number;
+                maxAllocPsram?: number;
+            };
+            storage?: {
+                flashChipSize?: number;
+                freeSketchSpace?: number;
+            };
+            ethernet?: {
+                localIP?: string;
+                macAddress?: string;
+                linkUp?: boolean;
+                linkSpeed?: number;
+                fullDuplex?: boolean;
+            };
+            general?: {
+                uptime?: number;
+                cpuTemp?: number | null;
+            };
+        };
+        NetworkIPRequest: {
+            /** @enum {string} */
+            ipAssignment: "DHCP" | "STATIC";
+            staticConfig?: {
+                ip?: string;
+                gateway?: string;
+                subnet?: string;
+                dns?: string;
+            };
+        };
+        NotificationsConfigRequest: {
+            /** Format: uri */
+            apiUrl: string;
+            apiSecret: string;
+        };
+        SetMacRequest: {
+            mac: string;
         };
         SetPmkRequest: {
             pmk: string;
