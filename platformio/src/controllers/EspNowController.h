@@ -6,7 +6,6 @@
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
 #include <esp_now.h>
-#include <uri/UriBraces.h>
 #include "Properties.h"
 #include "Vars.h"
 #include "Utils.h"
@@ -17,6 +16,33 @@
 class EspNowController
 {
 public:
+  static void setMac(AsyncWebServerRequest *request, ArduinoJson::JsonVariant &json)
+  {
+    if (
+        !json["mac"].is<const char *>())
+    {
+      request->send(400, "application/json", "{\"error\":\"INVALID_REQUEST\"}");
+      return;
+    }
+    const char *macStr = json["mac"].as<const char *>();
+    if (!isUnicastMacAddress(macStr))
+    {
+      request->send(400, "application/json", "{\"error\":\"INVALID_REQUEST\"}");
+      return;
+    }
+
+    EspNowData *espNowData = loadEspNowData();
+
+    macStringToBytes(macStr, espNowData->mac);
+    espNowData->macSet = true;
+
+    saveEspNowData(espNowData);
+    free(espNowData);
+    request->send(200);
+
+    delayedRestart();
+  }
+
   static void setPMK(AsyncWebServerRequest *request, ArduinoJson::JsonVariant &json)
   {
     if (

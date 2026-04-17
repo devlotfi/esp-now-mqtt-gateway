@@ -6,7 +6,6 @@
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
 #include <esp_now.h>
-#include <uri/UriBraces.h>
 #include <etl/string.h>
 #include "esp_http_client.h"
 #include "esp_crt_bundle.h"

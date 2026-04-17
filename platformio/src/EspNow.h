@@ -81,7 +81,21 @@ void initEspNow()
 {
   EspNowData *espNowData = loadEspNowData();
   WiFi.mode(WIFI_STA);
-  esp_wifi_set_mac(WIFI_IF_STA, deviceMac);
+
+  char macStr[MAC_SIZE_STRING];
+  if (espNowData->macSet)
+  {
+    macBytesToString(espNowData->mac, macStr);
+    Serial.printf("ESP-NOW: Using custom mac: %s\n", macStr);
+    esp_wifi_set_mac(WIFI_IF_STA, espNowData->mac);
+  }
+  else
+  {
+    macBytesToString(defaultMac, macStr);
+    Serial.printf("ESP-NOW: Using default mac: %s\n", macStr);
+    esp_wifi_set_mac(WIFI_IF_STA, defaultMac);
+  }
+
   esp_wifi_set_channel(1, WIFI_SECOND_CHAN_NONE);
   esp_wifi_set_ps(WIFI_PS_NONE);
   if (esp_now_init() != ESP_OK)

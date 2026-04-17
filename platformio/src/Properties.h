@@ -55,7 +55,7 @@ const char *mqtt_password = "test";
 // ----------------------
 // ESP-NOW
 // ----------------------
-uint8_t deviceMac[6] = {0x30, 0xAE, 0xA4, 0x11, 0x22, 0x33};
+uint8_t defaultMac[6] = {0x30, 0xAE, 0xA4, 0x11, 0x22, 0x33};
 
 // ----------------------
 // JWT Secret
