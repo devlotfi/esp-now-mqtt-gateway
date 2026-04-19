@@ -60,7 +60,7 @@ function TopicComponent({
   );
 
   return (
-    <Surface className="flex items-center justify-between border border-border rounded-xl p-[0.5rem]">
+    <Surface className="flex items-center justify-between border border-separator rounded-xl p-[0.5rem]">
       <div className="flex">{topic}</div>
       <Button
         isIconOnly

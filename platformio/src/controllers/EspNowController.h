@@ -16,6 +16,60 @@
 class EspNowController
 {
 public:
+  static void getChannel(AsyncWebServerRequest *request)
+  {
+    EspNowData *espNowData = loadEspNowData();
+    AsyncJsonResponse *response = new AsyncJsonResponse();
+    JsonObject root = response->getRoot().to<JsonObject>();
+
+    root["channel"] = espNowData->channel;
+
+    free(espNowData);
+    response->setLength();
+    request->send(response);
+  }
+
+  static void setChannel(AsyncWebServerRequest *request, ArduinoJson::JsonVariant &json)
+  {
+    if (
+        !json["channel"].is<const char *>())
+    {
+      request->send(400, "application/json", "{\"error\":\"INVALID_REQUEST\"}");
+      return;
+    }
+    uint8_t channel = json["channel"].as<uint8_t>();
+    if (!isValidWifiChannel(channel))
+    {
+      request->send(400, "application/json", "{\"error\":\"INVALID_REQUEST\"}");
+      return;
+    }
+
+    EspNowData *espNowData = loadEspNowData();
+
+    espNowData->channel = channel;
+
+    saveEspNowData(espNowData);
+    free(espNowData);
+    request->send(200);
+
+    delayedRestart();
+  }
+
+  static void getMac(AsyncWebServerRequest *request)
+  {
+    EspNowData *espNowData = loadEspNowData();
+    AsyncJsonResponse *response = new AsyncJsonResponse();
+    JsonObject root = response->getRoot().to<JsonObject>();
+
+    char macStr[MAC_SIZE_STRING];
+    macBytesToString(espNowData->mac, macStr);
+    root["mac"] = macStr;
+
+    free(espNowData);
+    response->setLength();
+    request->send(response);
+  }
+
   static void setMac(AsyncWebServerRequest *request, ArduinoJson::JsonVariant &json)
   {
     if (
@@ -32,9 +86,7 @@ public:
     }
 
     EspNowData *espNowData = loadEspNowData();
-
     macStringToBytes(macStr, espNowData->mac);
-    espNowData->macSet = true;
 
     saveEspNowData(espNowData);
     free(espNowData);

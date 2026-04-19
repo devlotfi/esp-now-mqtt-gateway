@@ -1,5 +1,5 @@
 export interface paths {
-    "/api/auth/login": {
+    "/auth/login": {
         parameters: {
             query?: never;
             header?: never;
@@ -8,7 +8,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Login */
+        /** Login to get JWT token */
         post: {
             parameters: {
                 query?: never;
@@ -18,7 +18,9 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": components["schemas"]["PasswordRequest"];
+                    "application/json": {
+                        password: string;
+                    };
                 };
             };
             responses: {
@@ -28,29 +30,17 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["LoginResponse"];
+                        "application/json": {
+                            token?: string;
+                        };
                     };
                 };
-                /** @description Invalid Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Wrong Password */
+                /** @description Wrong password */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        /**
-                         * @example {
-                         *       "error": "WRONG_PASSWORD"
-                         *     }
-                         */
-                        "application/json": components["schemas"]["Error"];
-                    };
+                    content?: never;
                 };
             };
         };
@@ -60,7 +50,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/auth/set-password": {
+    "/auth/set-password": {
         parameters: {
             query?: never;
             header?: never;
@@ -69,7 +59,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Update password */
+        /** Update device password */
         post: {
             parameters: {
                 query?: never;
@@ -79,18 +69,19 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": components["schemas"]["PasswordRequest"];
+                    "application/json": {
+                        password: string;
+                    };
                 };
             };
             responses: {
-                /** @description Updated */
+                /** @description Password updated */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                401: components["responses"]["UnauthorizedError"];
             };
         };
         delete?: never;
@@ -99,14 +90,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/device/reboot": {
+    "/device/reboot": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Reboot the device */
+        /** Reboot the ESP32 */
         get: {
             parameters: {
                 query?: never;
@@ -116,14 +107,13 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Reboot initiated */
+                /** @description Device will restart */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                401: components["responses"]["UnauthorizedError"];
             };
         };
         put?: never;
@@ -134,14 +124,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/device/status": {
+    "/device/status": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get device status and telemetry */
+        /** Get system resources and network status */
         get: {
             parameters: {
                 query?: never;
@@ -151,16 +141,24 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Device status */
+                /** @description System status */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["DeviceStatusResponse"];
+                        "application/json": {
+                            heap?: Record<string, never>;
+                            psram?: Record<string, never>;
+                            storage?: Record<string, never>;
+                            ethernet?: Record<string, never>;
+                            general?: {
+                                uptime?: number;
+                                cpuTemp?: number | null;
+                            };
+                        };
                     };
                 };
-                401: components["responses"]["UnauthorizedError"];
             };
         };
         put?: never;
@@ -171,109 +169,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/network/ip": {
+    "/esp-now/get-channel": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put?: never;
-        /** Configure IP assignment (DHCP/Static) */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["NetworkIPRequest"];
-                };
-            };
-            responses: {
-                /** @description Network configured */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Invalid IP config or format */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                401: components["responses"]["UnauthorizedError"];
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/notifications": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Configure webhook/API notifications */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["NotificationsConfigRequest"];
-                };
-            };
-            responses: {
-                /** @description Configured */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Invalid URL or Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                401: components["responses"]["UnauthorizedError"];
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/notifications/test": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Send a test notification */
-        post: {
+        /** Get current WiFi channel */
+        get: {
             parameters: {
                 query?: never;
                 header?: never;
@@ -282,24 +186,28 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Test sent */
+                /** @description OK */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            channel?: number;
+                        };
+                    };
                 };
-                401: components["responses"]["UnauthorizedError"];
-                404: components["responses"]["NotFoundError"];
             };
         };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/esp-now/set-mac": {
+    "/esp-now/set-channel": {
         parameters: {
             query?: never;
             header?: never;
@@ -308,7 +216,6 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Set custom MAC address */
         post: {
             parameters: {
                 query?: never;
@@ -316,27 +223,21 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            requestBody: {
+            requestBody?: {
                 content: {
-                    "application/json": components["schemas"]["SetMacRequest"];
+                    "application/json": {
+                        channel?: number;
+                    };
                 };
             };
             responses: {
-                /** @description MAC address set */
+                /** @description Channel updated, device restarting */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                /** @description Invalid MAC */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                401: components["responses"]["UnauthorizedError"];
             };
         };
         delete?: never;
@@ -345,7 +246,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/esp-now/set-pmk": {
+    "/esp-now/set-pmk": {
         parameters: {
             query?: never;
             header?: never;
@@ -354,7 +255,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Set Primary Master Key (PMK) */
+        /** Set Primary Master Key */
         post: {
             parameters: {
                 query?: never;
@@ -362,9 +263,12 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            requestBody: {
+            requestBody?: {
                 content: {
-                    "application/json": components["schemas"]["SetPmkRequest"];
+                    "application/json": {
+                        /** @description 16-byte hex string */
+                        pmk?: string;
+                    };
                 };
             };
             responses: {
@@ -375,21 +279,6 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Invalid key */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                401: components["responses"]["UnauthorizedError"];
-                /** @description ESP_NOW Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
             };
         };
         delete?: never;
@@ -398,14 +287,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/esp-now/peers": {
+    "/esp-now/peers": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** List peers */
+        /** List all ESP-NOW peers */
         get: {
             parameters: {
                 query?: never;
@@ -415,20 +304,26 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description List */
+                /** @description Success */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["PeersListResponse"];
+                        "application/json": {
+                            peers?: {
+                                /** Format: uuid */
+                                id?: string;
+                                name?: string;
+                                mac?: string;
+                            }[];
+                        };
                     };
                 };
-                401: components["responses"]["UnauthorizedError"];
             };
         };
         put?: never;
-        /** Add peer */
+        /** Add a new peer */
         post: {
             parameters: {
                 query?: never;
@@ -436,36 +331,26 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            requestBody: {
+            requestBody?: {
                 content: {
-                    "application/json": components["schemas"]["AddPeerRequest"];
+                    "application/json": {
+                        name: string;
+                        mac: string;
+                        /** @description Local Master Key */
+                        lmk: string;
+                    };
                 };
             };
             responses: {
-                /** @description Added */
+                /** @description Peer added */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                /** @description Invalid Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                401: components["responses"]["UnauthorizedError"];
-                /** @description Duplicate */
+                /** @description Peer already exists */
                 403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Limit Reached */
-                500: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -479,7 +364,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/esp-now/peers/{id}": {
+    "/esp-now/peers/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -489,6 +374,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
+        /** Delete a peer */
         delete: {
             parameters: {
                 query?: never;
@@ -500,15 +386,20 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Deleted */
+                /** @description Peer deleted */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                401: components["responses"]["UnauthorizedError"];
-                404: components["responses"]["NotFoundError"];
+                /** @description Peer not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
             };
         };
         options?: never;
@@ -516,13 +407,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/esp-now/topics/{id}": {
+    "/esp-now/topics/{id}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
+        /** Get topics for a peer */
         get: {
             parameters: {
                 query?: never;
@@ -534,21 +426,21 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Topics list */
+                /** @description OK */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["TopicListResponse"];
+                        "application/json": {
+                            topicList?: string[];
+                        };
                     };
                 };
-                401: components["responses"]["UnauthorizedError"];
-                404: components["responses"]["NotFoundError"];
             };
         };
         put?: never;
-        /** Add single topic */
+        /** Add topic subscription */
         post: {
             parameters: {
                 query?: never;
@@ -558,9 +450,11 @@ export interface paths {
                 };
                 cookie?: never;
             };
-            requestBody: {
+            requestBody?: {
                 content: {
-                    "application/json": components["schemas"]["TopicItem"];
+                    "application/json": {
+                        topic?: string;
+                    };
                 };
             };
             responses: {
@@ -571,32 +465,9 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Invalid Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                401: components["responses"]["UnauthorizedError"];
-                /** @description Topic exists */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                404: components["responses"]["NotFoundError"];
-                /** @description Max topics */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
             };
         };
-        /** Delete single topic */
+        /** Remove topic subscription */
         delete: {
             parameters: {
                 query?: never;
@@ -606,30 +477,265 @@ export interface paths {
                 };
                 cookie?: never;
             };
-            requestBody: {
+            requestBody?: {
                 content: {
-                    "application/json": components["schemas"]["TopicItem"];
+                    "application/json": {
+                        topic?: string;
+                    };
                 };
             };
             responses: {
-                /** @description Topic deleted */
+                /** @description Topic removed */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                /** @description Invalid Request */
-                400: {
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get notification settings */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            isSet?: boolean;
+                            config?: {
+                                apiUrl?: string;
+                                apiSecret?: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Update notification settings */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        apiUrl?: string;
+                        apiSecret?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Settings saved */
+                200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                401: components["responses"]["UnauthorizedError"];
-                404: components["responses"]["NotFoundError"];
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Trigger test notification */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Notification sent */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/mqtt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get MQTT config */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            isSet?: boolean;
+                            config?: Record<string, never>;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Set MQTT config */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        clientId: string;
+                        url: string;
+                        useAuth: boolean;
+                        username?: string;
+                        password?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description MQTT settings saved */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/network": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get IP settings */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {string} */
+                            ipAssignment?: "DHCP" | "STATIC";
+                            ip?: string;
+                            gateway?: string;
+                            subnet?: string;
+                            dns?: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Set IP settings */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        ipAssignment: "DHCP" | "STATIC";
+                        staticConfig?: {
+                            ip?: string;
+                            gateway?: string;
+                            subnet?: string;
+                            dns?: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Network settings saved */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -641,115 +747,10 @@ export interface components {
     schemas: {
         Error: {
             /** @example INVALID_REQUEST */
-            error: string;
-        };
-        PasswordRequest: {
-            password: string;
-        };
-        LoginResponse: {
-            token: string;
-        };
-        DeviceStatusResponse: {
-            heap?: {
-                freeHeap?: number;
-                heapSize?: number;
-                minFreeHeap?: number;
-                maxAllocHeap?: number;
-            };
-            psram?: {
-                freePsram?: number;
-                psramSize?: number;
-                minFreePsram?: number;
-                maxAllocPsram?: number;
-            };
-            storage?: {
-                flashChipSize?: number;
-                freeSketchSpace?: number;
-            };
-            ethernet?: {
-                localIP?: string;
-                macAddress?: string;
-                linkUp?: boolean;
-                linkSpeed?: number;
-                fullDuplex?: boolean;
-            };
-            general?: {
-                uptime?: number;
-                cpuTemp?: number | null;
-            };
-        };
-        NetworkIPRequest: {
-            /** @enum {string} */
-            ipAssignment: "DHCP" | "STATIC";
-            staticConfig?: {
-                ip?: string;
-                gateway?: string;
-                subnet?: string;
-                dns?: string;
-            };
-        };
-        NotificationsConfigRequest: {
-            /** Format: uri */
-            apiUrl: string;
-            apiSecret: string;
-        };
-        SetMacRequest: {
-            mac: string;
-        };
-        SetPmkRequest: {
-            pmk: string;
-        };
-        Peer: {
-            /** Format: uuid */
-            id: string;
-            name: string;
-            mac: string;
-        };
-        PeersListResponse: {
-            peers: components["schemas"]["Peer"][];
-        };
-        AddPeerRequest: {
-            name: string;
-            mac: string;
-            lmk: string;
-        };
-        TopicItem: {
-            topic: string;
-        };
-        TopicListResponse: {
-            topicList: string[];
+            error?: string;
         };
     };
-    responses: {
-        /** @description Unauthorized */
-        UnauthorizedError: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                /**
-                 * @example {
-                 *       "error": "UNAUTHORIZED"
-                 *     }
-                 */
-                "application/json": components["schemas"]["Error"];
-            };
-        };
-        /** @description Not Found */
-        NotFoundError: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                /**
-                 * @example {
-                 *       "error": "NOT_FOUND"
-                 *     }
-                 */
-                "application/json": components["schemas"]["Error"];
-            };
-        };
-    };
+    responses: never;
     parameters: never;
     requestBodies: never;
     headers: never;

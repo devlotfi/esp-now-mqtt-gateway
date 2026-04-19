@@ -20,7 +20,26 @@
 class NotificationsController
 {
 public:
-  static void configure(AsyncWebServerRequest *request, ArduinoJson::JsonVariant &json)
+  static void getConfig(AsyncWebServerRequest *request)
+  {
+    NotificationsData *notificationsData = loadNotificationsData();
+    AsyncJsonResponse *response = new AsyncJsonResponse();
+    JsonObject root = response->getRoot().to<JsonObject>();
+    auto config = root["config"].to<ArduinoJson::JsonObject>();
+
+    root["isSet"] = notificationsData->isSet;
+    if (notificationsData->isSet)
+    {
+      config["apiUrl"] = notificationsData->apiUrl;
+      config["apiSecret"] = notificationsData->apiSecret;
+    }
+
+    free(notificationsData);
+    response->setLength();
+    request->send(response);
+  }
+
+  static void setConfig(AsyncWebServerRequest *request, ArduinoJson::JsonVariant &json)
   {
     if (
         !json["apiUrl"].is<const char *>() ||
@@ -61,7 +80,7 @@ public:
       return;
     }
 
-    testNotification(notificationsData);
+    sendTestNotification(notificationsData);
     free(notificationsData);
     request->send(200);
   }

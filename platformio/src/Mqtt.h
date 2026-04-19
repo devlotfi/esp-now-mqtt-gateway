@@ -6,6 +6,7 @@
 #include "Vars.h"
 #include "Api.h"
 #include "Lookup.h"
+#include "preferences/Mqtt.h"
 
 static void mqttEventHandler(void *args, esp_event_base_t base,
                              int32_t eventId, void *eventData)
@@ -15,6 +16,7 @@ static void mqttEventHandler(void *args, esp_event_base_t base,
   switch (static_cast<esp_mqtt_event_id_t>(eventId))
   {
   case MQTT_EVENT_CONNECTED:
+    mqttConnected = true;
     Serial.println("MQTT: Connected");
     for (size_t i = 0; i < topicSet.count; i++)
     {
@@ -26,6 +28,7 @@ static void mqttEventHandler(void *args, esp_event_base_t base,
     break;
 
   case MQTT_EVENT_DISCONNECTED:
+    mqttConnected = false;
     Serial.println("MQTT: Disconnected (broker will retry automatically)");
     break;
 
@@ -87,16 +90,27 @@ static void mqttEventHandler(void *args, esp_event_base_t base,
 
 static void startMqtt()
 {
+  MqttData *mqttData = loadMqttData();
+
+  if (!mqttData->isSet)
+  {
+    Serial.println("MQTT: No configuration saved, skipping");
+    free(mqttData);
+    return;
+  }
+
   esp_mqtt_client_config_t cfg = {};
-  cfg.broker.address.uri = mqtt_uri;
-  cfg.broker.verification.certificate = rootCA;
-  cfg.credentials.client_id = "test-client";
-  cfg.credentials.username = mqtt_user;
-  cfg.credentials.authentication.password = mqtt_password;
+  cfg.broker.verification.crt_bundle_attach = esp_crt_bundle_attach;
+  cfg.broker.address.uri = mqttData->url;
+  cfg.credentials.client_id = mqttData->clientId;
+  cfg.credentials.username = mqttData->username;
+  cfg.credentials.authentication.password = mqttData->password;
 
   mqttClient = esp_mqtt_client_init(&cfg);
   esp_mqtt_client_register_event(mqttClient,
                                  (esp_mqtt_event_id_t)ESP_EVENT_ANY_ID,
                                  mqttEventHandler, nullptr);
   esp_mqtt_client_start(mqttClient);
+
+  free(mqttData);
 }

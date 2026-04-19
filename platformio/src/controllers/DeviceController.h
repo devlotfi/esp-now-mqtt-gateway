@@ -6,6 +6,7 @@
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
 #include <esp_now.h>
+#include "esp_mac.h"
 #include "Properties.h"
 #include "Vars.h"
 #include "Utils.h"
@@ -35,6 +36,11 @@ public:
 
     auto flashChipSize = ESP.getFlashChipSize();
     auto freeSketchSpace = ESP.getFreeSketchSpace();
+
+    uint8_t mac[6];
+    esp_read_mac(mac, ESP_MAC_ETH);
+    char macStr[MAC_SIZE_STRING];
+    macBytesToString(mac, macStr);
 
     auto localIP = ETH.localIP().toString();
     auto macAddress = ETH.macAddress();
@@ -69,6 +75,7 @@ public:
     storageObj["freeSketchSpace"] = freeSketchSpace;
 
     auto ethernetObj = root["ethernet"].to<ArduinoJson::JsonObject>();
+    ethernetObj["mac"] = macStr;
     ethernetObj["localIP"] = localIP;
     ethernetObj["macAddress"] = macAddress;
     ethernetObj["linkUp"] = linkUp;
@@ -77,6 +84,7 @@ public:
 
     auto generalObj = root["general"].to<ArduinoJson::JsonObject>();
     generalObj["uptime"] = uptime;
+    generalObj["mqttConnected"] = mqttConnected;
     if (tempReading)
     {
       generalObj["cpuTemp"] = cpuTemp;

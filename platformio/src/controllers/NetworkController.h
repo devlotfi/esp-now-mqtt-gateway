@@ -17,7 +17,28 @@
 class NetworkController
 {
 public:
-  static void configureIP(AsyncWebServerRequest *request, ArduinoJson::JsonVariant &json)
+  static void getConfig(AsyncWebServerRequest *request)
+  {
+    NetworkData *networkData = loadNetworkData();
+    AsyncJsonResponse *response = new AsyncJsonResponse();
+    JsonObject root = response->getRoot().to<JsonObject>();
+
+    root["ipAssignment"] = networkData->ipAssignment.to_string();
+    // if static provide static config
+    if (networkData->ipAssignment == IPAssignment::STATIC)
+    {
+      root["ip"] = IPAddress(networkData->ip).toString();
+      root["gateway"] = IPAddress(networkData->gateway).toString();
+      root["subnet"] = IPAddress(networkData->subnet).toString();
+      root["dns"] = IPAddress(networkData->dns).toString();
+    }
+
+    free(networkData);
+    response->setLength();
+    request->send(response);
+  }
+
+  static void setConfig(AsyncWebServerRequest *request, ArduinoJson::JsonVariant &json)
   {
     if (
         !json["ipAssignment"].is<const char *>())
@@ -35,7 +56,7 @@ public:
 
     if (ipAssignment == IPAssignment::STATIC)
     {
-      auto staticConfig = json["staticConfig"].as<ArduinoJson::JsonObject>();
+      auto staticConfig = json["staticConfig"].to<ArduinoJson::JsonObject>();
       if (
           !staticConfig ||
           !staticConfig["ip"].is<const char *>() ||

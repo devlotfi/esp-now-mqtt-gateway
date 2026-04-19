@@ -72,7 +72,7 @@
     --danger: #d42326;
     --danger-foreground: var(--snow);
 
-    --accent: #1d97de;
+    --accent: #e8362d;
 
     --border: #e6e6e6;
     --separator: #c0c4cf;
@@ -93,10 +93,10 @@
     --spacing: 0.25rem;
     --radius: 0.3rem;
 
-    --background: #1b283a;
+    --background: #242d3b;
     --foreground: #b7bdc9;
 
-    --surface: #203147;
+    --surface: #2b3747;
     --surface-foreground: var(--foreground);
 
     --success: #1dbe63;
@@ -105,15 +105,15 @@
     --danger: #d42326;
     --danger-foreground: var(--snow);
 
-    --default: #273c58;
+    --default: #334357;
     --default-foreground: var(--foreground);
 
     --overlay: var(--background);
     --overlay-foreground: var(--foreground);
 
-    --accent: #1d97de;
+    --accent: #e8362d;
 
-    --border: #344261;
+    --border: #3b4558;
     --separator: #57688d;
 
     --field-background: var(--surface);

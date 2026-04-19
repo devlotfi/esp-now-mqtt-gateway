@@ -17,7 +17,7 @@ struct Peer
 
 struct EspNowData
 {
-  bool macSet;
+  uint8_t channel;
   uint8_t mac[MAC_SIZE_BYTES];
   bool pmkSet;
   uint8_t pmk[ESP_NOW_KEY_SIZE_BYTES];
@@ -35,7 +35,7 @@ EspNowData *loadEspNowData()
   EspNowData *data = (EspNowData *)malloc(sizeof(EspNowData));
   if (!data)
     return nullptr;
-  data->macSet = false;
+  data->channel = 1;
   data->pmkSet = false;
   data->peerCount = 0;
   memcpy(data->mac, defaultMac, MAC_SIZE_BYTES);

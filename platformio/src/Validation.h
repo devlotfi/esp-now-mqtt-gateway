@@ -93,6 +93,87 @@ static bool isValidUrl(const char *url)
   return true;
 }
 
+static bool isValidMqttUrl(const char *url)
+{
+  if (!url)
+    return false;
+
+  size_t len = strlen(url);
+  if (len < 12 || len > 200)
+    return false;
+
+  // Must start with mqtt:// or mqtts://
+  bool isSecure = false;
+
+  if (strncmp(url, "mqtt://", 7) == 0)
+  {
+    isSecure = false;
+  }
+  else if (strncmp(url, "mqtts://", 8) == 0)
+  {
+    isSecure = true;
+  }
+  else
+  {
+    return false;
+  }
+
+  const char *p = strstr(url, "://");
+  if (!p)
+    return false;
+
+  p += 3; // skip ://
+
+  // Host must exist
+  if (*p == '\0')
+    return false;
+
+  // Validate hostname
+  while (*p && *p != '/' && *p != ':')
+  {
+    char c = *p;
+
+    if (!(
+            (c >= 'a' && c <= 'z') ||
+            (c >= 'A' && c <= 'Z') ||
+            (c >= '0' && c <= '9') ||
+            c == '.' || c == '-'))
+      return false;
+
+    p++;
+  }
+
+  // Optional port (recommended for MQTT)
+  if (*p == ':')
+  {
+    p++;
+
+    if (!isdigit(*p))
+      return false;
+
+    int port = 0;
+
+    while (*p && *p != '/')
+    {
+      if (!isdigit(*p))
+        return false;
+
+      port = port * 10 + (*p - '0');
+      p++;
+    }
+
+    // Validate port range
+    if (port <= 0 || port > 65535)
+      return false;
+  }
+  else
+  {
+    return false;
+  }
+
+  return true;
+}
+
 static bool isHexChar(char c)
 {
   return (c >= '0' && c <= '9') ||
@@ -166,4 +247,13 @@ bool isUnicastMacAddress(const char *mac)
     return false;
 
   return true;
+}
+
+bool isValidWifiChannel(uint8_t channel)
+{
+  if (channel >= 1 && channel <= 13)
+  {
+    return true;
+  }
+  return false;
 }

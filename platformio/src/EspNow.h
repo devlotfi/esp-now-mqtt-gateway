@@ -6,6 +6,8 @@
 #include "Vars.h"
 #include "Api.h"
 #include "Lookup.h"
+#include "Notifications.h"
+#include "preferences/Notifications.h"
 
 enum MessageType
 {
@@ -47,7 +49,7 @@ void onReceive(const esp_now_recv_info_t *info, const uint8_t *data, int len)
 
   switch (msg->type)
   {
-  case TEXT_MESSAGE:
+  case MessageType::TEXT_MESSAGE:
   {
     const MqttEspNowMessage &mqttMsg = msg->payload.mqttEspNowMessage;
 
@@ -65,7 +67,19 @@ void onReceive(const esp_now_recv_info_t *info, const uint8_t *data, int len)
 
     break;
   }
+  case MessageType::NOTIFICATION_MESSAGE:
+  {
+    const NotificationEspNowMessage &notificationMsg = msg->payload.notificationEspNowMessage;
+    NotificationsData *notificationsData = loadNotificationsData();
+    if (!notificationsData->isSet)
+    {
+      Serial.println("ESP-NOW: Notification data not set");
+      return;
+    }
 
+    sendNotification(notificationsData, notificationMsg.title, notificationMsg.body);
+    free(notificationsData);
+  }
   default:
     Serial.printf("ESP-NOW: Unknown type %d\n", msg->type);
   }
@@ -83,20 +97,11 @@ void initEspNow()
   WiFi.mode(WIFI_STA);
 
   char macStr[MAC_SIZE_STRING];
-  if (espNowData->macSet)
-  {
-    macBytesToString(espNowData->mac, macStr);
-    Serial.printf("ESP-NOW: Using custom mac: %s\n", macStr);
-    esp_wifi_set_mac(WIFI_IF_STA, espNowData->mac);
-  }
-  else
-  {
-    macBytesToString(defaultMac, macStr);
-    Serial.printf("ESP-NOW: Using default mac: %s\n", macStr);
-    esp_wifi_set_mac(WIFI_IF_STA, defaultMac);
-  }
+  macBytesToString(espNowData->mac, macStr);
+  Serial.printf("ESP-NOW: Using mac: %s\n", macStr);
+  esp_wifi_set_mac(WIFI_IF_STA, espNowData->mac);
 
-  esp_wifi_set_channel(1, WIFI_SECOND_CHAN_NONE);
+  esp_wifi_set_channel(espNowData->channel, WIFI_SECOND_CHAN_NONE);
   esp_wifi_set_ps(WIFI_PS_NONE);
   if (esp_now_init() != ESP_OK)
   {
