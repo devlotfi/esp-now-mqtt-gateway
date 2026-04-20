@@ -49,14 +49,23 @@ export default defineConfig({
   build: {
     outDir: "../docs",
     emptyOutDir: true,
-    rollupOptions: {
+    rolldownOptions: {
       output: {
-        manualChunks: (id) => {
-          if (id.includes("@heroui")) {
-            return "heroui";
-          } else if (id.includes("lucide-react")) {
-            return "lucide-react";
-          }
+        codeSplitting: {
+          groups: [
+            {
+              name: "lucide-react",
+              test: /node_modules\/lucide-react/,
+            },
+            {
+              name: "heroui",
+              test: /node_modules\/@heroui/,
+            },
+            {
+              name: "mqtt",
+              test: /node_modules\/mqtt/,
+            },
+          ],
         },
       },
     },

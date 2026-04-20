@@ -31,7 +31,7 @@ void setupServer()
   cors.setAllowCredentials(false);
   server.addMiddleware(&cors);
 
-  server.on(AsyncURIMatcher::exact("/api/device/reboot"), HTTP_GET, DeviceController::reboot).addMiddleware(&jwtAuth);
+  server.on(AsyncURIMatcher::exact("/api/device/reboot"), HTTP_POST, DeviceController::reboot).addMiddleware(&jwtAuth);
   server.on(AsyncURIMatcher::exact("/api/device/status"), HTTP_GET, DeviceController::status).addMiddleware(&jwtAuth);
 
   server.on(AsyncURIMatcher::exact("/api/network"), HTTP_GET, NetworkController::getConfig).addMiddleware(&jwtAuth);
@@ -47,11 +47,9 @@ void setupServer()
   server.on(AsyncURIMatcher::exact("/api/notifications"), HTTP_POST, NotificationsController::setConfig).addMiddleware(&jwtAuth);
   server.on(AsyncURIMatcher::exact("/api/notifications/test"), HTTP_POST, NotificationsController::test).addMiddleware(&jwtAuth);
 
-  server.on(AsyncURIMatcher::exact("/api/esp-now/get-channel"), HTTP_GET, EspNowController::getChannel).addMiddleware(&jwtAuth);
-  server.on(AsyncURIMatcher::exact("/api/esp-now/set-channel"), HTTP_POST, EspNowController::setChannel).addMiddleware(&jwtAuth);
-  server.on(AsyncURIMatcher::exact("/api/esp-now/get-mac"), HTTP_GET, EspNowController::getMac).addMiddleware(&jwtAuth);
-  server.on(AsyncURIMatcher::exact("/api/esp-now/set-mac"), HTTP_POST, EspNowController::setMac).addMiddleware(&jwtAuth);
-  server.on(AsyncURIMatcher::exact("/api/esp-now/set-pmk"), HTTP_POST, EspNowController::setPMK).addMiddleware(&jwtAuth);
+  server.on(AsyncURIMatcher::exact("/api/esp-now"), HTTP_GET, EspNowController::getConfig).addMiddleware(&jwtAuth);
+  server.on(AsyncURIMatcher::exact("/api/esp-now"), HTTP_POST, EspNowController::setConfig).addMiddleware(&jwtAuth);
+  server.on(AsyncURIMatcher::exact("/api/esp-now/pmk"), HTTP_POST, EspNowController::setPMK).addMiddleware(&jwtAuth);
   server.on(AsyncURIMatcher::exact("/api/esp-now/peers"), HTTP_GET, EspNowController::peers).addMiddleware(&jwtAuth);
   server.on(AsyncURIMatcher::exact("/api/esp-now/peers"), HTTP_POST, EspNowController::addPeer).addMiddleware(&jwtAuth);
   server.on(AsyncURIMatcher::regex("^/api/esp-now/peers/([0-9a-fA-F-]{36})$"), HTTP_DELETE, EspNowController::deletePeer).addMiddleware(&jwtAuth);

@@ -18,7 +18,7 @@ export default function Navbar() {
         <Button
           isIconOnly
           variant="outline"
-          className="hidden lg:flex"
+          className="hidden lg:flex bg-background"
           size="lg"
           onPress={() => setSidebarOpen(!sidebarOpen)}
         >
@@ -72,7 +72,7 @@ export default function Navbar() {
           <Button
             isIconOnly
             variant="outline"
-            className="size-[2.5rem] text-foreground bg-[color-mix(in_srgb,var(--surface),transparent_60%)]"
+            className="size-[2.5rem] text-foreground bg-background"
             onPress={() => beforeInstallPromptEvent.prompt()}
           >
             <Download className="size-[1.4rem]"></Download>
@@ -81,7 +81,7 @@ export default function Navbar() {
         <Button
           isIconOnly
           variant="outline"
-          className="size-[2.5rem] text-danger bg-[color-mix(in_srgb,var(--surface),transparent_60%)]"
+          className="size-[2.5rem] text-danger bg-background"
           onPress={() => setAuthData(null)}
         >
           <LogOut className="size-[1.4rem]"></LogOut>

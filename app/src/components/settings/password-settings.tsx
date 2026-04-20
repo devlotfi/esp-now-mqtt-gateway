@@ -1,13 +1,13 @@
-import { Button, Card, toast } from "@heroui/react";
+import { Button, toast } from "@heroui/react";
 import { useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Check, Eye, EyeOff, InfoIcon, Save } from "lucide-react";
-import { SectionTitle } from "../../components/section-title";
 import { useFormik } from "formik";
 import * as yup from "yup";
 import { $api } from "../../api/openapi-client";
 import ValidatedTextField from "../../components/validated-text-field";
 import { AuthContext } from "../../context/auth-context";
+import CardWithTitle from "../card-with-header";
 
 export default function PasswordSettings() {
   const { t } = useTranslation();
@@ -58,45 +58,41 @@ export default function PasswordSettings() {
   const toggleVisibility = () => setIsVisible(!isVisible);
 
   return (
-    <Card>
-      <Card.Content className="flex flex-col gap-[0.7rem]">
-        <SectionTitle icon="key-round">{t("setPassword")}</SectionTitle>
+    <CardWithTitle icon="key-round" title={t("setPassword")}>
+      <form
+        onSubmit={formik.handleSubmit}
+        className="flex flex-col gap-[1rem] p-[1rem]"
+      >
+        <ValidatedTextField
+          formik={formik}
+          name="password"
+          labelProps={{ children: t("password") }}
+          inputProps={{
+            type: isVisible ? "text" : "password",
+          }}
+          textFieldProps={{ isRequired: true }}
+          suffix={
+            <Button
+              isIconOnly
+              variant="ghost"
+              size="sm"
+              onPress={toggleVisibility}
+            >
+              {isVisible ? <EyeOff></EyeOff> : <Eye></Eye>}
+            </Button>
+          }
+        ></ValidatedTextField>
 
-        <form
-          onSubmit={formik.handleSubmit}
-          className="flex flex-col gap-[1rem]"
+        <Button
+          fullWidth
+          type="submit"
+          isPending={isPending}
+          className="mt-[1rem]"
         >
-          <ValidatedTextField
-            formik={formik}
-            name="password"
-            labelProps={{ children: t("password") }}
-            inputProps={{
-              type: isVisible ? "text" : "password",
-            }}
-            textFieldProps={{ isRequired: true }}
-            suffix={
-              <Button
-                isIconOnly
-                variant="ghost"
-                size="sm"
-                onPress={toggleVisibility}
-              >
-                {isVisible ? <EyeOff></EyeOff> : <Eye></Eye>}
-              </Button>
-            }
-          ></ValidatedTextField>
-
-          <Button
-            fullWidth
-            type="submit"
-            isPending={isPending}
-            className="mt-[1rem]"
-          >
-            <Save></Save>
-            {t("save")}
-          </Button>
-        </form>
-      </Card.Content>
-    </Card>
+          <Save></Save>
+          {t("save")}
+        </Button>
+      </form>
+    </CardWithTitle>
   );
 }

@@ -1,21 +1,19 @@
-import { Card, Label, ListBox, Select } from "@heroui/react";
+import { Label, ListBox, Select } from "@heroui/react";
 import { useContext } from "react";
 import { useTranslation } from "react-i18next";
 import { ThemeContext } from "../../context/theme-context";
 import { ThemeOptions } from "../../types/theme-options";
 import { Computer, Moon, Sun } from "lucide-react";
-import { SectionTitle } from "../../components/section-title";
 import { renderFlag } from "../../utils/render-flag";
+import CardWithTitle from "../card-with-header";
 
 export default function DisplaySettings() {
   const { themeOption, setTheme } = useContext(ThemeContext);
   const { t, i18n } = useTranslation();
 
   return (
-    <Card>
-      <Card.Content className="flex flex-col gap-[0.7rem]">
-        <SectionTitle icon="monitor-cog">{t("display")}</SectionTitle>
-
+    <CardWithTitle icon="monitor-cog" title={t("display")}>
+      <div className="flex flex-col p-[1rem] gap-[1rem]">
         <Select
           value={themeOption}
           onChange={(value) => setTheme(value?.toString() as ThemeOptions)}
@@ -111,7 +109,7 @@ export default function DisplaySettings() {
             </ListBox>
           </Select.Popover>
         </Select>
-      </Card.Content>
-    </Card>
+      </div>
+    </CardWithTitle>
   );
 }

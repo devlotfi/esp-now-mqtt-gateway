@@ -265,8 +265,14 @@ void sendNotification(NotificationsData *notificationsData, const char *title, c
   strncpy(args->apiSecret, notificationsData->apiSecret, sizeof(args->apiSecret) - 1);
   args->apiSecret[sizeof(args->apiSecret) - 1] = '\0';
 
+  // body
+  strncpy(args->title, title, NOTIFICATION_TITLE_SIZE);
+  args->title[NOTIFICATION_TITLE_SIZE - 1] = '\0';
+  strncpy(args->body, body, NOTIFICATION_BODY_SIZE);
+  args->body[NOTIFICATION_BODY_SIZE - 1] = '\0';
+
   xTaskCreatePinnedToCoreWithCaps(
-      testNotificationTask,
+      notificationTask,
       "send_notification_worker",
       8192,
       args,

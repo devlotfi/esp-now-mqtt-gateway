@@ -24,13 +24,14 @@ public:
     JsonObject root = response->getRoot().to<JsonObject>();
 
     root["ipAssignment"] = networkData->ipAssignment.to_string();
+    auto staticConfig = root["staticConfig"].to<ArduinoJson::JsonObject>();
     // if static provide static config
     if (networkData->ipAssignment == IPAssignment::STATIC)
     {
-      root["ip"] = IPAddress(networkData->ip).toString();
-      root["gateway"] = IPAddress(networkData->gateway).toString();
-      root["subnet"] = IPAddress(networkData->subnet).toString();
-      root["dns"] = IPAddress(networkData->dns).toString();
+      staticConfig["ip"] = IPAddress(networkData->ip).toString();
+      staticConfig["gateway"] = IPAddress(networkData->gateway).toString();
+      staticConfig["subnet"] = IPAddress(networkData->subnet).toString();
+      staticConfig["dns"] = IPAddress(networkData->dns).toString();
     }
 
     free(networkData);
@@ -56,7 +57,7 @@ public:
 
     if (ipAssignment == IPAssignment::STATIC)
     {
-      auto staticConfig = json["staticConfig"].to<ArduinoJson::JsonObject>();
+      auto staticConfig = json["staticConfig"].as<ArduinoJson::JsonObject>();
       if (
           !staticConfig ||
           !staticConfig["ip"].is<const char *>() ||
@@ -72,8 +73,8 @@ public:
       const char *subnetStr = staticConfig["subnet"].as<const char *>();
       const char *dnsStr = staticConfig["dns"].as<const char *>();
       if (
-          !isValidIPv4(ipStr) ||
-          !isValidIPv4(gatewayStr) ||
+          !isPrivateIPv4(ipStr) ||
+          !isPrivateIPv4(gatewayStr) ||
           !isValidSubnetMask(subnetStr) ||
           !isValidIPv4(dnsStr))
       {

@@ -1,0 +1,1 @@
+import{T as e}from"./heroui-C1Ugla2k.js";import{t}from"./useNavigate-BKqjah0v.js";var n=e();function r(){return(0,n.jsx)(t,{to:`/login`})}export{r as component};

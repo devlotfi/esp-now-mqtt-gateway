@@ -4,6 +4,9 @@ import { type ComponentProps, type PropsWithChildren } from "react";
 
 interface SectionHeaderProps extends ComponentProps<"div"> {
   icon: IconName;
+  iconProps?: {
+    className: string;
+  };
   iconWrapperProps?: ComponentProps<"div">;
   labelProps?: ComponentProps<"div">;
 }
@@ -11,6 +14,7 @@ interface SectionHeaderProps extends ComponentProps<"div"> {
 export default function SectionHeader({
   children,
   icon,
+  iconProps,
   className,
   iconWrapperProps: {
     className: classNameIconWrapper,
@@ -36,7 +40,10 @@ export default function SectionHeader({
       >
         <DynamicIcon
           name={icon}
-          className="text-accent-foreground size-[2rem]"
+          className={cn(
+            "text-accent-foreground size-[2rem]",
+            iconProps?.className,
+          )}
         ></DynamicIcon>
       </div>
       <div

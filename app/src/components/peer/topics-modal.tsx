@@ -211,7 +211,8 @@ export default function TopicsModal({ state, peer }: TopicsModalProps) {
                   ></ValidatedTextField>
                 </form>
 
-                {topicsQuery.data?.topicList.length ? (
+                {topicsQuery.data?.topicList &&
+                topicsQuery.data?.topicList.length ? (
                   <div className="flex flex-col pt-[1rem]">
                     <div className="flex flex-col gap-[0.5rem]">
                       {topicsQuery.data.topicList.map((topic, index) => (

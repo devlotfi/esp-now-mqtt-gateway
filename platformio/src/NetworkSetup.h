@@ -76,6 +76,9 @@ void setupNetwork()
 
   Network.onEvent(WiFiEvent);
 
+  ETH.begin(ETH_PHY_W5500, 1, WIZNET_CS_PIN, WIZNET_INT_PIN, WIZNET_RESET_PIN, SPI2_HOST,
+            WIZNET_SCLK_PIN, WIZNET_MISO_PIN, WIZNET_MOSI_PIN);
+
   if (networkData->ipAssignment == IPAssignment::STATIC)
   {
     IPAddress ip(networkData->ip);
@@ -95,9 +98,6 @@ void setupNetwork()
   {
     Serial.println("NETWORK-INTERFACE: Using DHCP");
   }
-
-  ETH.begin(ETH_PHY_W5500, 1, WIZNET_CS_PIN, WIZNET_INT_PIN, WIZNET_RESET_PIN, SPI2_HOST,
-            WIZNET_SCLK_PIN, WIZNET_MISO_PIN, WIZNET_MOSI_PIN);
 
   free(networkData);
 }

@@ -1,18 +1,23 @@
 {
-  "openapi": "3.0.0",
+  "openapi": "3.0.3",
   "info": {
-    "title": "ESP32 IoT Gateway API",
+    "title": "ESP32 Gateway API",
     "version": "1.0.0",
-    "description": "API for managing ESP-NOW to MQTT gateway, network configurations, and device status."
+    "description": "REST API for the ESP32-based MQTT/ESP-NOW gateway device."
   },
   "servers": [
     {
-      "url": "http://{device_ip}/api",
+      "url": "http://{host}",
       "variables": {
-        "device_ip": {
-          "default": "192.168.1.1"
+        "host": {
+          "default": "192.168.1.100"
         }
       }
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
     }
   ],
   "components": {
@@ -26,143 +31,576 @@
     "schemas": {
       "Error": {
         "type": "object",
+        "required": ["error"],
         "properties": {
           "error": {
             "type": "string",
-            "example": "INVALID_REQUEST"
+            "example": "INVALID_REQUEST",
+            "enum": [
+              "INVALID_REQUEST",
+              "WRONG_PASSWORD",
+              "NOT_FOUND",
+              "EXISTS",
+              "MAX_PEERS_REACHED",
+              "MAX_TOPICS_REACHED",
+              "CANNOT_SET_PMK_TO_ESP_NOW"
+            ]
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["password"],
+        "properties": {
+          "password": {
+            "type": "string",
+            "example": "mysecretpassword"
+          }
+        }
+      },
+      "LoginResponse": {
+        "type": "object",
+        "required": ["token"],
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "JWT bearer token (max 255 chars)",
+            "example": "eyJhbGciOi..."
+          }
+        }
+      },
+      "SetPasswordRequest": {
+        "type": "object",
+        "required": ["password"],
+        "properties": {
+          "password": {
+            "type": "string",
+            "example": "mynewpassword"
+          }
+        }
+      },
+      "DeviceStatusResponse": {
+        "type": "object",
+        "required": ["heap", "psram", "storage", "ethernet", "general"],
+        "properties": {
+          "heap": {
+            "type": "object",
+            "required": ["freeHeap", "heapSize", "minFreeHeap", "maxAllocHeap"],
+            "properties": {
+              "freeHeap": {
+                "type": "integer",
+                "example": 200000
+              },
+              "heapSize": {
+                "type": "integer",
+                "example": 327680
+              },
+              "minFreeHeap": {
+                "type": "integer",
+                "example": 180000
+              },
+              "maxAllocHeap": {
+                "type": "integer",
+                "example": 131072
+              }
+            }
+          },
+          "psram": {
+            "type": "object",
+            "required": [
+              "freePsram",
+              "psramSize",
+              "minFreePsram",
+              "maxAllocPsram"
+            ],
+            "properties": {
+              "freePsram": {
+                "type": "integer",
+                "example": 4000000
+              },
+              "psramSize": {
+                "type": "integer",
+                "example": 4194304
+              },
+              "minFreePsram": {
+                "type": "integer",
+                "example": 3900000
+              },
+              "maxAllocPsram": {
+                "type": "integer",
+                "example": 2097152
+              }
+            }
+          },
+          "storage": {
+            "type": "object",
+            "required": ["flashChipSize", "freeSketchSpace"],
+            "properties": {
+              "flashChipSize": {
+                "type": "integer",
+                "example": 4194304
+              },
+              "freeSketchSpace": {
+                "type": "integer",
+                "example": 1900000
+              }
+            }
+          },
+          "ethernet": {
+            "type": "object",
+            "required": [
+              "localIP",
+              "macAddress",
+              "linkUp",
+              "linkSpeed",
+              "fullDuplex"
+            ],
+            "properties": {
+              "localIP": {
+                "type": "string",
+                "example": "192.168.1.100"
+              },
+              "macAddress": {
+                "type": "string",
+                "example": "AA:BB:CC:DD:EE:FF"
+              },
+              "linkUp": {
+                "type": "boolean",
+                "example": true
+              },
+              "linkSpeed": {
+                "type": "integer",
+                "example": 100
+              },
+              "fullDuplex": {
+                "type": "boolean",
+                "example": true
+              }
+            }
+          },
+          "general": {
+            "type": "object",
+            "required": ["uptime", "mqttConnected", "mqttConnected"],
+            "properties": {
+              "uptime": {
+                "type": "integer",
+                "description": "Milliseconds since last boot",
+                "example": 123456
+              },
+              "cpuTemp": {
+                "type": "number",
+                "format": "float",
+                "nullable": true,
+                "description": "CPU temperature in \u00b0C; null if sensor read failed",
+                "example": 42.5
+              },
+              "mqttConnected": {
+                "type": "boolean",
+                "example": true
+              }
+            }
+          }
+        }
+      },
+      "NetworkConfigResponse": {
+        "type": "object",
+        "required": ["ipAssignment"],
+        "properties": {
+          "ipAssignment": {
+            "type": "string",
+            "enum": ["DHCP", "STATIC"],
+            "example": "STATIC"
+          },
+          "staticConfig": {
+            "type": "object",
+            "description": "Present but empty when ipAssignment is DHCP; populated when STATIC",
+            "properties": {
+              "ip": {
+                "type": "string",
+                "example": "192.168.1.100"
+              },
+              "gateway": {
+                "type": "string",
+                "example": "192.168.1.1"
+              },
+              "subnet": {
+                "type": "string",
+                "example": "255.255.255.0"
+              },
+              "dns": {
+                "type": "string",
+                "example": "8.8.8.8"
+              }
+            }
+          }
+        }
+      },
+      "NetworkSetConfigRequest": {
+        "type": "object",
+        "required": ["ipAssignment"],
+        "properties": {
+          "ipAssignment": {
+            "type": "string",
+            "enum": ["DHCP", "STATIC"],
+            "example": "STATIC"
+          },
+          "staticConfig": {
+            "type": "object",
+            "description": "Required when ipAssignment is STATIC",
+            "required": ["ip", "gateway", "subnet", "dns"],
+            "properties": {
+              "ip": {
+                "type": "string",
+                "example": "192.168.1.100"
+              },
+              "gateway": {
+                "type": "string",
+                "example": "192.168.1.1"
+              },
+              "subnet": {
+                "type": "string",
+                "example": "255.255.255.0"
+              },
+              "dns": {
+                "type": "string",
+                "example": "8.8.8.8"
+              }
+            }
+          }
+        }
+      },
+      "MqttConfigResponse": {
+        "type": "object",
+        "required": ["isSet"],
+        "properties": {
+          "isSet": {
+            "type": "boolean",
+            "example": true
+          },
+          "config": {
+            "type": "object",
+            "description": "Present only when isSet is true",
+            "required": ["useAuth", "clientId", "username", "password", "url"],
+            "properties": {
+              "useAuth": {
+                "type": "boolean",
+                "example": true
+              },
+              "clientId": {
+                "type": "string",
+                "example": "esp32-gateway"
+              },
+              "username": {
+                "type": "string",
+                "example": "mqttuser"
+              },
+              "password": {
+                "type": "string",
+                "example": "mqttpass"
+              },
+              "url": {
+                "type": "string",
+                "example": "mqtt://broker.example.com:1883"
+              }
+            }
+          }
+        }
+      },
+      "MqttSetConfigRequest": {
+        "type": "object",
+        "required": ["clientId", "url", "useAuth"],
+        "properties": {
+          "clientId": {
+            "type": "string",
+            "example": "esp32-gateway"
+          },
+          "url": {
+            "type": "string",
+            "description": "Valid MQTT URL (mqtt:// or mqtts://)",
+            "example": "mqtt://broker.example.com:1883"
+          },
+          "useAuth": {
+            "type": "boolean",
+            "example": true
+          },
+          "username": {
+            "type": "string",
+            "description": "Required when useAuth is true",
+            "example": "mqttuser"
+          },
+          "password": {
+            "type": "string",
+            "description": "Required when useAuth is true",
+            "example": "mqttpass"
+          }
+        }
+      },
+      "NotificationsConfigResponse": {
+        "type": "object",
+        "required": ["isSet"],
+        "properties": {
+          "isSet": {
+            "type": "boolean",
+            "example": true
+          },
+          "config": {
+            "type": "object",
+            "description": "Present only when isSet is true",
+            "required": ["apiUrl", "apiSecret"],
+            "properties": {
+              "apiUrl": {
+                "type": "string",
+                "example": "https://notify.example.com/send"
+              },
+              "apiSecret": {
+                "type": "string",
+                "example": "supersecret"
+              }
+            }
+          }
+        }
+      },
+      "NotificationsSetConfigRequest": {
+        "type": "object",
+        "required": ["apiUrl", "apiSecret"],
+        "properties": {
+          "apiUrl": {
+            "type": "string",
+            "description": "Valid HTTP/HTTPS URL",
+            "example": "https://notify.example.com/send"
+          },
+          "apiSecret": {
+            "type": "string",
+            "example": "supersecret"
+          }
+        }
+      },
+      "EspNowSetPmkRequest": {
+        "type": "object",
+        "required": ["pmk"],
+        "properties": {
+          "pmk": {
+            "type": "string",
+            "description": "32-character hex string representing the 16-byte Primary Master Key",
+            "example": "0102030405060708090a0b0c0d0e0f10"
+          }
+        }
+      },
+      "Peer": {
+        "type": "object",
+        "required": ["id", "name", "mac"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "name": {
+            "type": "string",
+            "example": "sensor-node-1"
+          },
+          "mac": {
+            "type": "string",
+            "example": "AA:BB:CC:DD:EE:01"
+          }
+        }
+      },
+      "PeersResponse": {
+        "type": "object",
+        "required": ["peers"],
+        "properties": {
+          "peers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Peer"
+            }
+          }
+        }
+      },
+      "AddPeerRequest": {
+        "type": "object",
+        "required": ["name", "mac", "lmk"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Human-readable peer name; must be unique",
+            "example": "sensor-node-1"
+          },
+          "mac": {
+            "type": "string",
+            "description": "Unicast MAC address; must be unique",
+            "example": "AA:BB:CC:DD:EE:01"
+          },
+          "lmk": {
+            "type": "string",
+            "description": "32-character hex string representing the 16-byte Local Master Key",
+            "example": "aabbccddeeff00112233445566778899"
+          }
+        }
+      },
+      "TopicsResponse": {
+        "type": "object",
+        "required": ["topicList"],
+        "properties": {
+          "topicList": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["sensors/temperature", "sensors/humidity"]
+          }
+        }
+      },
+      "AddTopicRequest": {
+        "type": "object",
+        "required": ["topic"],
+        "properties": {
+          "topic": {
+            "type": "string",
+            "description": "MQTT topic string; must be unique per peer",
+            "example": "sensors/temperature"
+          }
+        }
+      },
+      "DeleteTopicRequest": {
+        "type": "object",
+        "required": ["topic"],
+        "properties": {
+          "topic": {
+            "type": "string",
+            "example": "sensors/temperature"
+          }
+        }
+      },
+      "EspNowConfigResponse": {
+        "type": "object",
+        "required": ["mac", "channel"],
+        "properties": {
+          "mac": {
+            "type": "string",
+            "description": "Unicast MAC address in colon-separated hex notation",
+            "example": "AA:BB:CC:DD:EE:FF"
+          },
+          "channel": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 13,
+            "example": 6
+          }
+        }
+      },
+      "EspNowSetConfigRequest": {
+        "type": "object",
+        "required": ["mac", "channel"],
+        "properties": {
+          "mac": {
+            "type": "string",
+            "description": "Unicast MAC address (colon-separated hex)",
+            "example": "AA:BB:CC:DD:EE:FF"
+          },
+          "channel": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 13,
+            "example": 6
           }
         }
       }
     }
   },
   "paths": {
-    "/auth/login": {
+    "/api/auth/login": {
       "post": {
-        "summary": "Login to get JWT token",
+        "summary": "Authenticate and obtain a JWT token",
+        "security": [],
+        "tags": ["Auth"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "required": ["password"],
-                "properties": {
-                  "password": { "type": "string" }
-                }
+                "$ref": "#/components/schemas/LoginRequest"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Success",
+            "description": "Login successful",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "token": { "type": "string" }
-                  }
+                  "$ref": "#/components/schemas/LoginResponse"
                 }
               }
             }
           },
-          "403": { "description": "Wrong password" }
+          "400": {
+            "description": "Missing or invalid request body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Wrong password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
         }
       }
     },
-    "/auth/set-password": {
+    "/api/auth/set-password": {
       "post": {
-        "security": [{ "bearerAuth": [] }],
-        "summary": "Update device password",
+        "summary": "Change the device password",
+        "tags": ["Auth"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "required": ["password"],
-                "properties": {
-                  "password": { "type": "string" }
-                }
+                "$ref": "#/components/schemas/SetPasswordRequest"
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Password updated" }
+          "200": {
+            "description": "Password updated successfully"
+          }
         }
       }
     },
-    "/device/reboot": {
-      "get": {
-        "security": [{ "bearerAuth": [] }],
-        "summary": "Reboot the ESP32",
-        "responses": {
-          "200": { "description": "Device will restart" }
-        }
-      }
-    },
-    "/device/status": {
-      "get": {
-        "security": [{ "bearerAuth": [] }],
-        "summary": "Get system resources and network status",
+    "/api/device/reboot": {
+      "post": {
+        "summary": "Reboot the device",
+        "tags": ["Device"],
         "responses": {
           "200": {
-            "description": "System status",
+            "description": "Reboot initiated"
+          }
+        }
+      }
+    },
+    "/api/device/status": {
+      "get": {
+        "summary": "Get device health / status information",
+        "tags": ["Device"],
+        "responses": {
+          "200": {
+            "description": "Device status",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "heap": {
-                      "type": "object",
-                      "properties": {
-                        "freeHeap": { "type": "integer" },
-                        "heapSize": { "type": "integer" },
-                        "minFreeHeap": { "type": "integer" },
-                        "maxAllocHeap": { "type": "integer" }
-                      }
-                    },
-                    "psram": {
-                      "type": "object",
-                      "properties": {
-                        "freePsram": { "type": "integer" },
-                        "psramSize": { "type": "integer" },
-                        "minFreePsram": { "type": "integer" },
-                        "maxAllocPsram": { "type": "integer" }
-                      }
-                    },
-                    "storage": {
-                      "type": "object",
-                      "properties": {
-                        "flashChipSize": { "type": "integer" },
-                        "freeSketchSpace": { "type": "integer" }
-                      }
-                    },
-                    "ethernet": {
-                      "type": "object",
-                      "properties": {
-                        "mac": {
-                          "type": "string",
-                          "description": "Physical ETH MAC"
-                        },
-                        "localIP": { "type": "string" },
-                        "macAddress": { "type": "string" },
-                        "linkUp": { "type": "boolean" },
-                        "linkSpeed": { "type": "integer" },
-                        "fullDuplex": { "type": "boolean" }
-                      }
-                    },
-                    "general": {
-                      "type": "object",
-                      "properties": {
-                        "uptime": { "type": "integer" },
-                        "mqttConnected": { "type": "boolean" },
-                        "cpuTemp": { "type": "number", "nullable": true }
-                      }
-                    }
-                  }
+                  "$ref": "#/components/schemas/DeviceStatusResponse"
                 }
               }
             }
@@ -170,95 +608,179 @@
         }
       }
     },
-    "/esp-now/get-channel": {
+    "/api/network": {
       "get": {
-        "security": [{ "bearerAuth": [] }],
-        "summary": "Get current WiFi channel",
+        "summary": "Get current network configuration",
+        "tags": ["Network"],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Network config",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "channel": { "type": "integer" }
-                  }
+                  "$ref": "#/components/schemas/NetworkConfigResponse"
                 }
               }
             }
           }
         }
-      }
-    },
-    "/esp-now/set-channel": {
+      },
       "post": {
-        "security": [{ "bearerAuth": [] }],
+        "summary": "Set network configuration (triggers reboot)",
+        "tags": ["Network"],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "channel": { "type": "integer" }
-                }
+                "$ref": "#/components/schemas/NetworkSetConfigRequest"
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Channel updated, device restarting" }
-        }
-      }
-    },
-    "/esp-now/set-pmk": {
-      "post": {
-        "security": [{ "bearerAuth": [] }],
-        "summary": "Set Primary Master Key",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "pmk": {
-                    "type": "string",
-                    "description": "16-byte hex string"
-                  }
+          "200": {
+            "description": "Config saved; device will reboot"
+          },
+          "400": {
+            "description": "Invalid or incomplete request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
           }
-        },
-        "responses": {
-          "200": { "description": "PMK set" }
         }
       }
     },
-    "/esp-now/peers": {
+    "/api/mqtt": {
       "get": {
-        "security": [{ "bearerAuth": [] }],
+        "summary": "Get MQTT broker configuration",
+        "tags": ["MQTT"],
+        "responses": {
+          "200": {
+            "description": "MQTT config",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MqttConfigResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Set MQTT broker configuration (triggers reboot)",
+        "tags": ["MQTT"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MqttSetConfigRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Config saved; device will reboot"
+          },
+          "400": {
+            "description": "Invalid or incomplete request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notifications": {
+      "get": {
+        "summary": "Get push-notification configuration",
+        "tags": ["Notifications"],
+        "responses": {
+          "200": {
+            "description": "Notification config",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationsConfigResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Set push-notification configuration",
+        "tags": ["Notifications"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotificationsSetConfigRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Config saved"
+          },
+          "400": {
+            "description": "Invalid or incomplete request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notifications/test": {
+      "post": {
+        "summary": "Send a test notification",
+        "tags": ["Notifications"],
+        "responses": {
+          "200": {
+            "description": "Test notification sent"
+          },
+          "404": {
+            "description": "Notifications not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/esp-now/peers": {
+      "get": {
         "summary": "List all ESP-NOW peers",
+        "tags": ["ESP-NOW Peers"],
         "responses": {
           "200": {
-            "description": "Success",
+            "description": "Peer list",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "peers": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": { "type": "string", "format": "uuid" },
-                          "name": { "type": "string" },
-                          "mac": { "type": "string" }
-                        }
-                      }
-                    }
-                  }
+                  "$ref": "#/components/schemas/PeersResponse"
                 }
               }
             }
@@ -266,72 +788,120 @@
         }
       },
       "post": {
-        "security": [{ "bearerAuth": [] }],
-        "summary": "Add a new peer",
+        "summary": "Add an ESP-NOW peer",
+        "tags": ["ESP-NOW Peers"],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "required": ["name", "mac", "lmk"],
-                "properties": {
-                  "name": { "type": "string" },
-                  "mac": { "type": "string" },
-                  "lmk": { "type": "string", "description": "Local Master Key" }
-                }
+                "$ref": "#/components/schemas/AddPeerRequest"
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Peer added" },
-          "403": { "description": "Peer already exists" }
+          "200": {
+            "description": "Peer added"
+          },
+          "400": {
+            "description": "Invalid MAC or LMK format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Peer with same name or MAC already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Maximum peer count reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
         }
       }
     },
-    "/esp-now/peers/{id}": {
+    "/api/esp-now/peers/{id}": {
       "delete": {
-        "security": [{ "bearerAuth": [] }],
-        "summary": "Delete a peer",
+        "summary": "Delete an ESP-NOW peer by UUID",
+        "tags": ["ESP-NOW Peers"],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
-          }
-        ],
-        "responses": {
-          "200": { "description": "Peer deleted" },
-          "404": { "description": "Peer not found" }
-        }
-      }
-    },
-    "/esp-now/topics/{id}": {
-      "get": {
-        "security": [{ "bearerAuth": [] }],
-        "summary": "Get topics for a peer",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": "550e8400-e29b-41d4-a716-446655440000"
           }
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Peer deleted"
+          },
+          "404": {
+            "description": "Peer not found",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "topicList": {
-                      "type": "array",
-                      "items": { "type": "string" }
-                    }
-                  }
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/esp-now/topics/{id}": {
+      "get": {
+        "summary": "List MQTT topics subscribed for a peer",
+        "tags": ["ESP-NOW Topics"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Topic list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TopicsResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Peer not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
@@ -339,81 +909,178 @@
         }
       },
       "post": {
-        "security": [{ "bearerAuth": [] }],
-        "summary": "Add topic subscription",
+        "summary": "Add an MQTT topic subscription for a peer",
+        "tags": ["ESP-NOW Topics"],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "topic": { "type": "string" }
-                }
+                "$ref": "#/components/schemas/AddTopicRequest"
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Topic added" }
+          "200": {
+            "description": "Topic added and subscribed"
+          },
+          "400": {
+            "description": "Missing topic field",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Topic already exists for this peer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Peer not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Maximum topic count reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
         }
       },
       "delete": {
-        "security": [{ "bearerAuth": [] }],
-        "summary": "Remove topic subscription",
+        "summary": "Remove an MQTT topic subscription from a peer",
+        "tags": ["ESP-NOW Topics"],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "topic": { "type": "string" }
-                }
+                "$ref": "#/components/schemas/DeleteTopicRequest"
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Topic removed" }
-        }
-      }
-    },
-    "/notifications": {
-      "get": {
-        "security": [{ "bearerAuth": [] }],
-        "summary": "Get notification settings",
-        "responses": {
           "200": {
-            "description": "OK",
+            "description": "Topic removed (and MQTT unsubscribed if no other peers use it)"
+          },
+          "400": {
+            "description": "Missing topic field",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "isSet": { "type": "boolean" },
-                    "config": {
-                      "type": "object",
-                      "properties": {
-                        "apiUrl": { "type": "string" },
-                        "apiSecret": { "type": "string" }
-                      }
-                    }
-                  }
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Peer or topic not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/esp-now/pmk": {
+      "post": {
+        "summary": "Set the ESP-NOW Primary Master Key",
+        "tags": ["ESP-NOW"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EspNowSetPmkRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "PMK applied; peers re-initialised"
+          },
+          "400": {
+            "description": "Invalid PMK format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "esp_now_set_pmk() failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/esp-now": {
+      "get": {
+        "summary": "Get ESP-NOW configuration (MAC and channel)",
+        "tags": ["ESP-NOW"],
+        "responses": {
+          "200": {
+            "description": "ESP-NOW config",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EspNowConfigResponse"
                 }
               }
             }
@@ -421,138 +1088,32 @@
         }
       },
       "post": {
-        "security": [{ "bearerAuth": [] }],
-        "summary": "Update notification settings",
+        "summary": "Set ESP-NOW configuration (MAC and channel, triggers reboot)",
+        "tags": ["ESP-NOW"],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "apiUrl": { "type": "string" },
-                  "apiSecret": { "type": "string" }
-                }
+                "$ref": "#/components/schemas/EspNowSetConfigRequest"
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Settings saved" }
-        }
-      }
-    },
-    "/notifications/test": {
-      "post": {
-        "security": [{ "bearerAuth": [] }],
-        "summary": "Trigger test notification",
-        "responses": {
-          "200": { "description": "Notification sent" }
-        }
-      }
-    },
-    "/mqtt": {
-      "get": {
-        "security": [{ "bearerAuth": [] }],
-        "summary": "Get MQTT config",
-        "responses": {
           "200": {
-            "description": "OK",
+            "description": "Config saved; device will reboot"
+          },
+          "400": {
+            "description": "Invalid MAC or channel",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "isSet": { "type": "boolean" },
-                    "config": { "type": "object" }
-                  }
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
           }
-        }
-      },
-      "post": {
-        "security": [{ "bearerAuth": [] }],
-        "summary": "Set MQTT config",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["clientId", "url", "useAuth"],
-                "properties": {
-                  "clientId": { "type": "string" },
-                  "url": { "type": "string" },
-                  "useAuth": { "type": "boolean" },
-                  "username": { "type": "string" },
-                  "password": { "type": "string" }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": { "description": "MQTT settings saved" }
-        }
-      }
-    },
-    "/network": {
-      "get": {
-        "security": [{ "bearerAuth": [] }],
-        "summary": "Get IP settings",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "ipAssignment": {
-                      "type": "string",
-                      "enum": ["DHCP", "STATIC"]
-                    },
-                    "ip": { "type": "string" },
-                    "gateway": { "type": "string" },
-                    "subnet": { "type": "string" },
-                    "dns": { "type": "string" }
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "security": [{ "bearerAuth": [] }],
-        "summary": "Set IP settings",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["ipAssignment"],
-                "properties": {
-                  "ipAssignment": {
-                    "type": "string",
-                    "enum": ["DHCP", "STATIC"]
-                  },
-                  "staticConfig": {
-                    "type": "object",
-                    "properties": {
-                      "ip": { "type": "string" },
-                      "gateway": { "type": "string" },
-                      "subnet": { "type": "string" },
-                      "dns": { "type": "string" }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": { "description": "Network settings saved" }
         }
       }
     }

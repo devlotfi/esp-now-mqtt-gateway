@@ -12,6 +12,39 @@ bool isValidIPv4(const char *ip)
   return result == 1;
 }
 
+bool isPrivateIPv4(const char *ip, bool strict = false)
+{
+  if (!ip)
+    return false;
+
+  struct sockaddr_in sa;
+  if (inet_pton(AF_INET, ip, &(sa.sin_addr)) != 1)
+    return false;
+
+  uint32_t addr = ntohl(sa.sin_addr.s_addr);
+  uint8_t first = (addr >> 24) & 0xFF;
+  uint8_t second = (addr >> 16) & 0xFF;
+
+  if (strict)
+  {
+    if (first == 127)
+      return false; // loopback
+    if (first == 169 && second == 254)
+      return false; // link-local
+    if (addr == 0)
+      return false; // 0.0.0.0
+  }
+
+  if (first == 10)
+    return true; // 10.0.0.0/8
+  if (first == 172 && second >= 16 && second <= 31)
+    return true; // 172.16.0.0/12
+  if (first == 192 && second == 168)
+    return true; // 192.168.0.0/16
+
+  return false;
+}
+
 bool isValidSubnetMask(const char *mask)
 {
   struct in_addr addr;

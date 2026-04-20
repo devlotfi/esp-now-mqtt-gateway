@@ -14,7 +14,7 @@ import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settings'
-import { Route as DashboardAuthRouteImport } from './routes/dashboard/auth'
+import { Route as DashboardPeersRouteImport } from './routes/dashboard/peers'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -41,9 +41,9 @@ const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
-const DashboardAuthRoute = DashboardAuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const DashboardPeersRoute = DashboardPeersRouteImport.update({
+  id: '/peers',
+  path: '/peers',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
 
@@ -51,14 +51,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/login': typeof LoginRoute
-  '/dashboard/auth': typeof DashboardAuthRoute
+  '/dashboard/peers': typeof DashboardPeersRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/dashboard/auth': typeof DashboardAuthRoute
+  '/dashboard/peers': typeof DashboardPeersRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard': typeof DashboardIndexRoute
 }
@@ -67,7 +67,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/login': typeof LoginRoute
-  '/dashboard/auth': typeof DashboardAuthRoute
+  '/dashboard/peers': typeof DashboardPeersRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
@@ -77,17 +77,17 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard'
     | '/login'
-    | '/dashboard/auth'
+    | '/dashboard/peers'
     | '/dashboard/settings'
     | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/dashboard/auth' | '/dashboard/settings' | '/dashboard'
+  to: '/' | '/login' | '/dashboard/peers' | '/dashboard/settings' | '/dashboard'
   id:
     | '__root__'
     | '/'
     | '/dashboard'
     | '/login'
-    | '/dashboard/auth'
+    | '/dashboard/peers'
     | '/dashboard/settings'
     | '/dashboard/'
   fileRoutesById: FileRoutesById
@@ -135,24 +135,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
-    '/dashboard/auth': {
-      id: '/dashboard/auth'
-      path: '/auth'
-      fullPath: '/dashboard/auth'
-      preLoaderRoute: typeof DashboardAuthRouteImport
+    '/dashboard/peers': {
+      id: '/dashboard/peers'
+      path: '/peers'
+      fullPath: '/dashboard/peers'
+      preLoaderRoute: typeof DashboardPeersRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
   }
 }
 
 interface DashboardRouteRouteChildren {
-  DashboardAuthRoute: typeof DashboardAuthRoute
+  DashboardPeersRoute: typeof DashboardPeersRoute
   DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
 const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
-  DashboardAuthRoute: DashboardAuthRoute,
+  DashboardPeersRoute: DashboardPeersRoute,
   DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
 }

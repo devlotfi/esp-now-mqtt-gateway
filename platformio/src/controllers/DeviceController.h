@@ -37,11 +37,6 @@ public:
     auto flashChipSize = ESP.getFlashChipSize();
     auto freeSketchSpace = ESP.getFreeSketchSpace();
 
-    uint8_t mac[6];
-    esp_read_mac(mac, ESP_MAC_ETH);
-    char macStr[MAC_SIZE_STRING];
-    macBytesToString(mac, macStr);
-
     auto localIP = ETH.localIP().toString();
     auto macAddress = ETH.macAddress();
     auto linkUp = ETH.linkUp();
@@ -75,7 +70,6 @@ public:
     storageObj["freeSketchSpace"] = freeSketchSpace;
 
     auto ethernetObj = root["ethernet"].to<ArduinoJson::JsonObject>();
-    ethernetObj["mac"] = macStr;
     ethernetObj["localIP"] = localIP;
     ethernetObj["macAddress"] = macAddress;
     ethernetObj["linkUp"] = linkUp;

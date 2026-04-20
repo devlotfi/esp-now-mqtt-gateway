@@ -192,11 +192,11 @@ export default function Sidebar() {
       </div>
 
       <div className="flex flex-col flex-1 justify-center items-center gap-[0.5rem] p-[0.7rem]">
-        <SidebarButton path="/dashboard" icon={"microchip"}>
-          {t("peers")}
+        <SidebarButton path="/dashboard" icon={"circle-gauge"}>
+          {t("dashboard")}
         </SidebarButton>
-        <SidebarButton path="/dashboard/auth" icon={"user-key"}>
-          {t("auth")}
+        <SidebarButton path="/dashboard/peers" icon={"microchip"}>
+          {t("peers")}
         </SidebarButton>
         <SidebarButton path="/dashboard/settings" icon={"settings"}>
           {t("settings")}

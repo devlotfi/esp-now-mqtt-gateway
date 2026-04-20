@@ -27,7 +27,7 @@ public:
     root["isSet"] = mqttData->isSet;
     if (mqttData->isSet)
     {
-      config["isSet"] = mqttData->isSet;
+      config["useAuth"] = mqttData->useAuth;
       config["clientId"] = mqttData->clientId;
       config["username"] = mqttData->username;
       config["password"] = mqttData->password;

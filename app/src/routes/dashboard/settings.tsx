@@ -5,6 +5,9 @@ import DisplaySettings from "../../components/settings/display-settings";
 import PMKSettings from "../../components/settings/pmk-settings";
 import PasswordSettings from "../../components/settings/password-settings";
 import NotificationsSettings from "../../components/settings/notifications-settings";
+import MqttSettings from "../../components/settings/mqtt-settings";
+import NetworkSettings from "../../components/settings/network-settings";
+import EspNowSettings from "../../components/settings/esp-now-settings";
 
 export const Route = createFileRoute("/dashboard/settings")({
   component: RouteComponent,
@@ -15,14 +18,21 @@ function RouteComponent() {
 
   return (
     <div className="flex flex-1 flex-col items-center p-[1rem]">
-      <div className="flex flex-col w-full max-w-screen-sm pb-[5rem]">
+      <div className="flex flex-col w-full max-w-screen-lg pb-[5rem]">
         <SectionHeader icon="settings">{t("settings")}</SectionHeader>
 
-        <div className="flex flex-col gap-[2rem]">
-          <DisplaySettings></DisplaySettings>
-          <NotificationsSettings></NotificationsSettings>
-          <PMKSettings></PMKSettings>
-          <PasswordSettings></PasswordSettings>
+        <div className="flex flex-col lg:flex-row gap-[1rem]">
+          <div className="flex flex-1 flex-col gap-[1rem]">
+            <DisplaySettings></DisplaySettings>
+            <MqttSettings></MqttSettings>
+            <NotificationsSettings></NotificationsSettings>
+          </div>
+          <div className="flex flex-1 flex-col gap-[1rem]">
+            <NetworkSettings></NetworkSettings>
+            <EspNowSettings></EspNowSettings>
+            <PMKSettings></PMKSettings>
+            <PasswordSettings></PasswordSettings>
+          </div>
         </div>
       </div>
     </div>
