@@ -82,7 +82,7 @@ export function ThemeProvider({ children }: PropsWithChildren) {
         metaTag.setAttribute("content", "#ffffff");
         break;
       case ThemeOptions.DARK:
-        metaTag.setAttribute("content", "#203147");
+        metaTag.setAttribute("content", "#2b3747");
         break;
     }
   }, [appliedTheme]);
