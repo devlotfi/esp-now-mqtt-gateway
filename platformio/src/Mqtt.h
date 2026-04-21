@@ -102,18 +102,28 @@ static void startMqtt()
     return;
   }
 
+  static char url[MQTT_URL_SIZE];
+  static char clientId[MQTT_CLIENT_ID_SIZE];
+  static char username[MQTT_USERNAME_SIZE];
+  static char password[MQTT_PASSWORD_SIZE];
+
+  strncpy(url, mqttData->url, MQTT_URL_SIZE);
+  strncpy(clientId, mqttData->clientId, MQTT_CLIENT_ID_SIZE);
+  strncpy(username, mqttData->username, MQTT_USERNAME_SIZE);
+  strncpy(password, mqttData->password, MQTT_PASSWORD_SIZE);
+
+  free(mqttData);
+
   esp_mqtt_client_config_t cfg = {};
   cfg.broker.verification.crt_bundle_attach = esp_crt_bundle_attach;
-  cfg.broker.address.uri = mqttData->url;
-  cfg.credentials.client_id = mqttData->clientId;
-  cfg.credentials.username = mqttData->username;
-  cfg.credentials.authentication.password = mqttData->password;
+  cfg.broker.address.uri = url;
+  cfg.credentials.client_id = clientId;
+  cfg.credentials.username = username;
+  cfg.credentials.authentication.password = password;
 
   mqttClient = esp_mqtt_client_init(&cfg);
   esp_mqtt_client_register_event(mqttClient,
                                  (esp_mqtt_event_id_t)ESP_EVENT_ANY_ID,
                                  mqttEventHandler, nullptr);
   esp_mqtt_client_start(mqttClient);
-
-  free(mqttData);
 }
