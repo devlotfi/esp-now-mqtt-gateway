@@ -29,7 +29,7 @@ export default defineConfig({
         name: "ESP-NOW MQTT Gateway",
         short_name: "ESP-NOW MQTT Gateway",
         description: "A web UI to configure the ESP-NOW MQTT Gateway",
-        theme_color: "#1d97de",
+        theme_color: "#e8362d",
       },
 
       workbox: {
