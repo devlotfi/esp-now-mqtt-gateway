@@ -9,6 +9,7 @@
 #include "EspNow.h"
 #include "TempSensor.h"
 #include "NetworkSetup.h"
+#include "Led.h"
 
 void setupStorage()
 {
@@ -26,6 +27,11 @@ void setupLookup()
 void setup()
 {
   Serial.begin(115200);
+
+  // LED setup
+  Serial.println("LED: Setup started");
+  setupLed();
+  Serial.println("LED: Setup completed");
 
   // NVS setup
   Serial.println("TEMP-SENSOR: Setup started");

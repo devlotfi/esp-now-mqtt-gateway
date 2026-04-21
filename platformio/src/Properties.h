@@ -32,6 +32,12 @@
 #define NOTIFICATIONS_API_SECRET_SIZE 256
 
 // ----------------------
+// Led
+// ----------------------
+#define LED_PIN 48
+#define LED_COUNT 1
+
+// ----------------------
 // Preferences namespace
 // ----------------------
 #define PREFERENCES_NAMESAPCE "DEVICE"

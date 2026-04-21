@@ -6,6 +6,7 @@
 #include "Vars.h"
 #include "Api.h"
 #include "Lookup.h"
+#include "Led.h"
 #include "preferences/Mqtt.h"
 
 static void mqttEventHandler(void *args, esp_event_base_t base,
@@ -17,6 +18,7 @@ static void mqttEventHandler(void *args, esp_event_base_t base,
   {
   case MQTT_EVENT_CONNECTED:
     mqttConnected = true;
+    updateLed();
     Serial.println("MQTT: Connected");
     for (size_t i = 0; i < topicSet.count; i++)
     {
@@ -29,6 +31,7 @@ static void mqttEventHandler(void *args, esp_event_base_t base,
 
   case MQTT_EVENT_DISCONNECTED:
     mqttConnected = false;
+    updateLed();
     Serial.println("MQTT: Disconnected (broker will retry automatically)");
     break;
 

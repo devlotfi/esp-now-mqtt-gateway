@@ -2,6 +2,7 @@
 
 #include "preferences/Network.h"
 #include "Mqtt.h"
+#include "Led.h"
 
 void syncTime()
 {
@@ -46,23 +47,27 @@ void WiFiEvent(arduino_event_id_t event)
     Serial.print("ETH: IP → ");
     Serial.println(ETH.localIP());
     ethernetConnected = true;
+    updateLed();
     syncTime();
     if (!mqttStarted)
     {
       Serial.println("MQTT: Starting client...");
       startMqtt();
       mqttStarted = true;
+      updateLed();
     }
     break;
 
   case ARDUINO_EVENT_ETH_DISCONNECTED:
     Serial.println("ETH: Link down");
     ethernetConnected = false;
+    updateLed();
     break;
 
   case ARDUINO_EVENT_ETH_STOP:
     Serial.println("ETH: Stopped");
     ethernetConnected = false;
+    updateLed();
     break;
 
   default:
