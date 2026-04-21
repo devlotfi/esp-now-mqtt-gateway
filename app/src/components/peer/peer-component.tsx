@@ -1,10 +1,11 @@
 import { Button, Card, Chip, useOverlayState } from "@heroui/react";
-import { Mails, Trash } from "lucide-react";
+import { Eye, EyeOff, Mails, Trash } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { paths } from "../../__generated__/schema";
 import DataRow from "../data-row";
 import DeletePeerModal from "./delete-peer-modal";
 import TopicsModal from "./topics-modal";
+import { useState } from "react";
 
 interface PeerComponentProps {
   peer: paths["/api/esp-now/peers"]["get"]["responses"]["200"]["content"]["application/json"]["peers"][number];
@@ -15,6 +16,9 @@ export default function PeerComponent({ peer }: PeerComponentProps) {
 
   const deletePeerModalState = useOverlayState();
   const topicsModalState = useOverlayState();
+
+  const [isVisible, setIsVisible] = useState(false);
+  const toggleVisibility = () => setIsVisible(!isVisible);
 
   return (
     <>
@@ -52,6 +56,26 @@ export default function PeerComponent({ peer }: PeerComponentProps) {
         <Card.Content>
           <DataRow name="ID" value={peer.id} fold></DataRow>
           <DataRow name="MAC" value={peer.mac} fold></DataRow>
+          <DataRow
+            name="LMK"
+            value={
+              <div className="flex items-center gap-[0.5rem]">
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="outline"
+                  className="bg-background rounded-full"
+                  onPress={toggleVisibility}
+                >
+                  {isVisible ? <EyeOff></EyeOff> : <Eye></Eye>}
+                </Button>
+                <div className="flex">
+                  {isVisible ? peer.lmk : "................................"}
+                </div>
+              </div>
+            }
+            fold
+          ></DataRow>
         </Card.Content>
       </Card>
     </>

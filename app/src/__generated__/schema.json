@@ -180,7 +180,7 @@
           },
           "general": {
             "type": "object",
-            "required": ["uptime", "mqttConnected", "mqttConnected"],
+            "required": ["uptime", "mqttConnected"],
             "properties": {
               "uptime": {
                 "type": "integer",
@@ -375,20 +375,9 @@
           }
         }
       },
-      "EspNowSetPmkRequest": {
-        "type": "object",
-        "required": ["pmk"],
-        "properties": {
-          "pmk": {
-            "type": "string",
-            "description": "32-character hex string representing the 16-byte Primary Master Key",
-            "example": "0102030405060708090a0b0c0d0e0f10"
-          }
-        }
-      },
       "Peer": {
         "type": "object",
-        "required": ["id", "name", "mac"],
+        "required": ["id", "name", "mac", "lmk"],
         "properties": {
           "id": {
             "type": "string",
@@ -402,6 +391,11 @@
           "mac": {
             "type": "string",
             "example": "AA:BB:CC:DD:EE:01"
+          },
+          "lmk": {
+            "type": "string",
+            "description": "32-character hex string of the 16-byte Local Master Key",
+            "example": "aabbccddeeff00112233445566778899"
           }
         }
       },
@@ -474,7 +468,7 @@
       },
       "EspNowConfigResponse": {
         "type": "object",
-        "required": ["mac", "channel"],
+        "required": ["mac", "channel", "pmkSet"],
         "properties": {
           "mac": {
             "type": "string",
@@ -486,12 +480,21 @@
             "minimum": 1,
             "maximum": 13,
             "example": 6
+          },
+          "pmkSet": {
+            "type": "boolean",
+            "example": true
+          },
+          "pmk": {
+            "type": "string",
+            "description": "Present only when pmkSet is true; 32-char hex string of the 16-byte PMK",
+            "example": "0102030405060708090a0b0c0d0e0f10"
           }
         }
       },
       "EspNowSetConfigRequest": {
         "type": "object",
-        "required": ["mac", "channel"],
+        "required": ["mac", "channel", "pmk"],
         "properties": {
           "mac": {
             "type": "string",
@@ -503,6 +506,11 @@
             "minimum": 1,
             "maximum": 13,
             "example": 6
+          },
+          "pmk": {
+            "type": "string",
+            "description": "32-character hex string representing the 16-byte Primary Master Key",
+            "example": "0102030405060708090a0b0c0d0e0f10"
           }
         }
       }
@@ -1018,47 +1026,6 @@
           },
           "404": {
             "description": "Peer or topic not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/esp-now/pmk": {
-      "post": {
-        "summary": "Set the ESP-NOW Primary Master Key",
-        "tags": ["ESP-NOW"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/EspNowSetPmkRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "PMK applied; peers re-initialised"
-          },
-          "400": {
-            "description": "Invalid PMK format",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "esp_now_set_pmk() failed",
             "content": {
               "application/json": {
                 "schema": {

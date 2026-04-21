@@ -49,7 +49,6 @@ void setupServer()
 
   server.on(AsyncURIMatcher::exact("/api/esp-now"), HTTP_GET, EspNowController::getConfig).addMiddleware(&jwtAuth);
   server.on(AsyncURIMatcher::exact("/api/esp-now"), HTTP_POST, EspNowController::setConfig).addMiddleware(&jwtAuth);
-  server.on(AsyncURIMatcher::exact("/api/esp-now/pmk"), HTTP_POST, EspNowController::setPMK).addMiddleware(&jwtAuth);
   server.on(AsyncURIMatcher::exact("/api/esp-now/peers"), HTTP_GET, EspNowController::peers).addMiddleware(&jwtAuth);
   server.on(AsyncURIMatcher::exact("/api/esp-now/peers"), HTTP_POST, EspNowController::addPeer).addMiddleware(&jwtAuth);
   server.on(AsyncURIMatcher::regex("^/api/esp-now/peers/([0-9a-fA-F-]{36})$"), HTTP_DELETE, EspNowController::deletePeer).addMiddleware(&jwtAuth);

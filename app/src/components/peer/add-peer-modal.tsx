@@ -12,7 +12,7 @@ import * as yup from "yup";
 import { useFormik } from "formik";
 import ValidatedTextField from "../validated-text-field";
 import { $api } from "../../api/openapi-client";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../../context/auth-context";
 import { generateUnicastMac } from "../../utils/generate-unicast-mac";
 import { generateEspNowKey } from "../../utils/generate-esp-now-key";
@@ -76,6 +76,12 @@ export default function AddPeerModal({ state }: AddPeerModalProps) {
       });
     },
   });
+
+  useEffect(() => {
+    if (state.isOpen === false) {
+      formik.resetForm();
+    }
+  }, [state.isOpen]);
 
   const [isVisible, setIsVisible] = useState(false);
   const toggleVisibility = () => setIsVisible(!isVisible);

@@ -689,62 +689,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/esp-now/pmk": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Set the ESP-NOW Primary Master Key */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["EspNowSetPmkRequest"];
-                };
-            };
-            responses: {
-                /** @description PMK applied; peers re-initialised */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Invalid PMK format */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description esp_now_set_pmk() failed */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/esp-now": {
         parameters: {
             query?: never;
@@ -987,13 +931,6 @@ export interface components {
             /** @example supersecret */
             apiSecret: string;
         };
-        EspNowSetPmkRequest: {
-            /**
-             * @description 32-character hex string representing the 16-byte Primary Master Key
-             * @example 0102030405060708090a0b0c0d0e0f10
-             */
-            pmk: string;
-        };
         Peer: {
             /**
              * Format: uuid
@@ -1004,6 +941,11 @@ export interface components {
             name: string;
             /** @example AA:BB:CC:DD:EE:01 */
             mac: string;
+            /**
+             * @description 32-character hex string of the 16-byte Local Master Key
+             * @example aabbccddeeff00112233445566778899
+             */
+            lmk: string;
         };
         PeersResponse: {
             peers: components["schemas"]["Peer"][];
@@ -1053,6 +995,13 @@ export interface components {
             mac: string;
             /** @example 6 */
             channel: number;
+            /** @example true */
+            pmkSet: boolean;
+            /**
+             * @description Present only when pmkSet is true; 32-char hex string of the 16-byte PMK
+             * @example 0102030405060708090a0b0c0d0e0f10
+             */
+            pmk?: string;
         };
         EspNowSetConfigRequest: {
             /**
@@ -1062,6 +1011,11 @@ export interface components {
             mac: string;
             /** @example 6 */
             channel: number;
+            /**
+             * @description 32-character hex string representing the 16-byte Primary Master Key
+             * @example 0102030405060708090a0b0c0d0e0f10
+             */
+            pmk: string;
         };
     };
     responses: never;

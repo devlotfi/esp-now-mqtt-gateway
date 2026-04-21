@@ -26,6 +26,13 @@ public:
     macBytesToString(espNowData->mac, macStr);
     root["mac"] = macStr;
     root["channel"] = espNowData->channel;
+    root["pmkSet"] = espNowData->pmkSet;
+    if (espNowData->pmkSet) // pmk is optional
+    {
+      char pmkStr[ESP_NOW_KEY_SIZE_STRING];
+      keyBytesToHex(espNowData->pmk, pmkStr);
+      root["pmk"] = pmkStr;
+    }
 
     free(espNowData);
     response->setLength();
@@ -36,14 +43,16 @@ public:
   {
     if (
         !json["mac"].is<const char *>() ||
-        !json["channel"].is<uint8_t>())
+        !json["channel"].is<uint8_t>() ||
+        !json["pmk"].is<const char *>())
     {
       request->send(400, "application/json", "{\"error\":\"INVALID_REQUEST\"}");
       return;
     }
     const char *macStr = json["mac"].as<const char *>();
     uint8_t channel = json["channel"].as<uint8_t>();
-    if (!isValidWifiChannel(channel) || !isUnicastMacAddress(macStr))
+    const char *pmkStr = json["pmk"].as<const char *>();
+    if (!isValidWifiChannel(channel) || !isUnicastMacAddress(macStr) || !isValidEspNowKey(pmkStr))
     {
       request->send(400, "application/json", "{\"error\":\"INVALID_REQUEST\"}");
       return;
@@ -53,47 +62,14 @@ public:
 
     macStringToBytes(macStr, espNowData->mac);
     espNowData->channel = channel;
+    espNowData->pmkSet = true;
+    keyHexToBytes(pmkStr, espNowData->pmk);
 
     saveEspNowData(espNowData);
     free(espNowData);
     request->send(200);
 
     delayedRestart();
-  }
-
-  static void setPMK(AsyncWebServerRequest *request, ArduinoJson::JsonVariant &json)
-  {
-    if (
-        !json["pmk"].is<const char *>())
-    {
-      request->send(400, "application/json", "{\"error\":\"INVALID_REQUEST\"}");
-      return;
-    }
-    const char *pmkStr = json["pmk"].as<const char *>();
-    if (!isValidEspNowKey(pmkStr))
-    {
-      request->send(400, "application/json", "{\"error\":\"INVALID_REQUEST\"}");
-      return;
-    }
-
-    EspNowData *espNowData = loadEspNowData();
-    espNowData->pmkSet = true;
-    keyHexToBytes(pmkStr, espNowData->pmk);
-    saveEspNowData(espNowData);
-
-    esp_err_t result = esp_now_set_pmk(espNowData->pmk);
-    if (result != ESP_OK)
-    {
-      free(espNowData);
-      request->send(500, "application/json", "{\"error\":\"CANNOT_SET_PMK_TO_ESP_NOW\"}");
-      return;
-    }
-
-    clearPeers();
-    initPeers();
-
-    free(espNowData);
-    request->send(200);
   }
 
   static void peers(AsyncWebServerRequest *request)
@@ -112,6 +88,9 @@ public:
       char macStr[MAC_SIZE_STRING];
       macBytesToString(peer.mac, macStr);
       peerJson["mac"] = macStr;
+      char lmkStr[ESP_NOW_KEY_SIZE_STRING];
+      keyBytesToHex(peer.lmk, lmkStr);
+      peerJson["lmk"] = lmkStr;
     }
 
     free(espNowData);
