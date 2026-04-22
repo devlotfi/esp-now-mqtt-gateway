@@ -12,7 +12,8 @@
 enum MessageType
 {
   TEXT_MESSAGE = 1,
-  NOTIFICATION_MESSAGE = 2
+  NOTIFICATION_MESSAGE = 2,
+  TIME_SYNC_MESSAGE = 3
 };
 
 struct __attribute__((packed)) MqttEspNowMessage
@@ -27,6 +28,11 @@ struct __attribute__((packed)) NotificationEspNowMessage
   char body[NOTIFICATION_BODY_SIZE];
 };
 
+struct __attribute__((packed)) TimeSyncEspNowMessage
+{
+  uint32_t epoch;
+};
+
 struct __attribute__((packed)) EspNowMessage
 {
   MessageType type;
@@ -34,6 +40,7 @@ struct __attribute__((packed)) EspNowMessage
   {
     MqttEspNowMessage mqttEspNowMessage;
     NotificationEspNowMessage notificationEspNowMessage;
+    TimeSyncEspNowMessage timeSyncEspNowMessage;
   } payload;
 };
 
@@ -79,9 +86,41 @@ void onReceive(const esp_now_recv_info_t *info, const uint8_t *data, int len)
 
     sendNotification(notificationsData, notificationMsg.title, notificationMsg.body);
     free(notificationsData);
+    break;
+  }
+  case MessageType::TIME_SYNC_MESSAGE:
+  {
+    // Build the ESP-NOW frame
+    Serial.println("ESP-NOW: Time Sync Request");
+    EspNowMessage espNowMessage = {};
+    espNowMessage.type = MessageType::TIME_SYNC_MESSAGE;
+
+    TimeSyncEspNowMessage &timeSyncMsg = espNowMessage.payload.timeSyncEspNowMessage;
+
+    time_t now;
+    time(&now);
+    if (now < 1577836800)
+    {
+      Serial.println("ESP-NOW: Time not synced, canceling time sync");
+      return;
+    }
+
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    timeSyncMsg.epoch = tv.tv_sec;
+
+    esp_err_t err = esp_now_send(
+        info->src_addr,
+        (const uint8_t *)&espNowMessage,
+        sizeof(EspNowMessage));
+
+    if (err != ESP_OK)
+      Serial.printf("ESP-NOW: Send failed, err=0x%x\n", err);
+    break;
   }
   default:
     Serial.printf("ESP-NOW: Unknown type %d\n", msg->type);
+    break;
   }
 }
 
