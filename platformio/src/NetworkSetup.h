@@ -7,6 +7,9 @@
 void syncTime()
 {
   Serial.println("Syncing time with NTP...");
+
+  // Set the offset before starting the client
+  timeClient.setTimeOffset(timezoneOffset);
   timeClient.begin();
 
   int retry = 0;
