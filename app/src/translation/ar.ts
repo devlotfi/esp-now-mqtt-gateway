@@ -55,6 +55,7 @@ export const AR: AppTranslation = {
   device: "الجهاز",
   uptime: "مدة التشغيل",
   cpuTemperature: "درجة حرارة المعالج",
+  time: "الوقت",
   connected: "متصل",
   disconnected: "غير متصل",
   clientId: "معرف العميل",

@@ -87,6 +87,17 @@ public:
     {
       generalObj["cpuTemp"] = nullptr;
     }
+    struct tm timeinfo;
+    if (getLocalTime(&timeinfo))
+    {
+      char timeStringBuff[25];
+      strftime(timeStringBuff, sizeof(timeStringBuff), "%Y-%m-%d %H:%M:%S", &timeinfo);
+      generalObj["time"] = timeStringBuff;
+    }
+    else
+    {
+      generalObj["time"] = nullptr;
+    }
 
     response->setLength();
     request->send(response);

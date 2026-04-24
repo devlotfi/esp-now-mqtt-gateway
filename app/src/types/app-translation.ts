@@ -53,6 +53,7 @@ export interface AppTranslation {
   device: string;
   uptime: string;
   cpuTemperature: string;
+  time: string;
   connected: string;
   disconnected: string;
   clientId: string;

@@ -46,6 +46,7 @@ export default function DeviceCard({
           name={t("cpuTemperature")}
           value={<div className="flex">{data.cpuTemp} °C</div>}
         ></DataRow>
+        <DataRow name={t("time")} value={data.time}></DataRow>
 
         <Button
           fullWidth

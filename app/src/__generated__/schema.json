@@ -197,6 +197,12 @@
               "mqttConnected": {
                 "type": "boolean",
                 "example": true
+              },
+              "time": {
+                "type": "string",
+                "nullable": true,
+                "description": "Current time as \"YYYY-MM-DD HH:MM:SS\"; null if NTP not synced",
+                "example": "2025-04-24 14:30:00"
               }
             }
           }

@@ -55,6 +55,7 @@ export const EN: AppTranslation = {
   device: "Device",
   uptime: "Uptime",
   cpuTemperature: "CPU Temperature",
+  time: "Time",
   connected: "Connected",
   disconnected: "Disconnected",
   clientId: "Client ID",

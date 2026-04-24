@@ -835,6 +835,11 @@ export interface components {
                 cpuTemp?: number | null;
                 /** @example true */
                 mqttConnected: boolean;
+                /**
+                 * @description Current time as "YYYY-MM-DD HH:MM:SS"; null if NTP not synced
+                 * @example 2025-04-24 14:30:00
+                 */
+                time?: string | null;
             };
         };
         NetworkConfigResponse: {
