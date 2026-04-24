@@ -107,7 +107,7 @@ void onReceive(const esp_now_recv_info_t *info, const uint8_t *data, int len)
 
     struct timeval tv;
     gettimeofday(&tv, NULL);
-    timeSyncMsg.epoch = tv.tv_sec;
+    timeSyncMsg.epoch = tv.tv_sec + TIMEZONE_OFFSET_SECONDS;
 
     esp_err_t err = esp_now_send(
         info->src_addr,

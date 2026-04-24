@@ -66,7 +66,7 @@ export default function BottomTabs() {
     <div className="flex md:hidden h-[5.5rem] rounded-tl-4xl rounded-tr-4xl md:rounded-none md:pl-0">
       <div className="flex items-center w-full gap-[0.5rem] p-[0.3rem]">
         <BottomTabsButton path="/dashboard" icon={"gauge-circle"}>
-          {t("peers")}
+          {t("dashboard")}
         </BottomTabsButton>
         <BottomTabsButton path="/dashboard/peers" icon={"microchip"}>
           {t("peers")}
