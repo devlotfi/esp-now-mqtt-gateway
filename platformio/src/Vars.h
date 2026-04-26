@@ -25,3 +25,4 @@ static unsigned long lastReconnectAttempt = 0;
 static volatile bool ethernetConnected = false;
 static volatile bool mqttStarted = false;
 static volatile bool mqttConnected = false;
+static volatile bool ntpSynced = false;

@@ -6,31 +6,24 @@
 
 void syncTime()
 {
-  Serial.println("Syncing time with NTP...");
+  Serial.println("NTP: Syncing time...");
 
-  // Set the offset before starting the client
   timeClient.setTimeOffset(TIMEZONE_OFFSET_SECONDS);
   timeClient.begin();
 
-  int retry = 0;
-  while (!timeClient.update() && retry < 20)
+  // Retry indefinitely — the watchdog will reboot the device if we are
+  // stuck here too long without ETH/MQTT coming up anyway.
+  while (!timeClient.forceUpdate())
   {
-    delay(500);
-    Serial.print(".");
-    retry++;
+    Serial.println("NTP: Waiting for sync...");
+    delay(2000);
   }
 
-  if (retry < 20)
-  {
-    time_t epoch = timeClient.getEpochTime();
-    struct timeval tv = {.tv_sec = epoch};
-    settimeofday(&tv, nullptr);
-    Serial.println("\nTime synced: " + timeClient.getFormattedTime());
-  }
-  else
-  {
-    Serial.println("\nNTP sync failed.");
-  }
+  time_t epoch = timeClient.getEpochTime();
+  struct timeval tv = {.tv_sec = epoch};
+  settimeofday(&tv, nullptr);
+  ntpSynced = true;
+  Serial.println("NTP: Synced -> " + timeClient.getFormattedTime());
 }
 
 void WiFiEvent(arduino_event_id_t event)
@@ -47,7 +40,7 @@ void WiFiEvent(arduino_event_id_t event)
     break;
 
   case ARDUINO_EVENT_ETH_GOT_IP:
-    Serial.print("ETH: IP → ");
+    Serial.print("ETH: IP -> ");
     Serial.println(ETH.localIP());
     ethernetConnected = true;
     updateLed();

@@ -91,6 +91,21 @@ static void mqttEventHandler(void *args, esp_event_base_t base,
   }
 }
 
+// Tear down any previously running MQTT client instance cleanly before
+// creating a new one. Safe to call even if mqttClient is nullptr.
+static void stopMqtt()
+{
+  if (mqttClient != nullptr)
+  {
+    Serial.println("MQTT: Stopping existing client...");
+    esp_mqtt_client_stop(mqttClient);
+    esp_mqtt_client_destroy(mqttClient);
+    mqttClient = nullptr;
+    mqttConnected = false;
+    Serial.println("MQTT: Client destroyed");
+  }
+}
+
 static void startMqtt()
 {
   MqttData *mqttData = loadMqttData();
@@ -101,6 +116,8 @@ static void startMqtt()
     free(mqttData);
     return;
   }
+
+  stopMqtt();
 
   static char url[MQTT_URL_SIZE];
   static char clientId[MQTT_CLIENT_ID_SIZE];
@@ -126,4 +143,5 @@ static void startMqtt()
                                  (esp_mqtt_event_id_t)ESP_EVENT_ANY_ID,
                                  mqttEventHandler, nullptr);
   esp_mqtt_client_start(mqttClient);
+  Serial.println("MQTT: Client started");
 }

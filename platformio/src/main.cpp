@@ -10,6 +10,7 @@
 #include "TempSensor.h"
 #include "NetworkSetup.h"
 #include "Led.h"
+#include "Watchdog.h"
 
 void setupStorage()
 {
@@ -27,6 +28,11 @@ void setupLookup()
 void setup()
 {
   Serial.begin(115200);
+
+  // Watchdog setup
+  Serial.println("WATCHDOG: Setup started");
+  setupWatchdog();
+  Serial.println("WATCHDOG: Setup completed");
 
   // LED setup
   Serial.println("LED: Setup started");
