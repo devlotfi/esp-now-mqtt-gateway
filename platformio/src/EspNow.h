@@ -165,7 +165,7 @@ void initPeers()
   {
     auto &peer = espNowData->peerList[i];
     esp_now_peer_info_t peerInfo{};
-    peerInfo.channel = 1;
+    peerInfo.channel = espNowData->channel;
     peerInfo.encrypt = true;
     memcpy(peerInfo.peer_addr, peer.mac, MAC_SIZE_BYTES);
     memcpy(peerInfo.lmk, peer.lmk, ESP_NOW_KEY_SIZE_BYTES);
