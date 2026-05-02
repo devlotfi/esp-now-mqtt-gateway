@@ -11,6 +11,7 @@
 #include "NetworkSetup.h"
 #include "Led.h"
 #include "Watchdog.h"
+#include "EspNowMessageQueue.h"
 
 void setupStorage()
 {
@@ -57,9 +58,15 @@ void setup()
   // esp-now setup
   Serial.println("ESP-NOW: Setup started");
   initEspNow();
+
   Serial.println("ESP-NOW: Init peers");
   initPeers();
   Serial.println("ESP-NOW: Init peers completed");
+
+  Serial.println("ESP-NOW: Init message queue");
+  initQueue();
+  Serial.println("ESP-NOW: Init message queue completed");
+
   Serial.println("ESP-NOW: Setup completed");
 
   // ethernet setup

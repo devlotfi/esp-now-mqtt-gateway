@@ -8,6 +8,7 @@
 #include "Lookup.h"
 #include "Led.h"
 #include "preferences/Mqtt.h"
+#include "EspNowMessageQueue.h"
 
 static void mqttEventHandler(void *args, esp_event_base_t base,
                              int32_t eventId, void *eventData)
@@ -65,13 +66,13 @@ static void mqttEventHandler(void *args, esp_event_base_t base,
 
     for (size_t i = 0; i < mapping->macSet.count; i++)
     {
-      esp_err_t err = esp_now_send(
+      bool res = enqueueMessage(
           mapping->macSet.set[i],
           (const uint8_t *)&espNowMessage,
           sizeof(EspNowMessage));
 
-      if (err != ESP_OK)
-        Serial.printf("ESP-NOW: Send failed, err=0x%x\n", err);
+      if (!res)
+        Serial.println("ESP-NOW: Send failed");
     }
     break;
   }

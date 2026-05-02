@@ -8,6 +8,7 @@
 #include "Lookup.h"
 #include "Notifications.h"
 #include "preferences/Notifications.h"
+#include "EspNowMessageQueue.h"
 
 enum MessageType
 {
@@ -108,14 +109,13 @@ void onReceive(const esp_now_recv_info_t *info, const uint8_t *data, int len)
     struct timeval tv;
     gettimeofday(&tv, NULL);
     timeSyncMsg.epoch = tv.tv_sec;
-
-    esp_err_t err = esp_now_send(
+    bool res = enqueueMessage(
         info->src_addr,
         (const uint8_t *)&espNowMessage,
         sizeof(EspNowMessage));
 
-    if (err != ESP_OK)
-      Serial.printf("ESP-NOW: Send failed, err=0x%x\n", err);
+    if (!res)
+      Serial.println("ESP-NOW: Send failed");
     break;
   }
   default:
