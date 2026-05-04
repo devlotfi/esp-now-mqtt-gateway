@@ -8,6 +8,8 @@
 #include "Lookup.h"
 #include "Notifications.h"
 #include "preferences/Notifications.h"
+#include "preferences/EspNow.h"
+#include "preferences/Peer.h"
 #include "EspNowMessageQueue.h"
 
 enum MessageType
@@ -86,7 +88,6 @@ void onReceive(const esp_now_recv_info_t *info, const uint8_t *data, int len)
     }
 
     sendNotification(notificationsData, notificationMsg.title, notificationMsg.body);
-    free(notificationsData);
     break;
   }
   case MessageType::TIME_SYNC_MESSAGE:
@@ -155,15 +156,15 @@ void initEspNow()
 
   esp_now_register_recv_cb(onReceive);
   esp_now_register_send_cb(onSent);
-  free(espNowData);
 }
 
 void initPeers()
 {
   EspNowData *espNowData = loadEspNowData();
-  for (size_t i = 0; i < espNowData->peerCount; i++)
+  PeerData *peerData = loadPeerData();
+  for (size_t i = 0; i < peerData->peerCount; i++)
   {
-    auto &peer = espNowData->peerList[i];
+    auto &peer = peerData->peerList[i];
     esp_now_peer_info_t peerInfo{};
     peerInfo.channel = espNowData->channel;
     peerInfo.encrypt = true;
@@ -171,21 +172,18 @@ void initPeers()
     memcpy(peerInfo.lmk, peer.lmk, ESP_NOW_KEY_SIZE_BYTES);
     if (esp_now_add_peer(&peerInfo) != ESP_OK)
     {
-      free(espNowData);
       Serial.println("ESP-NOW: Cannot add peer");
       return;
     }
   }
-  free(espNowData);
 }
 
 void clearPeers()
 {
-  EspNowData *espNowData = loadEspNowData();
-  for (size_t i = 0; i < espNowData->peerCount; i++)
+  PeerData *peerData = loadPeerData();
+  for (size_t i = 0; i < peerData->peerCount; i++)
   {
-    auto &peer = espNowData->peerList[i];
+    auto &peer = peerData->peerList[i];
     esp_now_del_peer(peer.mac);
   }
-  free(espNowData);
 }

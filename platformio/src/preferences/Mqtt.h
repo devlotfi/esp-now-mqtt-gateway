@@ -13,20 +13,35 @@ struct MqttData
   char username[MQTT_USERNAME_SIZE];
   char password[MQTT_PASSWORD_SIZE];
   char url[MQTT_URL_SIZE];
+  bool useSleepyPeerDiscovery;
+  char discoveryRequestTopic[TOPIC_SIZE];
+  char discoveryResponseTopic[TOPIC_SIZE];
 };
+
+static MqttData *mqttDataCache = nullptr;
 
 void saveMqttData(const MqttData *data)
 {
-  preferences.putBytes("mqtt_data", data, sizeof(MqttData));
+  size_t written = preferences.putBytes("mqtt_data", data, sizeof(MqttData));
+  if (written != sizeof(MqttData))
+    return;
+  if (!mqttDataCache)
+    mqttDataCache = (MqttData *)malloc(sizeof(MqttData));
+  if (mqttDataCache)
+    memcpy(mqttDataCache, data, sizeof(MqttData));
 }
 
 MqttData *loadMqttData()
 {
-  MqttData *data = (MqttData *)malloc(sizeof(MqttData));
-  if (!data)
+  if (mqttDataCache)
+    return mqttDataCache;
+
+  mqttDataCache = (MqttData *)malloc(sizeof(MqttData));
+  if (!mqttDataCache)
     return nullptr;
-  data->isSet = false;
-  data->useAuth = false;
-  preferences.getBytes("mqtt_data", data, sizeof(MqttData));
-  return data;
+  mqttDataCache->isSet = false;
+  mqttDataCache->useAuth = false;
+  mqttDataCache->useSleepyPeerDiscovery = false;
+  preferences.getBytes("mqtt_data", mqttDataCache, sizeof(MqttData));
+  return mqttDataCache;
 }

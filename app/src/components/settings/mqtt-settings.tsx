@@ -57,6 +57,12 @@ export default function MqttSettings() {
       useAuth: configQuery.data?.config?.useAuth || true,
       username: configQuery.data?.config?.username || "",
       password: configQuery.data?.config?.password || "",
+      useSleepyPeerDiscovery:
+        configQuery.data?.config?.useSleepyPeerDiscovery || true,
+      discoveryRequestTopic:
+        configQuery.data?.config?.discoveryRequestTopic || "",
+      discoveryResponseTopic:
+        configQuery.data?.config?.discoveryResponseTopic || "",
     },
     validationSchema: yup.object({
       clientId: yup.string().required(),
@@ -98,6 +104,13 @@ export default function MqttSettings() {
           useAuth: values.useAuth,
           username: values.useAuth ? values.username : undefined,
           password: values.useAuth ? values.password : undefined,
+          useSleepyPeerDiscovery: values.useSleepyPeerDiscovery,
+          discoveryRequestTopic: values.useSleepyPeerDiscovery
+            ? values.discoveryRequestTopic
+            : undefined,
+          discoveryResponseTopic: values.useSleepyPeerDiscovery
+            ? values.discoveryResponseTopic
+            : undefined,
         },
       });
     },
@@ -192,6 +205,38 @@ export default function MqttSettings() {
                   {isVisible ? <EyeOff></EyeOff> : <Eye></Eye>}
                 </Button>
               }
+            ></ValidatedTextField>
+          </>
+        ) : null}
+
+        <Switch
+          isSelected={formik.values.useSleepyPeerDiscovery}
+          onChange={(value) =>
+            formik.setFieldValue("useSleepyPeerDiscovery", value)
+          }
+        >
+          <Switch.Control>
+            <Switch.Thumb />
+          </Switch.Control>
+          <Label className="text-sm">{t("useSleepyPeerDiscovery")}</Label>
+        </Switch>
+        {formik.values.useSleepyPeerDiscovery ? (
+          <>
+            <ValidatedTextField
+              formik={formik}
+              name="discoveryRequestTopic"
+              labelProps={{ children: t("discoveryRequestTopic") }}
+              textFieldProps={{
+                isRequired: true,
+              }}
+            ></ValidatedTextField>
+            <ValidatedTextField
+              formik={formik}
+              name="discoveryResponseTopic"
+              labelProps={{ children: t("discoveryResponseTopic") }}
+              textFieldProps={{
+                isRequired: true,
+              }}
             ></ValidatedTextField>
           </>
         ) : null}

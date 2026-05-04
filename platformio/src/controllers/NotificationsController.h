@@ -34,7 +34,6 @@ public:
       config["apiSecret"] = notificationsData->apiSecret;
     }
 
-    free(notificationsData);
     response->setLength();
     request->send(response);
   }
@@ -66,7 +65,6 @@ public:
     notificationsData->apiSecret[NOTIFICATIONS_API_SECRET_SIZE - 1] = '\0';
 
     saveNotificationsData(notificationsData);
-    free(notificationsData);
     request->send(200);
   }
 
@@ -76,12 +74,10 @@ public:
     if (!notificationsData->isSet)
     {
       request->send(404, "application/json", "{\"error\":\"NOT_FOUND\"}");
-      free(notificationsData);
       return;
     }
 
     sendTestNotification(notificationsData);
-    free(notificationsData);
     request->send(200);
   }
 };

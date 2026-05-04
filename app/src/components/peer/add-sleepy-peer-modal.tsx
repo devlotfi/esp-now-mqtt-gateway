@@ -17,17 +17,17 @@ import { AuthContext } from "../../context/auth-context";
 import { generateUnicastMac } from "../../utils/generate-unicast-mac";
 import { generateEspNowKey } from "../../utils/generate-esp-now-key";
 
-interface AddPeerModalProps {
+interface AddSleepyPeerModalProps {
   state: UseOverlayStateReturn;
 }
 
-export default function AddPeerModal({ state }: AddPeerModalProps) {
+export default function AddSleepyPeerModal({ state }: AddSleepyPeerModalProps) {
   const { t } = useTranslation();
   const { authData } = useContext(AuthContext);
   if (!authData) throw new Error("Missing auth data");
   const queryClient = useQueryClient();
 
-  const { mutate, isPending } = $api.useMutation("post", "/api/peers", {
+  const { mutate, isPending } = $api.useMutation("post", "/api/sleepy-peers", {
     onError() {
       toast(t("error"), {
         indicator: <InfoIcon />,
@@ -36,7 +36,7 @@ export default function AddPeerModal({ state }: AddPeerModalProps) {
     },
     onSuccess() {
       queryClient.resetQueries({
-        queryKey: ["get", "/api/peers"],
+        queryKey: ["get", "/api/sleepy-peers"],
       });
       state.close();
     },
@@ -47,6 +47,8 @@ export default function AddPeerModal({ state }: AddPeerModalProps) {
       name: "",
       mac: "",
       lmk: "",
+      commandTopic: "",
+      dataTopic: "",
     },
     validationSchema: yup.object({
       name: yup.string().required(),
@@ -61,6 +63,8 @@ export default function AddPeerModal({ state }: AddPeerModalProps) {
         .string()
         .matches(/^[A-F0-9]{32}$/)
         .required(),
+      commandTopic: yup.string().required(),
+      dataTopic: yup.string().required(),
     }),
     onSubmit(values) {
       mutate({
@@ -68,6 +72,8 @@ export default function AddPeerModal({ state }: AddPeerModalProps) {
           name: values.name,
           mac: values.mac,
           lmk: values.lmk,
+          commandTopic: values.commandTopic,
+          dataTopic: values.dataTopic,
         },
         baseUrl: authData.apiUrl,
         headers: {
@@ -99,7 +105,7 @@ export default function AddPeerModal({ state }: AddPeerModalProps) {
             <Modal.Icon className="bg-accent-soft text-accent-soft-foreground">
               <Plus className="size-5" />
             </Modal.Icon>
-            <Modal.Heading>{t("addPeer")}</Modal.Heading>
+            <Modal.Heading>{t("addSleepyPeer")}</Modal.Heading>
           </Modal.Header>
           <Modal.Body className="p-[0.3rem]">
             <Form
@@ -160,6 +166,18 @@ export default function AddPeerModal({ state }: AddPeerModalProps) {
                     </Button>
                   </div>
                 }
+              ></ValidatedTextField>
+              <ValidatedTextField
+                formik={formik}
+                name="commandTopic"
+                textFieldProps={{ isRequired: true }}
+                labelProps={{ children: t("commandTopic") }}
+              ></ValidatedTextField>
+              <ValidatedTextField
+                formik={formik}
+                name="dataTopic"
+                textFieldProps={{ isRequired: true }}
+                labelProps={{ children: t("dataTopic") }}
               ></ValidatedTextField>
 
               <Button

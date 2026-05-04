@@ -257,11 +257,13 @@
             "properties": {
               "ip": {
                 "type": "string",
-                "example": "192.168.1.100"
+                "example": "192.168.1.100",
+                "description": "Private IPv4 address"
               },
               "gateway": {
                 "type": "string",
-                "example": "192.168.1.1"
+                "example": "192.168.1.1",
+                "description": "Private IPv4 gateway address"
               },
               "subnet": {
                 "type": "string",
@@ -286,7 +288,14 @@
           "config": {
             "type": "object",
             "description": "Present only when isSet is true",
-            "required": ["useAuth", "clientId", "username", "password", "url"],
+            "required": [
+              "useAuth",
+              "clientId",
+              "username",
+              "password",
+              "url",
+              "useSleepyPeerDiscovery"
+            ],
             "properties": {
               "useAuth": {
                 "type": "boolean",
@@ -307,6 +316,20 @@
               "url": {
                 "type": "string",
                 "example": "mqtt://broker.example.com:1883"
+              },
+              "useSleepyPeerDiscovery": {
+                "type": "boolean",
+                "example": true
+              },
+              "discoveryRequestTopic": {
+                "type": "string",
+                "description": "Present only when useSleepyPeerDiscovery is true",
+                "example": "sleepy/discovery/request"
+              },
+              "discoveryResponseTopic": {
+                "type": "string",
+                "description": "Present only when useSleepyPeerDiscovery is true",
+                "example": "sleepy/discovery/response"
               }
             }
           }
@@ -314,7 +337,7 @@
       },
       "MqttSetConfigRequest": {
         "type": "object",
-        "required": ["clientId", "url", "useAuth"],
+        "required": ["clientId", "url", "useAuth", "useSleepyPeerDiscovery"],
         "properties": {
           "clientId": {
             "type": "string",
@@ -338,6 +361,20 @@
             "type": "string",
             "description": "Required when useAuth is true",
             "example": "mqttpass"
+          },
+          "useSleepyPeerDiscovery": {
+            "type": "boolean",
+            "example": true
+          },
+          "discoveryRequestTopic": {
+            "type": "string",
+            "description": "Required when useSleepyPeerDiscovery is true",
+            "example": "sleepy/discovery/request"
+          },
+          "discoveryResponseTopic": {
+            "type": "string",
+            "description": "Required when useSleepyPeerDiscovery is true",
+            "example": "sleepy/discovery/response"
           }
         }
       },
@@ -517,6 +554,81 @@
             "type": "string",
             "description": "32-character hex string representing the 16-byte Primary Master Key",
             "example": "0102030405060708090a0b0c0d0e0f10"
+          }
+        }
+      },
+      "SleepyPeer": {
+        "type": "object",
+        "required": ["id", "name", "mac", "lmk", "commandTopic", "dataTopic"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440001"
+          },
+          "name": {
+            "type": "string",
+            "example": "sleepy-sensor-1"
+          },
+          "mac": {
+            "type": "string",
+            "example": "AA:BB:CC:DD:EE:02"
+          },
+          "lmk": {
+            "type": "string",
+            "description": "32-character hex string of the 16-byte Local Master Key",
+            "example": "aabbccddeeff00112233445566778899"
+          },
+          "commandTopic": {
+            "type": "string",
+            "description": "MQTT topic the gateway publishes commands to",
+            "example": "sleepy/sensor1/cmd"
+          },
+          "dataTopic": {
+            "type": "string",
+            "description": "MQTT topic the gateway publishes received data to",
+            "example": "sleepy/sensor1/data"
+          }
+        }
+      },
+      "SleepyPeersResponse": {
+        "type": "object",
+        "required": ["sleepyPeers"],
+        "properties": {
+          "sleepyPeers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SleepyPeer"
+            }
+          }
+        }
+      },
+      "AddSleepyPeerRequest": {
+        "type": "object",
+        "required": ["name", "mac", "lmk", "commandTopic", "dataTopic"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Human-readable name; must be unique",
+            "example": "sleepy-sensor-1"
+          },
+          "mac": {
+            "type": "string",
+            "description": "Unicast MAC address; must be unique",
+            "example": "AA:BB:CC:DD:EE:02"
+          },
+          "lmk": {
+            "type": "string",
+            "description": "32-character hex string of the 16-byte Local Master Key",
+            "example": "aabbccddeeff00112233445566778899"
+          },
+          "commandTopic": {
+            "type": "string",
+            "example": "sleepy/sensor1/cmd"
+          },
+          "dataTopic": {
+            "type": "string",
+            "example": "sleepy/sensor1/data"
           }
         }
       }
@@ -784,10 +896,57 @@
         }
       }
     },
-    "/api/esp-now/peers": {
+    "/api/esp-now": {
+      "get": {
+        "summary": "Get ESP-NOW configuration (MAC and channel)",
+        "tags": ["ESP-NOW"],
+        "responses": {
+          "200": {
+            "description": "ESP-NOW config",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EspNowConfigResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Set ESP-NOW configuration (MAC and channel, triggers reboot)",
+        "tags": ["ESP-NOW"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EspNowSetConfigRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Config saved; device will reboot"
+          },
+          "400": {
+            "description": "Invalid MAC or channel",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/peers": {
       "get": {
         "summary": "List all ESP-NOW peers",
-        "tags": ["ESP-NOW Peers"],
+        "tags": ["Peers"],
         "responses": {
           "200": {
             "description": "Peer list",
@@ -803,7 +962,7 @@
       },
       "post": {
         "summary": "Add an ESP-NOW peer",
-        "tags": ["ESP-NOW Peers"],
+        "tags": ["Peers"],
         "requestBody": {
           "required": true,
           "content": {
@@ -851,10 +1010,10 @@
         }
       }
     },
-    "/api/esp-now/peers/{id}": {
+    "/api/peers/{id}": {
       "delete": {
         "summary": "Delete an ESP-NOW peer by UUID",
-        "tags": ["ESP-NOW Peers"],
+        "tags": ["Peers"],
         "parameters": [
           {
             "name": "id",
@@ -884,10 +1043,10 @@
         }
       }
     },
-    "/api/esp-now/topics/{id}": {
+    "/api/peers/{id}/topics": {
       "get": {
         "summary": "List MQTT topics subscribed for a peer",
-        "tags": ["ESP-NOW Topics"],
+        "tags": ["Peers"],
         "parameters": [
           {
             "name": "id",
@@ -924,7 +1083,7 @@
       },
       "post": {
         "summary": "Add an MQTT topic subscription for a peer",
-        "tags": ["ESP-NOW Topics"],
+        "tags": ["Peers"],
         "parameters": [
           {
             "name": "id",
@@ -994,7 +1153,7 @@
       },
       "delete": {
         "summary": "Remove an MQTT topic subscription from a peer",
-        "tags": ["ESP-NOW Topics"],
+        "tags": ["Peers"],
         "parameters": [
           {
             "name": "id",
@@ -1043,17 +1202,17 @@
         }
       }
     },
-    "/api/esp-now": {
+    "/api/sleepy-peers": {
       "get": {
-        "summary": "Get ESP-NOW configuration (MAC and channel)",
-        "tags": ["ESP-NOW"],
+        "summary": "List all sleepy ESP-NOW peers",
+        "tags": ["Sleepy Peers"],
         "responses": {
           "200": {
-            "description": "ESP-NOW config",
+            "description": "Sleepy peer list",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/EspNowConfigResponse"
+                  "$ref": "#/components/schemas/SleepyPeersResponse"
                 }
               }
             }
@@ -1061,24 +1220,77 @@
         }
       },
       "post": {
-        "summary": "Set ESP-NOW configuration (MAC and channel, triggers reboot)",
-        "tags": ["ESP-NOW"],
+        "summary": "Add a sleepy ESP-NOW peer",
+        "tags": ["Sleepy Peers"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/EspNowSetConfigRequest"
+                "$ref": "#/components/schemas/AddSleepyPeerRequest"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Config saved; device will reboot"
+            "description": "Sleepy peer added"
           },
           "400": {
-            "description": "Invalid MAC or channel",
+            "description": "Invalid or missing fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sleepy peer with same name or MAC already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Maximum sleepy peer count reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sleepy-peers/{id}": {
+      "delete": {
+        "summary": "Delete a sleepy ESP-NOW peer by UUID",
+        "tags": ["Sleepy Peers"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": "550e8400-e29b-41d4-a716-446655440001"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sleepy peer deleted"
+          },
+          "404": {
+            "description": "Sleepy peer not found",
             "content": {
               "application/json": {
                 "schema": {

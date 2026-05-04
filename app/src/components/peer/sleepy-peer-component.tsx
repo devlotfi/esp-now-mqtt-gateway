@@ -1,61 +1,52 @@
 import { Button, Card, Chip, useOverlayState } from "@heroui/react";
-import { Eye, EyeOff, Mails, Trash } from "lucide-react";
+import { Eye, EyeOff, Trash } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { paths } from "../../__generated__/schema";
 import DataRow from "../data-row";
-import DeletePeerModal from "./delete-peer-modal";
-import TopicsModal from "./topics-modal";
 import { useState } from "react";
+import DeleteSleepyPeerModal from "./delete-sleepy-peer-modal";
 
-interface PeerComponentProps {
-  peer: paths["/api/peers"]["get"]["responses"]["200"]["content"]["application/json"]["peers"][number];
+interface SleepyPeerComponentProps {
+  sleepyPeer: paths["/api/sleepy-peers"]["get"]["responses"]["200"]["content"]["application/json"]["sleepyPeers"][number];
 }
 
-export default function PeerComponent({ peer }: PeerComponentProps) {
+export default function SleepyPeerComponent({
+  sleepyPeer,
+}: SleepyPeerComponentProps) {
   const { t } = useTranslation();
 
-  const deletePeerModalState = useOverlayState();
-  const topicsModalState = useOverlayState();
+  const deleteSleepyPeerModalState = useOverlayState();
 
   const [isVisible, setIsVisible] = useState(false);
   const toggleVisibility = () => setIsVisible(!isVisible);
 
   return (
     <>
-      <TopicsModal state={topicsModalState} peer={peer}></TopicsModal>
-      <DeletePeerModal
-        state={deletePeerModalState}
-        peer={peer}
-      ></DeletePeerModal>
+      <DeleteSleepyPeerModal
+        state={deleteSleepyPeerModalState}
+        sleepyPeer={sleepyPeer}
+      ></DeleteSleepyPeerModal>
 
       <Card>
         <Card.Header className="flex-row justify-between items-center">
           <Chip color="accent" className="text-[11pt]">
-            {peer.name}
+            {sleepyPeer.name}
           </Chip>
 
           <div className="flex items-center gap-[0.5rem]">
             <Button
-              variant="outline"
-              className="bg-background"
-              onPress={() => topicsModalState.open()}
-            >
-              {t("topics")}
-              <Mails></Mails>
-            </Button>
-            <Button
               isIconOnly
               variant="outline"
               className="bg-background text-danger"
-              onPress={() => deletePeerModalState.open()}
+              onPress={() => deleteSleepyPeerModalState.open()}
             >
               <Trash></Trash>
             </Button>
           </div>
         </Card.Header>
         <Card.Content>
-          <DataRow name="ID" value={peer.id} fold></DataRow>
-          <DataRow name="MAC" value={peer.mac} fold></DataRow>
+          <DataRow name="ID" value={sleepyPeer.id} fold></DataRow>
+          <DataRow name="MAC" value={sleepyPeer.mac} fold></DataRow>
           <DataRow
             name="LMK"
             value={
@@ -70,10 +61,22 @@ export default function PeerComponent({ peer }: PeerComponentProps) {
                   {isVisible ? <EyeOff></EyeOff> : <Eye></Eye>}
                 </Button>
                 <div className="flex">
-                  {isVisible ? peer.lmk : "................................"}
+                  {isVisible
+                    ? sleepyPeer.lmk
+                    : "................................"}
                 </div>
               </div>
             }
+            fold
+          ></DataRow>
+          <DataRow
+            name={t("commandTopic")}
+            value={sleepyPeer.commandTopic}
+            fold
+          ></DataRow>
+          <DataRow
+            name={t("dataTopic")}
+            value={sleepyPeer.dataTopic}
             fold
           ></DataRow>
         </Card.Content>

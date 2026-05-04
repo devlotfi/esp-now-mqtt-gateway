@@ -26,7 +26,6 @@ static void resetEthernet()
                IPAddress(networkData->subnet),
                IPAddress(networkData->dns));
   }
-  free(networkData);
   Serial.println("WATCHDOG: ETH re-initialised, waiting for link...");
 }
 

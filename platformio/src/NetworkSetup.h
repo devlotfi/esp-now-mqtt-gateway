@@ -99,6 +99,4 @@ void setupNetwork()
   {
     Serial.println("NETWORK-INTERFACE: Using DHCP");
   }
-
-  free(networkData);
 }

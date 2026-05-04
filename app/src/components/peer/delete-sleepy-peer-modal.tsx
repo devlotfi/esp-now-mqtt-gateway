@@ -12,31 +12,38 @@ import { $api } from "../../api/openapi-client";
 import { useContext } from "react";
 import { AuthContext } from "../../context/auth-context";
 
-interface DeletePeerModalProps {
+interface DeleteSleepyPeerModalProps {
   state: UseOverlayStateReturn;
-  peer: paths["/api/peers"]["get"]["responses"]["200"]["content"]["application/json"]["peers"][number];
+  sleepyPeer: paths["/api/sleepy-peers"]["get"]["responses"]["200"]["content"]["application/json"]["sleepyPeers"][number];
 }
 
-export default function DeletePeerModal({ state, peer }: DeletePeerModalProps) {
+export default function DeleteSleepyPeerModal({
+  state,
+  sleepyPeer,
+}: DeleteSleepyPeerModalProps) {
   const { t } = useTranslation();
   const { authData } = useContext(AuthContext);
   if (!authData) throw new Error("Missing auth data");
   const queryClient = useQueryClient();
 
-  const { mutate, isPending } = $api.useMutation("delete", "/api/peers/{id}", {
-    onError() {
-      toast(t("error"), {
-        indicator: <InfoIcon />,
-        variant: "danger",
-      });
+  const { mutate, isPending } = $api.useMutation(
+    "delete",
+    "/api/sleepy-peers/{id}",
+    {
+      onError() {
+        toast(t("error"), {
+          indicator: <InfoIcon />,
+          variant: "danger",
+        });
+      },
+      onSuccess() {
+        queryClient.resetQueries({
+          queryKey: ["get", "/api/sleepy-peers"],
+        });
+        state.close();
+      },
     },
-    onSuccess() {
-      queryClient.resetQueries({
-        queryKey: ["get", "/api/peers"],
-      });
-      state.close();
-    },
-  });
+  );
 
   return (
     <Modal.Backdrop
@@ -51,7 +58,7 @@ export default function DeletePeerModal({ state, peer }: DeletePeerModalProps) {
             <Modal.Icon className="bg-danger-soft text-danger-soft-foreground">
               <Trash className="size-5" />
             </Modal.Icon>
-            <Modal.Heading>{t("deletePeer")}</Modal.Heading>
+            <Modal.Heading>{t("deleteSleepyPeer")}</Modal.Heading>
           </Modal.Header>
           <Modal.Body>
             <div className="flex">{t("deleteConfirmation")}</div>
@@ -71,7 +78,7 @@ export default function DeletePeerModal({ state, peer }: DeletePeerModalProps) {
                 mutate({
                   params: {
                     path: {
-                      id: peer.id,
+                      id: sleepyPeer.id,
                     },
                   },
                   baseUrl: authData.apiUrl,

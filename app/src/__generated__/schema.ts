@@ -409,7 +409,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/esp-now/peers": {
+    "/api/esp-now": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get ESP-NOW configuration (MAC and channel) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description ESP-NOW config */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EspNowConfigResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Set ESP-NOW configuration (MAC and channel, triggers reboot) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["EspNowSetConfigRequest"];
+                };
+            };
+            responses: {
+                /** @description Config saved; device will reboot */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid MAC or channel */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/peers": {
         parameters: {
             query?: never;
             header?: never;
@@ -494,7 +561,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/esp-now/peers/{id}": {
+    "/api/peers/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -540,7 +607,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/esp-now/topics/{id}": {
+    "/api/peers/{id}/topics": {
         parameters: {
             query?: never;
             header?: never;
@@ -689,14 +756,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/esp-now": {
+    "/api/sleepy-peers": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get ESP-NOW configuration (MAC and channel) */
+        /** List all sleepy ESP-NOW peers */
         get: {
             parameters: {
                 query?: never;
@@ -706,19 +773,19 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description ESP-NOW config */
+                /** @description Sleepy peer list */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["EspNowConfigResponse"];
+                        "application/json": components["schemas"]["SleepyPeersResponse"];
                     };
                 };
             };
         };
         put?: never;
-        /** Set ESP-NOW configuration (MAC and channel, triggers reboot) */
+        /** Add a sleepy ESP-NOW peer */
         post: {
             parameters: {
                 query?: never;
@@ -728,19 +795,37 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": components["schemas"]["EspNowSetConfigRequest"];
+                    "application/json": components["schemas"]["AddSleepyPeerRequest"];
                 };
             };
             responses: {
-                /** @description Config saved; device will reboot */
+                /** @description Sleepy peer added */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                /** @description Invalid MAC or channel */
+                /** @description Invalid or missing fields */
                 400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sleepy peer with same name or MAC already exists */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Maximum sleepy peer count reached */
+                500: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -751,6 +836,52 @@ export interface paths {
             };
         };
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sleepy-peers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a sleepy ESP-NOW peer by UUID */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @example 550e8400-e29b-41d4-a716-446655440001 */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Sleepy peer deleted */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Sleepy peer not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -868,9 +999,15 @@ export interface components {
             ipAssignment: "DHCP" | "STATIC";
             /** @description Required when ipAssignment is STATIC */
             staticConfig?: {
-                /** @example 192.168.1.100 */
+                /**
+                 * @description Private IPv4 address
+                 * @example 192.168.1.100
+                 */
                 ip: string;
-                /** @example 192.168.1.1 */
+                /**
+                 * @description Private IPv4 gateway address
+                 * @example 192.168.1.1
+                 */
                 gateway: string;
                 /** @example 255.255.255.0 */
                 subnet: string;
@@ -893,6 +1030,18 @@ export interface components {
                 password: string;
                 /** @example mqtt://broker.example.com:1883 */
                 url: string;
+                /** @example true */
+                useSleepyPeerDiscovery: boolean;
+                /**
+                 * @description Present only when useSleepyPeerDiscovery is true
+                 * @example sleepy/discovery/request
+                 */
+                discoveryRequestTopic?: string;
+                /**
+                 * @description Present only when useSleepyPeerDiscovery is true
+                 * @example sleepy/discovery/response
+                 */
+                discoveryResponseTopic?: string;
             };
         };
         MqttSetConfigRequest: {
@@ -915,6 +1064,18 @@ export interface components {
              * @example mqttpass
              */
             password?: string;
+            /** @example true */
+            useSleepyPeerDiscovery: boolean;
+            /**
+             * @description Required when useSleepyPeerDiscovery is true
+             * @example sleepy/discovery/request
+             */
+            discoveryRequestTopic?: string;
+            /**
+             * @description Required when useSleepyPeerDiscovery is true
+             * @example sleepy/discovery/response
+             */
+            discoveryResponseTopic?: string;
         };
         NotificationsConfigResponse: {
             /** @example true */
@@ -1021,6 +1182,56 @@ export interface components {
              * @example 0102030405060708090a0b0c0d0e0f10
              */
             pmk: string;
+        };
+        SleepyPeer: {
+            /**
+             * Format: uuid
+             * @example 550e8400-e29b-41d4-a716-446655440001
+             */
+            id: string;
+            /** @example sleepy-sensor-1 */
+            name: string;
+            /** @example AA:BB:CC:DD:EE:02 */
+            mac: string;
+            /**
+             * @description 32-character hex string of the 16-byte Local Master Key
+             * @example aabbccddeeff00112233445566778899
+             */
+            lmk: string;
+            /**
+             * @description MQTT topic the gateway publishes commands to
+             * @example sleepy/sensor1/cmd
+             */
+            commandTopic: string;
+            /**
+             * @description MQTT topic the gateway publishes received data to
+             * @example sleepy/sensor1/data
+             */
+            dataTopic: string;
+        };
+        SleepyPeersResponse: {
+            sleepyPeers: components["schemas"]["SleepyPeer"][];
+        };
+        AddSleepyPeerRequest: {
+            /**
+             * @description Human-readable name; must be unique
+             * @example sleepy-sensor-1
+             */
+            name: string;
+            /**
+             * @description Unicast MAC address; must be unique
+             * @example AA:BB:CC:DD:EE:02
+             */
+            mac: string;
+            /**
+             * @description 32-character hex string of the 16-byte Local Master Key
+             * @example aabbccddeeff00112233445566778899
+             */
+            lmk: string;
+            /** @example sleepy/sensor1/cmd */
+            commandTopic: string;
+            /** @example sleepy/sensor1/data */
+            dataTopic: string;
         };
     };
     responses: never;

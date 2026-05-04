@@ -5,40 +5,38 @@
 #include "Vars.h"
 #include "Utils.h"
 
-struct Peer
-{
-  char id[UUID_V4_SIZE];
-  char name[NAME_SIZE];
-  uint8_t mac[MAC_SIZE_BYTES];
-  uint8_t lmk[ESP_NOW_KEY_SIZE_BYTES];
-  uint8_t topicCount;
-  char topicList[TOPIC_LIST_SIZE][TOPIC_SIZE];
-};
-
 struct EspNowData
 {
   uint8_t channel;
   uint8_t mac[MAC_SIZE_BYTES];
   bool pmkSet;
   uint8_t pmk[ESP_NOW_KEY_SIZE_BYTES];
-  uint8_t peerCount;
-  Peer peerList[PEER_LIST_SIZE];
 };
+
+static EspNowData *espNowDataCache = nullptr;
 
 void saveEspNowData(const EspNowData *data)
 {
-  preferences.putBytes("esp_now_data", data, sizeof(EspNowData));
+  size_t written = preferences.putBytes("esp_now_data", data, sizeof(EspNowData));
+  if (written != sizeof(EspNowData))
+    return;
+  if (!espNowDataCache)
+    espNowDataCache = (EspNowData *)malloc(sizeof(EspNowData));
+  if (espNowDataCache)
+    memcpy(espNowDataCache, data, sizeof(EspNowData));
 }
 
 EspNowData *loadEspNowData()
 {
-  EspNowData *data = (EspNowData *)malloc(sizeof(EspNowData));
-  if (!data)
+  if (espNowDataCache)
+    return espNowDataCache;
+
+  espNowDataCache = (EspNowData *)malloc(sizeof(EspNowData));
+  if (!espNowDataCache)
     return nullptr;
-  data->channel = 1;
-  data->pmkSet = false;
-  data->peerCount = 0;
-  memcpy(data->mac, defaultMac, MAC_SIZE_BYTES);
-  preferences.getBytes("esp_now_data", data, sizeof(EspNowData));
-  return data;
+  espNowDataCache->channel = 1;
+  espNowDataCache->pmkSet = false;
+  memcpy(espNowDataCache->mac, defaultMac, MAC_SIZE_BYTES);
+  preferences.getBytes("esp_now_data", espNowDataCache, sizeof(EspNowData));
+  return espNowDataCache;
 }

@@ -125,7 +125,6 @@ void sendTestNotification(NotificationsData *notificationsData)
   TestNotificationTaskArgs *args = (TestNotificationTaskArgs *)malloc(sizeof(TestNotificationTaskArgs));
   if (!args)
   {
-    free(notificationsData);
     Serial.println("ERROR: OUT_OF_MEMORY");
     return;
   }
@@ -247,7 +246,6 @@ void sendNotification(NotificationsData *notificationsData, const char *title, c
   NotificationTaskArgs *args = (NotificationTaskArgs *)malloc(sizeof(NotificationTaskArgs));
   if (!args)
   {
-    free(notificationsData);
     Serial.println("ERROR: OUT_OF_MEMORY");
     return;
   }

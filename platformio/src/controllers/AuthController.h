@@ -29,7 +29,6 @@ public:
     AuthData *authData = loadAuthData();
     if (!verifyPassword(password, authData->passwordSalt, authData->passwordHash))
     {
-      free(authData);
       request->send(403, "application/json", "{\"error\":\"WRONG_PASSWORD\"}");
       return;
     }
@@ -41,7 +40,6 @@ public:
     generateToken(token, sizeof(token));
     root["token"] = token;
 
-    free(authData);
     response->setLength();
     request->send(response);
   }

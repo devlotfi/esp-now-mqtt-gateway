@@ -34,7 +34,6 @@ public:
       staticConfig["dns"] = IPAddress(networkData->dns).toString();
     }
 
-    free(networkData);
     response->setLength();
     request->send(response);
   }
@@ -96,7 +95,6 @@ public:
       networkData->dns = (uint32_t)dns;
 
       saveNetworkData(networkData);
-      free(networkData);
       request->send(200);
 
       delayedRestart();
@@ -108,7 +106,6 @@ public:
       networkData->ipAssignment = IPAssignment::DHCP;
 
       saveNetworkData(networkData);
-      free(networkData);
       request->send(200);
 
       delayedRestart();

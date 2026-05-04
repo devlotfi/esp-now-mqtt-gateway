@@ -21,7 +21,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 interface TopicsModalProps {
   state: UseOverlayStateReturn;
-  peer: paths["/api/esp-now/peers"]["get"]["responses"]["200"]["content"]["application/json"]["peers"][number];
+  peer: paths["/api/peers"]["get"]["responses"]["200"]["content"]["application/json"]["peers"][number];
 }
 
 function TopicComponent({
@@ -29,7 +29,7 @@ function TopicComponent({
   peer,
 }: {
   topic: string;
-  peer: paths["/api/esp-now/peers"]["get"]["responses"]["200"]["content"]["application/json"]["peers"][number];
+  peer: paths["/api/peers"]["get"]["responses"]["200"]["content"]["application/json"]["peers"][number];
 }) {
   const { t } = useTranslation();
   const { authData } = useContext(AuthContext);
@@ -38,11 +38,11 @@ function TopicComponent({
 
   const deleteTopicMutation = $api.useMutation(
     "delete",
-    "/api/esp-now/topics/{id}",
+    "/api/peers/{id}/topics",
     {
       onSuccess() {
         queryClient.resetQueries({
-          queryKey: ["get", "/api/esp-now/topics/{id}"],
+          queryKey: ["get", "/api/peers/{id}/topics"],
         });
         toast(t("actionSuccess"), {
           indicator: <Check />,
@@ -99,7 +99,7 @@ export default function TopicsModal({ state, peer }: TopicsModalProps) {
 
   const topicsQuery = $api.useQuery(
     "get",
-    "/api/esp-now/topics/{id}",
+    "/api/peers/{id}/topics",
     {
       params: {
         path: {
@@ -118,28 +118,25 @@ export default function TopicsModal({ state, peer }: TopicsModalProps) {
     },
   );
 
-  const addTopicMutation = $api.useMutation(
-    "post",
-    "/api/esp-now/topics/{id}",
-    {
-      onSuccess() {
-        queryClient.resetQueries({
-          queryKey: ["get", "/api/esp-now/topics/{id}"],
-        });
-        toast(t("actionSuccess"), {
-          indicator: <Check />,
-          variant: "success",
-        });
-      },
-      onError(error) {
-        console.error(error);
-        toast(`${t("error")}`, {
-          indicator: <InfoIcon />,
-          variant: "danger",
-        });
-      },
+  const addTopicMutation = $api.useMutation("post", "/api/peers/{id}/topics", {
+    onSuccess() {
+      queryClient.resetQueries({
+        queryKey: ["get", "/api/peers/{id}/topics"],
+      });
+      toast(t("actionSuccess"), {
+        indicator: <Check />,
+        variant: "success",
+      });
+      formik.resetForm();
     },
-  );
+    onError(error) {
+      console.error(error);
+      toast(`${t("error")}`, {
+        indicator: <InfoIcon />,
+        variant: "danger",
+      });
+    },
+  });
 
   const formik = useFormik({
     initialValues: {

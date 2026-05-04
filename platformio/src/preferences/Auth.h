@@ -11,21 +11,32 @@ struct AuthData
   uint8_t passwordHash[PASSWORD_HASH_SIZE];
 };
 
+static AuthData *authDataCache = nullptr;
+
 void saveAuthData(const AuthData *data)
 {
-  preferences.putBytes("auth_data", data, sizeof(AuthData));
+  size_t written = preferences.putBytes("auth_data", data, sizeof(AuthData));
+  if (written != sizeof(AuthData))
+    return;
+  if (!authDataCache)
+    authDataCache = (AuthData *)malloc(sizeof(AuthData));
+  if (authDataCache)
+    memcpy(authDataCache, data, sizeof(AuthData));
 }
 
 AuthData *loadAuthData()
 {
-  AuthData *data = (AuthData *)malloc(sizeof(AuthData));
-  if (!data)
+  if (authDataCache)
+    return authDataCache;
+
+  authDataCache = (AuthData *)malloc(sizeof(AuthData));
+  if (!authDataCache)
     return nullptr;
   uint8_t salt[PASSWORD_SALT_SIZE];
   uint8_t hash[PASSWORD_HASH_SIZE];
   hashPassword("admin", salt, hash);
-  memcpy(data->passwordSalt, salt, PASSWORD_SALT_SIZE);
-  memcpy(data->passwordHash, hash, PASSWORD_HASH_SIZE);
-  preferences.getBytes("auth_data", data, sizeof(AuthData));
-  return data;
+  memcpy(authDataCache->passwordSalt, salt, PASSWORD_SALT_SIZE);
+  memcpy(authDataCache->passwordHash, hash, PASSWORD_HASH_SIZE);
+  preferences.getBytes("auth_data", authDataCache, sizeof(AuthData));
+  return authDataCache;
 }

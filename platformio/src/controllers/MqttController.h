@@ -32,9 +32,11 @@ public:
       config["username"] = mqttData->username;
       config["password"] = mqttData->password;
       config["url"] = mqttData->url;
+      config["useSleepyPeerDiscovery"] = mqttData->useSleepyPeerDiscovery;
+      config["discoveryRequestTopic"] = mqttData->discoveryRequestTopic;
+      config["discoveryResponseTopic"] = mqttData->discoveryResponseTopic;
     }
 
-    free(mqttData);
     response->setLength();
     request->send(response);
   }
@@ -44,7 +46,8 @@ public:
     if (
         !json["clientId"].is<const char *>() ||
         !json["url"].is<const char *>() ||
-        !json["useAuth"].is<bool>())
+        !json["useAuth"].is<bool>() ||
+        !json["useSleepyPeerDiscovery"].is<bool>())
     {
       request->send(400, "application/json", "{\"error\":\"INVALID_REQUEST\"}");
       return;
@@ -58,6 +61,12 @@ public:
     }
     bool useAuth = json["useAuth"].as<bool>();
     if (useAuth && (!json["username"].is<const char *>() || !json["password"].is<const char *>()))
+    {
+      request->send(400, "application/json", "{\"error\":\"INVALID_REQUEST\"}");
+      return;
+    }
+    bool useSleepyPeerDiscovery = json["useSleepyPeerDiscovery"].as<bool>();
+    if (useSleepyPeerDiscovery && (!json["discoveryRequestTopic"].is<const char *>() || !json["discoveryResponseTopic"].is<const char *>()))
     {
       request->send(400, "application/json", "{\"error\":\"INVALID_REQUEST\"}");
       return;
@@ -81,8 +90,20 @@ public:
       mqttData->useAuth = false;
     }
 
+    if (useSleepyPeerDiscovery)
+    {
+      const char *discoveryRequestTopic = json["discoveryRequestTopic"].as<const char *>();
+      const char *discoveryResponseTopic = json["discoveryResponseTopic"].as<const char *>();
+      mqttData->useSleepyPeerDiscovery = true;
+      strncpy(mqttData->discoveryRequestTopic, discoveryRequestTopic, TOPIC_SIZE);
+      strncpy(mqttData->discoveryResponseTopic, discoveryResponseTopic, TOPIC_SIZE);
+    }
+    else
+    {
+      mqttData->useSleepyPeerDiscovery = false;
+    }
+
     saveMqttData(mqttData);
-    free(mqttData);
     request->send(200);
 
     delayedRestart();

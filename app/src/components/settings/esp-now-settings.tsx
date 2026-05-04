@@ -180,7 +180,7 @@ export default function EspNowSettings() {
           isPending={configMutation.isPending}
           className="mt-[1rem]"
         >
-          {t("save")}
+          {t("saveAndReboot")}
           <Save></Save>
         </Button>
       </form>

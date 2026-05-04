@@ -12,17 +12,28 @@ struct NotificationsData
   char apiSecret[NOTIFICATIONS_API_SECRET_SIZE];
 };
 
+static NotificationsData *notificationsDataCache = nullptr;
+
 void saveNotificationsData(const NotificationsData *data)
 {
-  preferences.putBytes("notif_data", data, sizeof(NotificationsData));
+  size_t written = preferences.putBytes("notif_data", data, sizeof(NotificationsData));
+  if (written != sizeof(NotificationsData))
+    return;
+  if (!notificationsDataCache)
+    notificationsDataCache = (NotificationsData *)malloc(sizeof(NotificationsData));
+  if (notificationsDataCache)
+    memcpy(notificationsDataCache, data, sizeof(NotificationsData));
 }
 
 NotificationsData *loadNotificationsData()
 {
-  NotificationsData *data = (NotificationsData *)malloc(sizeof(NotificationsData));
-  if (!data)
+  if (notificationsDataCache)
+    return notificationsDataCache;
+
+  notificationsDataCache = (NotificationsData *)malloc(sizeof(NotificationsData));
+  if (!notificationsDataCache)
     return nullptr;
-  data->isSet = false;
-  preferences.getBytes("notif_data", data, sizeof(NotificationsData));
-  return data;
+  notificationsDataCache->isSet = false;
+  preferences.getBytes("notif_data", notificationsDataCache, sizeof(NotificationsData));
+  return notificationsDataCache;
 }

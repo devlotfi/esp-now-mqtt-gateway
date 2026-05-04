@@ -15,6 +15,8 @@
 #include "controllers/AuthController.h"
 #include "controllers/NotificationsController.h"
 #include "controllers/EspNowController.h"
+#include "controllers/PeerController.h"
+#include "controllers/SleepyPeerController.h"
 #include "controllers/DeviceController.h"
 #include "controllers/NetworkController.h"
 #include "controllers/MqttController.h"
@@ -49,12 +51,17 @@ void setupServer()
 
   server.on(AsyncURIMatcher::exact("/api/esp-now"), HTTP_GET, EspNowController::getConfig).addMiddleware(&jwtAuth);
   server.on(AsyncURIMatcher::exact("/api/esp-now"), HTTP_POST, EspNowController::setConfig).addMiddleware(&jwtAuth);
-  server.on(AsyncURIMatcher::exact("/api/esp-now/peers"), HTTP_GET, EspNowController::peers).addMiddleware(&jwtAuth);
-  server.on(AsyncURIMatcher::exact("/api/esp-now/peers"), HTTP_POST, EspNowController::addPeer).addMiddleware(&jwtAuth);
-  server.on(AsyncURIMatcher::regex("^/api/esp-now/peers/([0-9a-fA-F-]{36})$"), HTTP_DELETE, EspNowController::deletePeer).addMiddleware(&jwtAuth);
-  server.on(AsyncURIMatcher::regex("^/api/esp-now/topics/([0-9a-fA-F-]{36})$"), HTTP_GET, EspNowController::topics).addMiddleware(&jwtAuth);
-  server.on(AsyncURIMatcher::regex("^/api/esp-now/topics/([0-9a-fA-F-]{36})$"), HTTP_POST, EspNowController::addTopic).addMiddleware(&jwtAuth);
-  server.on(AsyncURIMatcher::regex("^/api/esp-now/topics/([0-9a-fA-F-]{36})$"), HTTP_DELETE, EspNowController::deleteTopic).addMiddleware(&jwtAuth);
+
+  server.on(AsyncURIMatcher::exact("/api/peers"), HTTP_GET, PeerController::peers).addMiddleware(&jwtAuth);
+  server.on(AsyncURIMatcher::exact("/api/peers"), HTTP_POST, PeerController::addPeer).addMiddleware(&jwtAuth);
+  server.on(AsyncURIMatcher::regex("^/api/peers/([0-9a-fA-F-]{36})$"), HTTP_DELETE, PeerController::deletePeer).addMiddleware(&jwtAuth);
+  server.on(AsyncURIMatcher::regex("^/api/peers/([0-9a-fA-F-]{36})/topics$"), HTTP_GET, PeerController::topics).addMiddleware(&jwtAuth);
+  server.on(AsyncURIMatcher::regex("^/api/peers/([0-9a-fA-F-]{36})/topics$"), HTTP_POST, PeerController::addTopic).addMiddleware(&jwtAuth);
+  server.on(AsyncURIMatcher::regex("^/api/peers/([0-9a-fA-F-]{36})/topics$"), HTTP_DELETE, PeerController::deleteTopic).addMiddleware(&jwtAuth);
+
+  server.on(AsyncURIMatcher::exact("/api/sleepy-peers"), HTTP_GET, SleepyPeerController::sleepyPeers).addMiddleware(&jwtAuth);
+  server.on(AsyncURIMatcher::exact("/api/sleepy-peers"), HTTP_POST, SleepyPeerController::addSleepyPeer).addMiddleware(&jwtAuth);
+  server.on(AsyncURIMatcher::regex("^/api/sleepy-peers/([0-9a-fA-F-]{36})$"), HTTP_DELETE, SleepyPeerController::deleteSleepyPeer).addMiddleware(&jwtAuth);
 
   server.begin();
 }

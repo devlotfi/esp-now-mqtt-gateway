@@ -60,11 +60,27 @@ export default function MqttCard({
               fold
             ></DataRow>
             <DataRow name={"URL"} value={mqttData.config?.url} fold></DataRow>
-            <DataRow
-              name={t("username")}
-              value={mqttData.config?.username}
-              fold
-            ></DataRow>
+            {mqttData.config.useAuth ? (
+              <DataRow
+                name={t("username")}
+                value={mqttData.config?.username}
+                fold
+              ></DataRow>
+            ) : null}
+            {mqttData.config.useSleepyPeerDiscovery ? (
+              <>
+                <DataRow
+                  name={t("discoveryRequestTopic")}
+                  value={mqttData.config?.discoveryRequestTopic}
+                  fold
+                ></DataRow>
+                <DataRow
+                  name={t("discoveryResponseTopic")}
+                  value={mqttData.config?.discoveryResponseTopic}
+                  fold
+                ></DataRow>
+              </>
+            ) : null}
           </>
         ) : null}
       </div>

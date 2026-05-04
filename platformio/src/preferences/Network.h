@@ -57,17 +57,28 @@ struct NetworkData
   uint32_t dns;
 };
 
+static NetworkData *networkDataCache = nullptr;
+
 void saveNetworkData(const NetworkData *data)
 {
-  preferences.putBytes("network_data", data, sizeof(NetworkData));
+  size_t written = preferences.putBytes("network_data", data, sizeof(NetworkData));
+  if (written != sizeof(NetworkData))
+    return;
+  if (!networkDataCache)
+    networkDataCache = (NetworkData *)malloc(sizeof(NetworkData));
+  if (networkDataCache)
+    memcpy(networkDataCache, data, sizeof(NetworkData));
 }
 
 NetworkData *loadNetworkData()
 {
-  NetworkData *data = (NetworkData *)malloc(sizeof(NetworkData));
-  if (!data)
+  if (networkDataCache)
+    return networkDataCache;
+
+  networkDataCache = (NetworkData *)malloc(sizeof(NetworkData));
+  if (!networkDataCache)
     return nullptr;
-  data->ipAssignment = IPAssignment::DHCP;
-  preferences.getBytes("network_data", data, sizeof(NetworkData));
-  return data;
+  networkDataCache->ipAssignment = IPAssignment::DHCP;
+  preferences.getBytes("network_data", networkDataCache, sizeof(NetworkData));
+  return networkDataCache;
 }

@@ -114,7 +114,6 @@ static void startMqtt()
   if (!mqttData->isSet)
   {
     Serial.println("MQTT: No configuration saved, skipping");
-    free(mqttData);
     return;
   }
 
@@ -129,8 +128,6 @@ static void startMqtt()
   strncpy(clientId, mqttData->clientId, MQTT_CLIENT_ID_SIZE);
   strncpy(username, mqttData->username, MQTT_USERNAME_SIZE);
   strncpy(password, mqttData->password, MQTT_PASSWORD_SIZE);
-
-  free(mqttData);
 
   esp_mqtt_client_config_t cfg = {};
   cfg.broker.verification.crt_bundle_attach = esp_crt_bundle_attach;

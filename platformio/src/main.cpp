@@ -20,10 +20,9 @@ void setupStorage()
 
 void setupLookup()
 {
-  EspNowData *espNowData = loadEspNowData();
-  topicSet.init(espNowData);
-  topicToMacsMap.init(espNowData);
-  free(espNowData);
+  PeerData *peerData = loadPeerData();
+  topicSet.init(peerData);
+  topicToMacsMap.init(peerData);
 }
 
 void setup()

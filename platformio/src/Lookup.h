@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include "Properties.h"
-#include "preferences/EspNow.h"
+#include "preferences/Peer.h"
 
 class TopicSet
 {
@@ -16,12 +16,12 @@ public:
     count = 0;
   }
 
-  void init(EspNowData *espNowData)
+  void init(PeerData *peerData)
   {
     clear();
-    for (size_t i = 0; i < espNowData->peerCount; i++)
+    for (size_t i = 0; i < peerData->peerCount; i++)
     {
-      auto &peer = espNowData->peerList[i];
+      auto &peer = peerData->peerList[i];
       for (size_t j = 0; j < peer.topicCount; j++)
       {
         auto &topic = peer.topicList[j];
@@ -99,12 +99,12 @@ public:
     count = 0;
   }
 
-  void init(EspNowData *espNowData)
+  void init(PeerData *peerData)
   {
     clear();
-    for (size_t i = 0; i < espNowData->peerCount; i++)
+    for (size_t i = 0; i < peerData->peerCount; i++)
     {
-      auto &peer = espNowData->peerList[i];
+      auto &peer = peerData->peerList[i];
       for (size_t j = 0; j < peer.topicCount; j++)
       {
         auto &topic = peer.topicList[j];
