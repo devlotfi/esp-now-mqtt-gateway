@@ -2,7 +2,8 @@
 
 #include <Arduino.h>
 #include "driver/temperature_sensor.h"
-#include "Vars.h"
+
+static temperature_sensor_handle_t temp_sensor = nullptr;
 
 void setupTempSensor()
 {

@@ -12,11 +12,7 @@
 #include "Led.h"
 #include "Watchdog.h"
 #include "EspNowMessageQueue.h"
-
-void setupStorage()
-{
-  preferences.begin(PREFERENCES_NAMESAPCE, false);
-}
+#include "SleepyInbox.h"
 
 void setupLookup()
 {
@@ -46,13 +42,17 @@ void setup()
 
   // NVS setup
   Serial.println("NVS: Setup started");
-  setupStorage();
+  preferences.begin(PREFERENCES_NAMESAPCE, false);
   Serial.println("NVS: Setup completed");
 
   // Lookup setup
   Serial.println("LOOKUP: Setup started");
   setupLookup();
   Serial.println("LOOKUP: Setup completed");
+
+  Serial.println("SLEEPY-INBOX: Setup started");
+  sleepyInbox.init();
+  Serial.println("SLEEPY-INBOX: Setup completed");
 
   // esp-now setup
   Serial.println("ESP-NOW: Setup started");
@@ -61,6 +61,10 @@ void setup()
   Serial.println("ESP-NOW: Init peers");
   initPeers();
   Serial.println("ESP-NOW: Init peers completed");
+
+  Serial.println("ESP-NOW: Init sleepy peers");
+  initSleepyPeers();
+  Serial.println("ESP-NOW: Init sleepy peers completed");
 
   Serial.println("ESP-NOW: Init message queue");
   initQueue();

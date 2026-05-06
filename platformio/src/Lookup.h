@@ -144,5 +144,5 @@ public:
   }
 };
 
-TopicSet topicSet;
-TopicToMacsMap topicToMacsMap;
+static TopicSet topicSet;
+static TopicToMacsMap topicToMacsMap;

@@ -10,13 +10,16 @@
 #include "preferences/Notifications.h"
 #include "preferences/EspNow.h"
 #include "preferences/Peer.h"
+#include "preferences/SleepyPeer.h"
 #include "EspNowMessageQueue.h"
 
 enum MessageType
 {
   TEXT_MESSAGE = 1,
   NOTIFICATION_MESSAGE = 2,
-  TIME_SYNC_MESSAGE = 3
+  TIME_SYNC_MESSAGE = 3,
+  SLEEPY_COMMAND_MESSAGE = 4,
+  SLEEPY_DATA_MESSAGE = 5,
 };
 
 struct __attribute__((packed)) MqttEspNowMessage
@@ -36,6 +39,16 @@ struct __attribute__((packed)) TimeSyncEspNowMessage
   uint32_t epoch;
 };
 
+struct __attribute__((packed)) SleepyCommandEspNowMessage
+{
+  char text[MQTT_MESSAGE_TEXT_PAYLOAD_SIZE];
+};
+
+struct __attribute__((packed)) SleepyDataEspNowMessage
+{
+  char text[MQTT_MESSAGE_TEXT_PAYLOAD_SIZE];
+};
+
 struct __attribute__((packed)) EspNowMessage
 {
   MessageType type;
@@ -44,6 +57,8 @@ struct __attribute__((packed)) EspNowMessage
     MqttEspNowMessage mqttEspNowMessage;
     NotificationEspNowMessage notificationEspNowMessage;
     TimeSyncEspNowMessage timeSyncEspNowMessage;
+    SleepyCommandEspNowMessage sleepyCommandEspNowMessage;
+    SleepyDataEspNowMessage sleepyDataEspNowMessage;
   } payload;
 };
 
@@ -119,6 +134,37 @@ void onReceive(const esp_now_recv_info_t *info, const uint8_t *data, int len)
       Serial.println("ESP-NOW: Send failed");
     break;
   }
+  case MessageType::SLEEPY_DATA_MESSAGE:
+  {
+    SleepyPeerData *sleepyPeerData = loadSleepyPeerData();
+
+    SleepyPeer *sourceSleepyPeer = nullptr;
+    for (size_t i = 0; i < sleepyPeerData->sleepyPeerCount; i++)
+    {
+      auto &sleepyPeer = sleepyPeerData->sleepyPeerList[i];
+      if (memcmp(sleepyPeer.mac, info->src_addr, MAC_SIZE_BYTES) == 0)
+      {
+        sourceSleepyPeer = &sleepyPeer;
+      }
+    }
+    if (!sourceSleepyPeer)
+      return;
+
+    const SleepyDataEspNowMessage &mqttMsg = msg->payload.sleepyDataEspNowMessage;
+
+    esp_mqtt_client_publish(
+        mqttClient,
+        sourceSleepyPeer->dataTopic,
+        mqttMsg.text,
+        0,
+        1,
+        1);
+    break;
+  }
+  case MessageType::SLEEPY_COMMAND_MESSAGE:
+  {
+    break;
+  }
   default:
     Serial.printf("ESP-NOW: Unknown type %d\n", msg->type);
     break;
@@ -178,6 +224,26 @@ void initPeers()
   }
 }
 
+void initSleepyPeers()
+{
+  EspNowData *espNowData = loadEspNowData();
+  SleepyPeerData *sleepyPeerData = loadSleepyPeerData();
+  for (size_t i = 0; i < sleepyPeerData->sleepyPeerCount; i++)
+  {
+    auto &sleepyPeer = sleepyPeerData->sleepyPeerList[i];
+    esp_now_peer_info_t peerInfo{};
+    peerInfo.channel = espNowData->channel;
+    peerInfo.encrypt = true;
+    memcpy(peerInfo.peer_addr, sleepyPeer.mac, MAC_SIZE_BYTES);
+    memcpy(peerInfo.lmk, sleepyPeer.lmk, ESP_NOW_KEY_SIZE_BYTES);
+    if (esp_now_add_peer(&peerInfo) != ESP_OK)
+    {
+      Serial.println("ESP-NOW: Cannot add peer");
+      return;
+    }
+  }
+}
+
 void clearPeers()
 {
   PeerData *peerData = loadPeerData();
@@ -185,5 +251,15 @@ void clearPeers()
   {
     auto &peer = peerData->peerList[i];
     esp_now_del_peer(peer.mac);
+  }
+}
+
+void clearSleepyPeers()
+{
+  SleepyPeerData *sleepyPeerData = loadSleepyPeerData();
+  for (size_t i = 0; i < sleepyPeerData->sleepyPeerCount; i++)
+  {
+    auto &sleepyPeer = sleepyPeerData->sleepyPeerList[i];
+    esp_now_del_peer(sleepyPeer.mac);
   }
 }

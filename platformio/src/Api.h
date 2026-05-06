@@ -22,6 +22,7 @@
 #include "controllers/MqttController.h"
 #include "middlewares/JwtMiddleware.h"
 
+static AsyncWebServer server(80);
 static AsyncCorsMiddleware cors;
 
 void setupServer()

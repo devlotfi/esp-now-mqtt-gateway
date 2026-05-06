@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <AsyncTCP.h>
 #include <WiFi.h>
+#include <ETH.h>
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
 #include <esp_now.h>
@@ -12,6 +13,7 @@
 #include "Utils.h"
 #include "Lookup.h"
 #include "EspNow.h"
+#include "TempSensor.h"
 
 class DeviceController
 {

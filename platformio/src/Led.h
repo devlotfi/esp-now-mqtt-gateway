@@ -1,9 +1,11 @@
 #pragma once
 
 #include <stdint.h>
+#include <Adafruit_NeoPixel.h>
 #include "Properties.h"
 #include "Vars.h"
 
+static Adafruit_NeoPixel pixel(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 static const uint8_t brightness = 32;
 static const char *errorColor = "#FF0000";
 static const char *successColor = "#00FF00";

@@ -8,6 +8,7 @@
 #include "Lookup.h"
 #include "Led.h"
 #include "preferences/Mqtt.h"
+#include "preferences/SleepyPeer.h"
 #include "EspNowMessageQueue.h"
 
 static void mqttEventHandler(void *args, esp_event_base_t base,
@@ -18,9 +19,23 @@ static void mqttEventHandler(void *args, esp_event_base_t base,
   switch (static_cast<esp_mqtt_event_id_t>(eventId))
   {
   case MQTT_EVENT_CONNECTED:
+  {
     mqttConnected = true;
     updateLed();
     Serial.println("MQTT: Connected");
+
+    MqttData *mqttData = loadMqttData();
+
+    // subscribe to sleepy peer discovery
+    if (mqttData->useSleepyPeerDiscovery)
+    {
+      esp_mqtt_client_subscribe(mqttClient, mqttData->discoveryRequestTopic, 1);
+      Serial.print("MQTT: Subscribing to -> ");
+      Serial.print(mqttData->discoveryRequestTopic);
+      Serial.println();
+    }
+
+    // subscribe to peer topics
     for (size_t i = 0; i < topicSet.count; i++)
     {
       esp_mqtt_client_subscribe(mqttClient, topicSet.set[i], 1);
@@ -29,13 +44,14 @@ static void mqttEventHandler(void *args, esp_event_base_t base,
       Serial.println();
     }
     break;
-
+  }
   case MQTT_EVENT_DISCONNECTED:
+  {
     mqttConnected = false;
     updateLed();
     Serial.println("MQTT: Disconnected (broker will retry automatically)");
     break;
-
+  }
   case MQTT_EVENT_DATA:
   {
     if (event->current_data_offset != 0 || event->data_len != event->total_data_len)
@@ -47,6 +63,35 @@ static void mqttEventHandler(void *args, esp_event_base_t base,
     String topic = String(event->topic, event->topic_len);
     String message = String(event->data, event->data_len);
     Serial.printf("MQTT: topic -> %s, data -> %s\n", topic.c_str(), message.c_str());
+
+    MqttData *mqttData = loadMqttData();
+    SleepyPeerData *sleepyPeerData = loadSleepyPeerData();
+    if (mqttData->isSet && mqttData->useSleepyPeerDiscovery && strncmp(mqttData->discoveryRequestTopic, topic.c_str(), TOPIC_SIZE) == 0)
+    {
+      for (size_t i = 0; i < sleepyPeerData->sleepyPeerCount; i++)
+      {
+        auto &sleepyPeer = sleepyPeerData->sleepyPeerList[i];
+
+        ArduinoJson::JsonDocument doc;
+        doc["id"] = sleepyPeer.id;
+        doc["name"] = sleepyPeer.name;
+        doc["commandTopic"] = sleepyPeer.commandTopic;
+        doc["dataTopic"] = sleepyPeer.dataTopic;
+
+        char jsonBuffer[1024];
+        ArduinoJson::serializeJson(doc, jsonBuffer, 1024);
+        jsonBuffer[1024 - 1] = '\0';
+
+        esp_mqtt_client_publish(
+            mqttClient,
+            mqttData->discoveryResponseTopic,
+            jsonBuffer,
+            0,
+            1,
+            0);
+      }
+      return;
+    }
 
     auto mapping = topicToMacsMap.getMapping(topic.c_str());
     if (mapping == nullptr)
@@ -76,8 +121,8 @@ static void mqttEventHandler(void *args, esp_event_base_t base,
     }
     break;
   }
-
   case MQTT_EVENT_ERROR:
+  {
     Serial.println("MQTT: Error");
     if (event->error_handle->error_type == MQTT_ERROR_TYPE_TCP_TRANSPORT)
     {
@@ -86,7 +131,7 @@ static void mqttEventHandler(void *args, esp_event_base_t base,
       Serial.printf("  errno   : %d\n", event->error_handle->esp_transport_sock_errno);
     }
     break;
-
+  }
   default:
     break;
   }

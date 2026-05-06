@@ -1,8 +1,16 @@
 #pragma once
 
+#include <AsyncTCP.h>
+#include <WiFi.h>
+#include <ETH.h>
+#include <NTPClient.h>
+#include <NetworkUdp.h>
 #include "preferences/Network.h"
 #include "Mqtt.h"
 #include "Led.h"
+
+static NetworkUDP ntpUDP;
+static NTPClient timeClient(ntpUDP, "pool.ntp.org", 0, 60000);
 
 void syncTime()
 {
