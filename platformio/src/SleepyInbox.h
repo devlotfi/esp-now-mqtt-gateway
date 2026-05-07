@@ -32,7 +32,7 @@ public:
     }
   }
 
-  static bool set(uint8_t mac[MAC_SIZE_BYTES], char text[MQTT_MESSAGE_TEXT_PAYLOAD_SIZE])
+  static bool set(uint8_t mac[MAC_SIZE_BYTES], const char text[MQTT_MESSAGE_TEXT_PAYLOAD_SIZE])
   {
     for (size_t i = 0; i < sleepyInboxCount; i++)
     {
@@ -55,6 +55,20 @@ public:
       if (memcmp(sleepyPeerInbox.mac, mac, MAC_SIZE_BYTES) == 0 && sleepyPeerInbox.isSet)
       {
         memcpy(text, sleepyPeerInbox.text, MQTT_MESSAGE_TEXT_PAYLOAD_SIZE);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  static bool clear(uint8_t mac[MAC_SIZE_BYTES])
+  {
+    for (size_t i = 0; i < sleepyInboxCount; i++)
+    {
+      auto &sleepyPeerInbox = sleepyInbox[i];
+      if (memcmp(sleepyPeerInbox.mac, mac, MAC_SIZE_BYTES) == 0)
+      {
+        sleepyPeerInbox.isSet = false;
         return true;
       }
     }

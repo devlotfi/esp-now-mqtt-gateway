@@ -85,4 +85,13 @@ export const AR: AppTranslation = {
   noNotificationsConfig1: "إعدادات التنبيهات مفقودة",
   noNotificationsConfig2:
     "لم تقم بتكوين التنبيهات، لن تتمكن الأجهزة المقترنة من إرسال التنبيهات",
+
+  discoveryRequestTopic: "موضوع طلب الاكتشاف",
+  discoveryResponseTopic: "موضوع استجابة الاكتشاف",
+  useSleepyPeerDiscovery: "استخدام اكتشاف النظراء في وضع السكون",
+  sleepyPeers: "النظراء في وضع السكون",
+  addSleepyPeer: "إضافة نظير في وضع السكون",
+  deleteSleepyPeer: "حذف النظير في وضع السكون",
+  commandTopic: "موضوع الأوامر",
+  dataTopic: "موضوع البيانات",
 };

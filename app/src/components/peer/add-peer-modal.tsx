@@ -38,6 +38,9 @@ export default function AddPeerModal({ state }: AddPeerModalProps) {
       queryClient.resetQueries({
         queryKey: ["get", "/api/peers"],
       });
+      queryClient.resetQueries({
+        queryKey: ["get", "/api/peers/{id}/topics"],
+      });
       state.close();
     },
   });

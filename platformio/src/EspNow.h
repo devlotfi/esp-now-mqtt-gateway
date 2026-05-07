@@ -12,6 +12,7 @@
 #include "preferences/Peer.h"
 #include "preferences/SleepyPeer.h"
 #include "EspNowMessageQueue.h"
+#include "SleepyInbox.h"
 
 enum MessageType
 {
@@ -125,16 +126,42 @@ void onReceive(const esp_now_recv_info_t *info, const uint8_t *data, int len)
     struct timeval tv;
     gettimeofday(&tv, NULL);
     timeSyncMsg.epoch = tv.tv_sec;
+
     bool res = enqueueMessage(
         info->src_addr,
         (const uint8_t *)&espNowMessage,
         sizeof(EspNowMessage));
-
     if (!res)
       Serial.println("ESP-NOW: Send failed");
     break;
   }
   case MessageType::SLEEPY_DATA_MESSAGE:
+  {
+    const SleepyDataEspNowMessage &sleepyDataMsg = msg->payload.sleepyDataEspNowMessage;
+    SleepyPeerData *sleepyPeerData = loadSleepyPeerData();
+
+    SleepyPeer *sourceSleepyPeer = nullptr;
+    for (size_t i = 0; i < sleepyPeerData->sleepyPeerCount; i++)
+    {
+      auto &sleepyPeer = sleepyPeerData->sleepyPeerList[i];
+      if (memcmp(sleepyPeer.mac, info->src_addr, MAC_SIZE_BYTES) == 0)
+      {
+        sourceSleepyPeer = &sleepyPeer;
+      }
+    }
+    if (!sourceSleepyPeer)
+      return;
+
+    esp_mqtt_client_publish(
+        mqttClient,
+        sourceSleepyPeer->dataTopic,
+        sleepyDataMsg.text,
+        0,
+        1,
+        1);
+    break;
+  }
+  case MessageType::SLEEPY_COMMAND_MESSAGE:
   {
     SleepyPeerData *sleepyPeerData = loadSleepyPeerData();
 
@@ -150,19 +177,27 @@ void onReceive(const esp_now_recv_info_t *info, const uint8_t *data, int len)
     if (!sourceSleepyPeer)
       return;
 
-    const SleepyDataEspNowMessage &mqttMsg = msg->payload.sleepyDataEspNowMessage;
+    char text[MQTT_MESSAGE_TEXT_PAYLOAD_SIZE];
+    bool hasCommand = sleepyInbox.get(text, info->src_addr);
+    if (!hasCommand)
+      return;
 
-    esp_mqtt_client_publish(
-        mqttClient,
-        sourceSleepyPeer->dataTopic,
-        mqttMsg.text,
-        0,
-        1,
-        1);
-    break;
-  }
-  case MessageType::SLEEPY_COMMAND_MESSAGE:
-  {
+    // Build the ESP-NOW frame
+    Serial.println("ESP-NOW: Sleepy command sent");
+    EspNowMessage espNowMessage = {};
+    espNowMessage.type = MessageType::SLEEPY_COMMAND_MESSAGE;
+    SleepyCommandEspNowMessage &sleepyCommandMsg = espNowMessage.payload.sleepyCommandEspNowMessage;
+
+    strncpy(sleepyCommandMsg.text, text, MQTT_MESSAGE_TEXT_PAYLOAD_SIZE - 1);
+    sleepyCommandMsg.text[MQTT_MESSAGE_TEXT_PAYLOAD_SIZE - 1] = '\0';
+
+    bool res = enqueueMessage(
+        sourceSleepyPeer->mac,
+        (const uint8_t *)&espNowMessage,
+        sizeof(EspNowMessage));
+    if (!res)
+      Serial.println("ESP-NOW: Send failed");
+    sleepyInbox.clear(sourceSleepyPeer->mac);
     break;
   }
   default:

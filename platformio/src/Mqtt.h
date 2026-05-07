@@ -10,6 +10,7 @@
 #include "preferences/Mqtt.h"
 #include "preferences/SleepyPeer.h"
 #include "EspNowMessageQueue.h"
+#include "SleepyInbox.h"
 
 static void mqttEventHandler(void *args, esp_event_base_t base,
                              int32_t eventId, void *eventData)
@@ -25,14 +26,24 @@ static void mqttEventHandler(void *args, esp_event_base_t base,
     Serial.println("MQTT: Connected");
 
     MqttData *mqttData = loadMqttData();
+    SleepyPeerData *sleepyPeerData = loadSleepyPeerData();
 
     // subscribe to sleepy peer discovery
     if (mqttData->useSleepyPeerDiscovery)
     {
       esp_mqtt_client_subscribe(mqttClient, mqttData->discoveryRequestTopic, 1);
-      Serial.print("MQTT: Subscribing to -> ");
+      Serial.print("MQTT: Subscribing to sleepy peer discovery -> ");
       Serial.print(mqttData->discoveryRequestTopic);
       Serial.println();
+    }
+
+    // subscribe to sleepy peer command topic
+    for (size_t i = 0; i < sleepyPeerData->sleepyPeerCount; i++)
+    {
+      auto &sleepyPeer = sleepyPeerData->sleepyPeerList[i];
+      esp_mqtt_client_subscribe(mqttClient, sleepyPeer.commandTopic, 1);
+      Serial.print("MQTT: Subscribing to sleepy peer command topic discovery -> ");
+      Serial.print(sleepyPeer.commandTopic);
     }
 
     // subscribe to peer topics
@@ -66,6 +77,7 @@ static void mqttEventHandler(void *args, esp_event_base_t base,
 
     MqttData *mqttData = loadMqttData();
     SleepyPeerData *sleepyPeerData = loadSleepyPeerData();
+
     if (mqttData->isSet && mqttData->useSleepyPeerDiscovery && strncmp(mqttData->discoveryRequestTopic, topic.c_str(), TOPIC_SIZE) == 0)
     {
       for (size_t i = 0; i < sleepyPeerData->sleepyPeerCount; i++)
@@ -93,6 +105,16 @@ static void mqttEventHandler(void *args, esp_event_base_t base,
       return;
     }
 
+    for (size_t i = 0; i < sleepyPeerData->sleepyPeerCount; i++)
+    {
+      auto &sleepyPeer = sleepyPeerData->sleepyPeerList[i];
+      if (strncmp(sleepyPeer.commandTopic, topic.c_str(), TOPIC_SIZE) == 0)
+      {
+        sleepyInbox.set(sleepyPeer.mac, message.c_str());
+        Serial.println("MQTT: Saved in sleepy inbox");
+      }
+    }
+
     auto mapping = topicToMacsMap.getMapping(topic.c_str());
     if (mapping == nullptr)
       break;
@@ -115,7 +137,6 @@ static void mqttEventHandler(void *args, esp_event_base_t base,
           mapping->macSet.set[i],
           (const uint8_t *)&espNowMessage,
           sizeof(EspNowMessage));
-
       if (!res)
         Serial.println("ESP-NOW: Send failed");
     }

@@ -49,7 +49,7 @@ export default function Navbar() {
       <div className="flex gap-[0.5rem]">
         <Chip
           color="accent"
-          variant="soft"
+          variant="secondary"
           style={{
             whiteSpace: "nowrap",
             overflow: "hidden",

@@ -34,6 +34,9 @@ export default function DeletePeerModal({ state, peer }: DeletePeerModalProps) {
       queryClient.resetQueries({
         queryKey: ["get", "/api/peers"],
       });
+      queryClient.resetQueries({
+        queryKey: ["get", "/api/peers/{id}/topics"],
+      });
       state.close();
     },
   });

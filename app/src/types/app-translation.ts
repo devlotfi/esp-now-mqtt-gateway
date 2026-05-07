@@ -82,4 +82,13 @@ export interface AppTranslation {
   noMqttConfig2: string;
   noNotificationsConfig1: string;
   noNotificationsConfig2: string;
+
+  discoveryRequestTopic: string;
+  discoveryResponseTopic: string;
+  useSleepyPeerDiscovery: string;
+  sleepyPeers: string;
+  addSleepyPeer: string;
+  deleteSleepyPeer: string;
+  commandTopic: string;
+  dataTopic: string;
 }

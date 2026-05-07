@@ -86,4 +86,13 @@ export const EN: AppTranslation = {
   noNotificationsConfig1: "Notifications Config Missing",
   noNotificationsConfig2:
     "You have not configured you notifications, peer devices will not be able to send notifications",
+
+  discoveryRequestTopic: "Discovery request topic",
+  discoveryResponseTopic: "Discovery response topic",
+  useSleepyPeerDiscovery: "Use sleepy peer discovery",
+  sleepyPeers: "Sleepy peers",
+  addSleepyPeer: "Add sleepy peer",
+  deleteSleepyPeer: "Delete sleepy peer",
+  commandTopic: "Command topic",
+  dataTopic: "Data topic",
 };

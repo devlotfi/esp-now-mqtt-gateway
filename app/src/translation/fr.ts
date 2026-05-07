@@ -86,4 +86,13 @@ export const FR: AppTranslation = {
   noNotificationsConfig1: "Configuration des notifications manquante",
   noNotificationsConfig2:
     "Vous n'avez pas configuré vos notifications, les appareils pairs ne pourront pas envoyer de notifications",
+
+  discoveryRequestTopic: "Sujet de requête de découverte",
+  discoveryResponseTopic: "Sujet de réponse de découverte",
+  useSleepyPeerDiscovery: "Utiliser la découverte de pairs en mode veille",
+  sleepyPeers: "Pairs en mode veille",
+  addSleepyPeer: "Ajouter un pair en mode veille",
+  deleteSleepyPeer: "Supprimer le pair en mode veille",
+  commandTopic: "Sujet de commande",
+  dataTopic: "Sujet de données",
 };
