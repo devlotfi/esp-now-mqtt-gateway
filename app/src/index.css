@@ -22,6 +22,9 @@
   .input-group {
     @apply border border-border bg-background;
   }
+  .input-group__input {
+    @apply min-w-0;
+  }
 
   .alert {
     @apply border border-border bg-background;
