@@ -3,6 +3,7 @@ import { Alert } from "@heroui/react";
 import DataRow from "../data-row";
 import type { paths } from "../../__generated__/schema";
 import CardWithTitle from "../card-with-header";
+import PushNotifierLogo from "../../assets/push-notifier-logo.svg";
 
 export default function NotificationsCard({
   notificationsData,
@@ -13,6 +14,21 @@ export default function NotificationsCard({
 
   return (
     <CardWithTitle icon="bell" title={t("notifications")}>
+      <div className="flex px-[0.5rem] pt-[0.5rem]">
+        <Alert className="p-[0.3rem] bg-surface">
+          <Alert.Indicator>
+            <img
+              src={PushNotifierLogo}
+              alt="push-notifier"
+              className="h-[2rem]"
+            />
+          </Alert.Indicator>
+          <Alert.Content className="justify-center">
+            <Alert.Title className="text-[12pt]">Push Notifier</Alert.Title>
+          </Alert.Content>
+        </Alert>
+      </div>
+
       {!notificationsData.isSet ? (
         <div className="flex px-[0.5rem] pt-[0.5rem]">
           <Alert status="danger">

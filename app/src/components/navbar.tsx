@@ -50,6 +50,7 @@ export default function Navbar() {
         <Chip
           color="accent"
           variant="secondary"
+          className="bg-background border border-border"
           style={{
             whiteSpace: "nowrap",
             overflow: "hidden",

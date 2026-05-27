@@ -229,7 +229,7 @@ function RouteComponent() {
   return (
     <div className="flex flex-col flex-1 h-dvh w-dvw">
       <Navbar></Navbar>
-      <div className="flex flex-1 px-[1rem] justify-center items-center h-[calc(100dvh-4rem)] bg-background rounded-t-4xl border-t border-border overflow-x-hidden overflow-y-auto">
+      <div className="flex flex-1 px-[1rem] justify-center items-center h-[calc(100dvh-4rem)] bg-main rounded-t-4xl border-t border-border overflow-x-hidden overflow-y-auto">
         <Card className="w-full max-w-[28rem] md:p-[2rem]">
           <Tabs className="w-full max-w-md">
             <Tabs.ListContainer>

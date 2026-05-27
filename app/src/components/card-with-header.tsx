@@ -40,7 +40,7 @@ export default function CardWithTitle({
   return (
     <Card
       className={cn(
-        "p-0 bg-[color-mix(in_srgb,var(--surface),transparent_50%)]",
+        "p-0 bg-[color-mix(in_srgb,var(--surface),transparent_50%)] overflow-hidden",
         className,
       )}
       {...props}

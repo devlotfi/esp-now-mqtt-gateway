@@ -23,7 +23,7 @@ function RouteComponent() {
         <Navbar></Navbar>
         <div
           ref={scrollRef}
-          className="flex h-[calc(100dvh-4rem-5.5rem)] md:h-[calc(100dvh-1rem-4rem)] min-w-0 overflow-x-hidden overflow-y-auto bg-background border border-border rounded-4xl"
+          className="flex h-[calc(100dvh-4rem-5.5rem)] md:h-[calc(100dvh-1rem-4rem)] min-w-0 overflow-x-hidden overflow-y-auto bg-main border border-border rounded-4xl"
           style={{
             scrollbarColor:
               "color-mix(in srgb, var(--accent), transparent 30%) color-mix(in srgb, var(--surface), transparent 80%)",

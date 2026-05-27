@@ -9,6 +9,7 @@ import { $api } from "../../api/openapi-client";
 import { useQueryClient } from "@tanstack/react-query";
 import { AuthContext } from "../../context/auth-context";
 import CardWithTitle from "../card-with-header";
+import PushNotifierLogo from "../../assets/push-notifier-logo.svg";
 
 export default function NotificationsSettings() {
   const { t } = useTranslation();
@@ -99,6 +100,21 @@ export default function NotificationsSettings() {
 
   return (
     <CardWithTitle icon="bell-ring" title={t("notifications")}>
+      <div className="flex px-[0.5rem] pt-[0.5rem]">
+        <Alert className="p-[0.3rem] bg-surface">
+          <Alert.Indicator>
+            <img
+              src={PushNotifierLogo}
+              alt="push-notifier"
+              className="h-[2rem]"
+            />
+          </Alert.Indicator>
+          <Alert.Content className="justify-center">
+            <Alert.Title className="text-[12pt]">Push Notifier</Alert.Title>
+          </Alert.Content>
+        </Alert>
+      </div>
+
       {!configQuery.data?.isSet ? (
         <div className="flex px-[0.5rem] pt-[0.5rem]">
           <Alert status="danger">

@@ -144,3 +144,12 @@
 .animate-loading {
   animation: loading-slide 1.2s infinite ease-in-out;
 }
+
+@utility bg-main {
+  background-color: var(--background);
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--foreground), transparent 92%) 2px,
+    transparent 2px
+  );
+  background-size: 2rem 2rem;
+}
