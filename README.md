@@ -64,6 +64,7 @@ An app to controll IOT devices using MQTT
 - Normal devices send and recive messages directly via the gateway similar to a direct MQTT connection
 - Sleepy Devices periodicly send their data that will be saved as a Retained message on the data topic
 - Sleepy Devices recive commands by sending the command the command topic, which then gets stored in the gateways until the devices requests it
+- To communicate with the gateway you can use the dedicated library in the [Releases](https://github.com/devlotfi/esp-now-mqtt-gateway/releases)
 - Devices can also send notifications via the gateway using [PushNotifier](https://github.com/devlotfi/push-notifier)
 - For a UI Dashboard you can use [EspCommander](https://github.com/devlotfi/esp-commander)
 - To configure the gateway use the Admin Dashboard Web App
