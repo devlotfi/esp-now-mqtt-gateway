@@ -7,9 +7,6 @@ An app to controll IOT devices using MQTT
 # 📌 Contents
 
 - [Tech stack](#tech-stack)
-  - [App](#app)
-  - [IOT](#iot)
-  - [Diagrams](#diagrams)
 - [How does the system work ?](#how-does-the-system-work-)
 - [Images](#images)
 - [Web App](#web-app)
@@ -70,6 +67,30 @@ An app to controll IOT devices using MQTT
 - To configure the gateway use the Admin Dashboard Web App
 
 <img src="https://raw.githubusercontent.com/devlotfi/esp-now-mqtt-gateway/master/github-assets/working-diagram.png">
+
+# Build
+
+## Components
+
+- ESP32S3 (N16R8)
+- W5500 Ethernet Module
+- Cables
+- Case (Optional)
+
+## Connections
+
+| W5500         | ESP32S3 (N16R8) |
+|---------------|-----------------|
+| 3.3v          | 3.3v            |
+| GND           | GND             |
+| CS            | 10              |
+| RST           | 9               |
+| MISO          | 13              |
+| MOSI          | 11              |
+| SCLK          | 12              |
+| INT           | 15              |
+
+<img src="https://raw.githubusercontent.com/devlotfi/esp-now-mqtt-gateway/master/github-assets/fritzing.png">
 
 ## Images
 
