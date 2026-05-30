@@ -2,7 +2,7 @@
 
 # 📜 esp-now-mqtt-gateway
 
-An app to controll IOT devices using MQTT
+A Gateway that bridges between MQTT and ESP-NOW
 
 # 📌 Contents
 
