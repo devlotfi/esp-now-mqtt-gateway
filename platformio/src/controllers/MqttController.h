@@ -75,15 +75,15 @@ public:
     MqttData *mqttData = loadMqttData();
 
     mqttData->isSet = true;
-    strncpy(mqttData->clientId, clientId, MQTT_CLIENT_ID_SIZE);
-    strncpy(mqttData->url, url, MQTT_URL_SIZE);
+    strlcpy(mqttData->clientId, clientId, MQTT_CLIENT_ID_SIZE);
+    strlcpy(mqttData->url, url, MQTT_URL_SIZE);
     if (useAuth)
     {
       const char *username = json["username"].as<const char *>();
       const char *password = json["password"].as<const char *>();
       mqttData->useAuth = true;
-      strncpy(mqttData->username, username, MQTT_USERNAME_SIZE);
-      strncpy(mqttData->password, password, MQTT_PASSWORD_SIZE);
+      strlcpy(mqttData->username, username, MQTT_USERNAME_SIZE);
+      strlcpy(mqttData->password, password, MQTT_PASSWORD_SIZE);
     }
     else
     {
@@ -95,8 +95,8 @@ public:
       const char *discoveryRequestTopic = json["discoveryRequestTopic"].as<const char *>();
       const char *discoveryResponseTopic = json["discoveryResponseTopic"].as<const char *>();
       mqttData->useSleepyPeerDiscovery = true;
-      strncpy(mqttData->discoveryRequestTopic, discoveryRequestTopic, TOPIC_SIZE);
-      strncpy(mqttData->discoveryResponseTopic, discoveryResponseTopic, TOPIC_SIZE);
+      strlcpy(mqttData->discoveryRequestTopic, discoveryRequestTopic, TOPIC_SIZE);
+      strlcpy(mqttData->discoveryResponseTopic, discoveryResponseTopic, TOPIC_SIZE);
     }
     else
     {

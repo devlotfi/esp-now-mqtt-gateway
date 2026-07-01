@@ -125,11 +125,8 @@ static void mqttEventHandler(void *args, esp_event_base_t base,
 
     MqttEspNowMessage &mqttMsg = espNowMessage.payload.mqttEspNowMessage;
 
-    strncpy(mqttMsg.topic, topic.c_str(), TOPIC_SIZE - 1);
-    mqttMsg.topic[TOPIC_SIZE - 1] = '\0';
-
-    strncpy(mqttMsg.text, message.c_str(), MQTT_MESSAGE_TEXT_PAYLOAD_SIZE - 1);
-    mqttMsg.text[MQTT_MESSAGE_TEXT_PAYLOAD_SIZE - 1] = '\0';
+    strlcpy(mqttMsg.topic, topic.c_str(), TOPIC_SIZE - 1);
+    strlcpy(mqttMsg.text, message.c_str(), MQTT_MESSAGE_TEXT_PAYLOAD_SIZE - 1);
 
     for (size_t i = 0; i < mapping->macSet.count; i++)
     {
@@ -190,10 +187,10 @@ static void startMqtt()
   static char username[MQTT_USERNAME_SIZE];
   static char password[MQTT_PASSWORD_SIZE];
 
-  strncpy(url, mqttData->url, MQTT_URL_SIZE);
-  strncpy(clientId, mqttData->clientId, MQTT_CLIENT_ID_SIZE);
-  strncpy(username, mqttData->username, MQTT_USERNAME_SIZE);
-  strncpy(password, mqttData->password, MQTT_PASSWORD_SIZE);
+  strlcpy(url, mqttData->url, MQTT_URL_SIZE);
+  strlcpy(clientId, mqttData->clientId, MQTT_CLIENT_ID_SIZE);
+  strlcpy(username, mqttData->username, MQTT_USERNAME_SIZE);
+  strlcpy(password, mqttData->password, MQTT_PASSWORD_SIZE);
 
   esp_mqtt_client_config_t cfg = {};
   cfg.broker.verification.crt_bundle_attach = esp_crt_bundle_attach;

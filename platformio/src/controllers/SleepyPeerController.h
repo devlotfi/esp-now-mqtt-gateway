@@ -90,15 +90,12 @@ public:
 
     // saving in NVS
     SleepyPeer sleepyPeer;
-    strncpy(sleepyPeer.name, name, NAME_SIZE - 1);
-    sleepyPeer.name[NAME_SIZE - 1] = '\0';
+    strlcpy(sleepyPeer.name, name, NAME_SIZE - 1);
     uuid(sleepyPeer.id);
     macStringToBytes(macStr, sleepyPeer.mac);
     keyHexToBytes(lmkStr, sleepyPeer.lmk);
-    strncpy(sleepyPeer.commandTopic, commandTopic, TOPIC_SIZE - 1);
-    sleepyPeer.commandTopic[TOPIC_SIZE - 1] = '\0';
-    strncpy(sleepyPeer.dataTopic, dataTopic, TOPIC_SIZE - 1);
-    sleepyPeer.dataTopic[TOPIC_SIZE - 1] = '\0';
+    strlcpy(sleepyPeer.commandTopic, commandTopic, TOPIC_SIZE - 1);
+    strlcpy(sleepyPeer.dataTopic, dataTopic, TOPIC_SIZE - 1);
 
     sleepyPeerData->sleepyPeerList[sleepyPeerData->sleepyPeerCount] = sleepyPeer;
     sleepyPeerData->sleepyPeerCount++;

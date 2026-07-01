@@ -85,6 +85,12 @@ export const AR: AppTranslation = {
   noNotificationsConfig1: "إعدادات التنبيهات مفقودة",
   noNotificationsConfig2:
     "لم تقم بتكوين التنبيهات، لن تتمكن الأجهزة المقترنة من إرسال التنبيهات",
+  metrics: "المقاييس",
+  instanceId: "معرف المثيل",
+  apiKey: "مفتاح API",
+  noMetricsConfig1: "إعدادات المقاييس مفقودة",
+  noMetricsConfig2:
+    "لم تقم بإعداد المقاييس الخاصة بك، ولن تتمكن الأجهزة النظيرة من حفظ المقاييس.",
 
   discoveryRequestTopic: "موضوع طلب الاكتشاف",
   discoveryResponseTopic: "موضوع استجابة الاكتشاف",

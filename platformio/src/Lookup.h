@@ -37,8 +37,7 @@ public:
 
         if (!exists)
         {
-          strncpy(set[count], topic, TOPIC_SIZE - 1);
-          set[count][TOPIC_SIZE - 1] = '\0';
+          strlcpy(set[count], topic, TOPIC_SIZE - 1);
           count++;
         }
       }
@@ -122,7 +121,7 @@ public:
         if (!exists)
         {
           Mapping mapping;
-          strncpy(mapping.topic, topic, TOPIC_SIZE);
+          strlcpy(mapping.topic, topic, TOPIC_SIZE);
           mapping.macSet.add(peer.mac);
           memcpy(&map[count], &mapping, sizeof(Mapping));
           count++;

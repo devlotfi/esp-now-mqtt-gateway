@@ -86,6 +86,12 @@ export const EN: AppTranslation = {
   noNotificationsConfig1: "Notifications Config Missing",
   noNotificationsConfig2:
     "You have not configured you notifications, peer devices will not be able to send notifications",
+  metrics: "Metrics",
+  instanceId: "Instance Id",
+  apiKey: "API Key",
+  noMetricsConfig1: "Metrics Config Missing",
+  noMetricsConfig2:
+    "You have not configured you metrics, peer devices will not be able to save metrics",
 
   discoveryRequestTopic: "Discovery request topic",
   discoveryResponseTopic: "Discovery response topic",

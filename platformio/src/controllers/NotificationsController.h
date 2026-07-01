@@ -60,9 +60,7 @@ public:
     // saving in NVS
     notificationsData->isSet = true;
     strncpy(notificationsData->apiUrl, apiUrl, NOTIFICATIONS_API_URL_SIZE);
-    notificationsData->apiUrl[NOTIFICATIONS_API_URL_SIZE - 1] = '\0';
     strncpy(notificationsData->apiSecret, apiSecret, NOTIFICATIONS_API_SECRET_SIZE);
-    notificationsData->apiSecret[NOTIFICATIONS_API_SECRET_SIZE - 1] = '\0';
 
     saveNotificationsData(notificationsData);
     request->send(200);

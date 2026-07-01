@@ -7,6 +7,7 @@
 #include "Api.h"
 #include "Lookup.h"
 #include "Notifications.h"
+#include "Grafana.h"
 #include "preferences/Notifications.h"
 #include "preferences/EspNow.h"
 #include "preferences/Peer.h"
@@ -23,6 +24,7 @@ enum MessageType
   SLEEPY_COMMAND_MESSAGE = 4,
   SLEEPY_DATA_MESSAGE = 5,
   WOL_MESSAGE = 6,
+  METRIC_MESSAGE = 7
 };
 
 struct __attribute__((packed)) MqttEspNowMessage
@@ -40,6 +42,7 @@ struct __attribute__((packed)) NotificationEspNowMessage
 struct __attribute__((packed)) TimeSyncEspNowMessage
 {
   uint32_t epoch;
+  char timezonePosix[64];
 };
 
 struct __attribute__((packed)) SleepyCommandEspNowMessage
@@ -58,6 +61,11 @@ struct __attribute__((packed)) WolEspNowMessage
   uint8_t mac[MAC_SIZE_BYTES];
 };
 
+struct __attribute__((packed)) MetricEspNowMessage
+{
+  char body[GRAFANA_BODY_SIZE];
+};
+
 struct __attribute__((packed)) EspNowMessage
 {
   MessageType type;
@@ -69,6 +77,7 @@ struct __attribute__((packed)) EspNowMessage
     SleepyCommandEspNowMessage sleepyCommandEspNowMessage;
     SleepyDataEspNowMessage sleepyDataEspNowMessage;
     WolEspNowMessage wolEspNowMessage;
+    MetricEspNowMessage metricEspNowMessage;
   } payload;
 };
 
@@ -117,11 +126,9 @@ void onReceive(const esp_now_recv_info_t *info, const uint8_t *data, int len)
   }
   case MessageType::TIME_SYNC_MESSAGE:
   {
-    // Build the ESP-NOW frame
     Serial.println("ESP-NOW: Time Sync Request");
     EspNowMessage espNowMessage = {};
     espNowMessage.type = MessageType::TIME_SYNC_MESSAGE;
-
     TimeSyncEspNowMessage &timeSyncMsg = espNowMessage.payload.timeSyncEspNowMessage;
 
     time_t now;
@@ -135,11 +142,13 @@ void onReceive(const esp_now_recv_info_t *info, const uint8_t *data, int len)
     struct timeval tv;
     gettimeofday(&tv, NULL);
     timeSyncMsg.epoch = tv.tv_sec;
+    strlcpy(timeSyncMsg.timezonePosix, TIMEZONE_POSIX, TIMEZONE_POSIX_SIZE);
 
-    bool res = enqueueMessage(
-        info->src_addr,
-        (const uint8_t *)&espNowMessage,
-        sizeof(EspNowMessage));
+    printCurrentTime();
+
+    bool res = enqueueMessage(info->src_addr,
+                              (const uint8_t *)&espNowMessage,
+                              sizeof(EspNowMessage));
     if (!res)
       Serial.println("ESP-NOW: Send failed");
     break;
@@ -197,8 +206,7 @@ void onReceive(const esp_now_recv_info_t *info, const uint8_t *data, int len)
     espNowMessage.type = MessageType::SLEEPY_COMMAND_MESSAGE;
     SleepyCommandEspNowMessage &sleepyCommandMsg = espNowMessage.payload.sleepyCommandEspNowMessage;
 
-    strncpy(sleepyCommandMsg.text, text, MQTT_MESSAGE_TEXT_PAYLOAD_SIZE - 1);
-    sleepyCommandMsg.text[MQTT_MESSAGE_TEXT_PAYLOAD_SIZE - 1] = '\0';
+    strlcpy(sleepyCommandMsg.text, text, MQTT_MESSAGE_TEXT_PAYLOAD_SIZE - 1);
 
     bool res = enqueueMessage(
         sourceSleepyPeer->mac,
@@ -213,6 +221,19 @@ void onReceive(const esp_now_recv_info_t *info, const uint8_t *data, int len)
   {
     const WolEspNowMessage &wolMsg = msg->payload.wolEspNowMessage;
     sendWakeOnLan(wolMsg.port, wolMsg.mac);
+    break;
+  }
+  case MessageType::METRIC_MESSAGE:
+  {
+    const MetricEspNowMessage &metricMsg = msg->payload.metricEspNowMessage;
+    GrafanaData *grafanaData = loadGrafanaData();
+    if (!grafanaData->isSet)
+    {
+      Serial.println("ESP-NOW: Grafana data not set");
+      return;
+    }
+
+    saveGrafanaMetric(grafanaData, metricMsg.body);
     break;
   }
   default:

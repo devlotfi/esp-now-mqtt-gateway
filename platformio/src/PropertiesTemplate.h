@@ -69,9 +69,6 @@
 #define MQTT_USERNAME_SIZE 128
 #define MQTT_PASSWORD_SIZE 128
 #define MQTT_URL_SIZE 512
-const char *mqtt_uri = "mqtt_uri";
-const char *mqtt_user = "mqtt_user";
-const char *mqtt_password = "mqtt_password";
 
 // ----------------------
 // ESP-NOW

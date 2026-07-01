@@ -1,7 +1,5 @@
 #pragma once
 
-#pragma once
-
 #include <Arduino.h>
 #include <AsyncTCP.h>
 #include <WiFi.h>
@@ -19,16 +17,16 @@
 #include "Lookup.h"
 #include "EspNow.h"
 
-esp_err_t http_event_handler(esp_http_client_event_t *evt)
+esp_err_t notifications_http_event_handler(esp_http_client_event_t *evt)
 {
   switch (evt->event_id)
   {
   case HTTP_EVENT_ON_DATA:
-    printf("Received data: %.*s\n", evt->data_len, (char *)evt->data);
+    printf("%.*s", evt->data_len, (char *)evt->data);
     break;
 
   case HTTP_EVENT_ON_FINISH:
-    printf("Request finished\n");
+    printf("\n--- Request finished ---\n");
     break;
 
   case HTTP_EVENT_ERROR:
@@ -43,7 +41,7 @@ esp_err_t http_event_handler(esp_http_client_event_t *evt)
 
 struct TestNotificationTaskArgs
 {
-  char url[NOTIFICATIONS_API_URL_SIZE + 32];
+  char url[NOTIFICATIONS_API_URL_SIZE];
   char apiSecret[NOTIFICATIONS_API_SECRET_SIZE];
 };
 
@@ -54,7 +52,7 @@ static void testNotificationTask(void *pvParameters)
   const int MAX_RETRIES = 3;
   const int RETRY_DELAY_MS = 2000; // 2s between retries
 
-  esp_err_t err;
+  esp_err_t err = ESP_FAIL;
   int attempt = 0;
 
   while (attempt < MAX_RETRIES)
@@ -62,6 +60,7 @@ static void testNotificationTask(void *pvParameters)
     esp_http_client_config_t config = {
         .url = args->url,
         .method = HTTP_METHOD_POST,
+        .event_handler = notifications_http_event_handler,
         .crt_bundle_attach = esp_crt_bundle_attach,
     };
 
@@ -82,15 +81,7 @@ static void testNotificationTask(void *pvParameters)
                     status,
                     content_length);
 
-      char buffer[512];
-      int read_len;
-
-      while ((read_len = esp_http_client_read(client, buffer, sizeof(buffer) - 1)) > 0)
-      {
-        buffer[read_len] = 0;
-        Serial.print(buffer);
-      }
-
+      // FIX: Removed manual read loop here as data flows through the event handler
       esp_http_client_cleanup(client);
       break;
     }
@@ -130,17 +121,16 @@ void sendTestNotification(NotificationsData *notificationsData)
   }
 
   // Build URL
-  etl::string<NOTIFICATIONS_API_URL_SIZE + 32> url;
+  etl::string<NOTIFICATIONS_API_URL_SIZE> url;
   url = notificationsData->apiUrl;
   if (!url.empty() && url.back() == '/')
     url += "api/subscriptions/test";
   else
     url += "/api/subscriptions/test";
 
-  strncpy(args->url, url.c_str(), sizeof(args->url) - 1);
-  args->url[sizeof(args->url) - 1] = '\0';
-  strncpy(args->apiSecret, notificationsData->apiSecret, sizeof(args->apiSecret) - 1);
-  args->apiSecret[sizeof(args->apiSecret) - 1] = '\0';
+  // FIX: Passing standard sizeof() to strlcpy
+  strlcpy(args->url, url.c_str(), sizeof(args->url));
+  strlcpy(args->apiSecret, notificationsData->apiSecret, sizeof(args->apiSecret));
 
   xTaskCreatePinnedToCoreWithCaps(
       testNotificationTask,
@@ -155,7 +145,7 @@ void sendTestNotification(NotificationsData *notificationsData)
 
 struct NotificationTaskArgs
 {
-  char url[NOTIFICATIONS_API_URL_SIZE + 32];
+  char url[NOTIFICATIONS_API_URL_SIZE];
   char apiSecret[NOTIFICATIONS_API_SECRET_SIZE];
   char title[NOTIFICATION_TITLE_SIZE];
   char body[NOTIFICATION_BODY_SIZE];
@@ -168,11 +158,9 @@ static void notificationTask(void *pvParameters)
   const int MAX_RETRIES = 3;
   const int RETRY_DELAY_MS = 2000;
 
-  esp_err_t err;
+  esp_err_t err = ESP_FAIL;
   int attempt = 0;
 
-  // Define the JSON payload
-  // You can also use snprintf if you want to pass dynamic values from 'args'
   char post_data[2048];
   ArduinoJson::JsonDocument doc;
   doc["title"] = args->title;
@@ -184,6 +172,7 @@ static void notificationTask(void *pvParameters)
     esp_http_client_config_t config = {
         .url = args->url,
         .method = HTTP_METHOD_POST,
+        .event_handler = notifications_http_event_handler, // FIX: Registered the handler
         .crt_bundle_attach = esp_crt_bundle_attach,
     };
 
@@ -205,14 +194,7 @@ static void notificationTask(void *pvParameters)
       int status = esp_http_client_get_status_code(client);
       Serial.printf("HTTP Status = %d\n", status);
 
-      char buffer[512];
-      int read_len;
-      while ((read_len = esp_http_client_read(client, buffer, sizeof(buffer) - 1)) > 0)
-      {
-        buffer[read_len] = 0;
-        Serial.print(buffer);
-      }
-
+      // FIX: Removed manual read loop here as data flows through the event handler
       esp_http_client_cleanup(client);
       break;
     }
@@ -251,23 +233,18 @@ void sendNotification(NotificationsData *notificationsData, const char *title, c
   }
 
   // Build URL
-  etl::string<NOTIFICATIONS_API_URL_SIZE + 32> url;
+  etl::string<NOTIFICATIONS_API_URL_SIZE> url;
   url = notificationsData->apiUrl;
   if (!url.empty() && url.back() == '/')
     url += "api/subscriptions/send";
   else
     url += "/api/subscriptions/send";
 
-  strncpy(args->url, url.c_str(), sizeof(args->url) - 1);
-  args->url[sizeof(args->url) - 1] = '\0';
-  strncpy(args->apiSecret, notificationsData->apiSecret, sizeof(args->apiSecret) - 1);
-  args->apiSecret[sizeof(args->apiSecret) - 1] = '\0';
-
-  // body
-  strncpy(args->title, title, NOTIFICATION_TITLE_SIZE);
-  args->title[NOTIFICATION_TITLE_SIZE - 1] = '\0';
-  strncpy(args->body, body, NOTIFICATION_BODY_SIZE);
-  args->body[NOTIFICATION_BODY_SIZE - 1] = '\0';
+  // FIX: Passing standard sizeof() to strlcpy
+  strlcpy(args->url, url.c_str(), sizeof(args->url));
+  strlcpy(args->apiSecret, notificationsData->apiSecret, sizeof(args->apiSecret));
+  strlcpy(args->title, title, sizeof(args->title));
+  strlcpy(args->body, body, sizeof(args->body));
 
   xTaskCreatePinnedToCoreWithCaps(
       notificationTask,

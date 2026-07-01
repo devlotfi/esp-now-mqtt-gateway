@@ -8,6 +8,29 @@
 #include "Properties.h"
 #include "Validation.h"
 
+void printCurrentTime()
+{
+  time_t now = time(nullptr);
+
+  // UTC
+  struct tm utc;
+  gmtime_r(&now, &utc);
+
+  char utcStr[32];
+  strftime(utcStr, sizeof(utcStr), "%Y-%m-%d %H:%M:%S UTC", &utc);
+
+  // Local time (uses the POSIX TZ previously set with setenv("TZ", ...); tzset();)
+  struct tm local;
+  localtime_r(&now, &local);
+
+  char localStr[48];
+  strftime(localStr, sizeof(localStr), "%Y-%m-%d %H:%M:%S %Z", &local);
+
+  Serial.println("Current time:");
+  Serial.printf("UTC   : %s\n", utcStr);
+  Serial.printf("Local : %s\n", localStr);
+}
+
 bool keyHexToBytes(const char *hex, uint8_t key[16])
 {
   if (!isValidEspNowKey(hex))

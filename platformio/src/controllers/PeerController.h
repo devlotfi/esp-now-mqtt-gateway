@@ -84,8 +84,7 @@ public:
 
     // saving in NVS
     Peer peer;
-    strncpy(peer.name, name, NAME_SIZE - 1);
-    peer.name[NAME_SIZE - 1] = '\0';
+    strlcpy(peer.name, name, NAME_SIZE - 1);
     uuid(peer.id);
     macStringToBytes(macStr, peer.mac);
     keyHexToBytes(lmkStr, peer.lmk);
@@ -228,8 +227,7 @@ public:
           }
         }
 
-        strncpy(peer.topicList[peer.topicCount], topic, TOPIC_SIZE - 1);
-        peer.topicList[peer.topicCount][TOPIC_SIZE - 1] = '\0';
+        strlcpy(peer.topicList[peer.topicCount], topic, TOPIC_SIZE - 1);
         peer.topicCount++;
         esp_mqtt_client_subscribe(mqttClient, topic, 1);
         break;

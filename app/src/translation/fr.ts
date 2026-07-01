@@ -86,6 +86,12 @@ export const FR: AppTranslation = {
   noNotificationsConfig1: "Configuration des notifications manquante",
   noNotificationsConfig2:
     "Vous n'avez pas configuré vos notifications, les appareils pairs ne pourront pas envoyer de notifications",
+  metrics: "Métriques",
+  instanceId: "ID de l'instance",
+  apiKey: "Clé API",
+  noMetricsConfig1: "Configuration des métriques manquante",
+  noMetricsConfig2:
+    "Vous n'avez pas configuré vos métriques, les appareils pairs ne pourront pas enregistrer les métriques.",
 
   discoveryRequestTopic: "Sujet de requête de découverte",
   discoveryResponseTopic: "Sujet de réponse de découverte",

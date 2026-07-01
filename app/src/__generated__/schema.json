@@ -418,6 +418,55 @@
           }
         }
       },
+      "GrafanaConfigResponse": {
+        "type": "object",
+        "required": ["isSet"],
+        "properties": {
+          "isSet": {
+            "type": "boolean",
+            "example": true
+          },
+          "config": {
+            "type": "object",
+            "description": "Present only when isSet is true",
+            "required": ["url", "instanceId", "apiKey"],
+            "properties": {
+              "url": {
+                "type": "string",
+                "description": "Grafana Cloud push/write endpoint URL",
+                "example": "https://influx-prod-1.grafana.net/api/v1/push/influx/write"
+              },
+              "instanceId": {
+                "type": "string",
+                "example": "123456"
+              },
+              "apiKey": {
+                "type": "string",
+                "example": "glc_eyJvIjoiMTIzNDU2In0="
+              }
+            }
+          }
+        }
+      },
+      "GrafanaSetConfigRequest": {
+        "type": "object",
+        "required": ["url", "instanceId", "apiKey"],
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Grafana Cloud push/write endpoint URL",
+            "example": "https://influx-prod-1.grafana.net/api/v1/push/influx/write"
+          },
+          "instanceId": {
+            "type": "string",
+            "example": "123456"
+          },
+          "apiKey": {
+            "type": "string",
+            "example": "glc_eyJvIjoiMTIzNDU2In0="
+          }
+        }
+      },
       "Peer": {
         "type": "object",
         "required": ["id", "name", "mac", "lmk"],
@@ -885,6 +934,53 @@
           },
           "404": {
             "description": "Notifications not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grafana": {
+      "get": {
+        "summary": "Get Grafana Cloud configuration",
+        "tags": ["Grafana"],
+        "responses": {
+          "200": {
+            "description": "Grafana config",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GrafanaConfigResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Set Grafana Cloud configuration",
+        "tags": ["Grafana"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GrafanaSetConfigRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Config saved"
+          },
+          "400": {
+            "description": "Missing or invalid instanceId/apiKey",
             "content": {
               "application/json": {
                 "schema": {

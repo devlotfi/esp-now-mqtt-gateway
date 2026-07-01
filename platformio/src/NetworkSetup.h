@@ -15,11 +15,10 @@ void syncTime()
 {
   Serial.println("NTP: Syncing time...");
 
-  timeClient.setTimeOffset(TIMEZONE_OFFSET_SECONDS);
+  // Keep the system clock in UTC
+  timeClient.setTimeOffset(0);
   timeClient.begin();
 
-  // Retry indefinitely — the watchdog will reboot the device if we are
-  // stuck here too long without ETH/MQTT coming up anyway.
   while (!timeClient.forceUpdate())
   {
     Serial.println("NTP: Waiting for sync...");
@@ -27,10 +26,22 @@ void syncTime()
   }
 
   time_t epoch = timeClient.getEpochTime();
-  struct timeval tv = {.tv_sec = epoch};
+
+  struct timeval tv = {
+      .tv_sec = epoch,
+      .tv_usec = 0,
+  };
+
   settimeofday(&tv, nullptr);
+
+  // Configure local timezone
+  setenv("TZ", TIMEZONE_POSIX, 1);
+  tzset();
+  Serial.printf("POSIX TZ: %s\n", TIMEZONE_POSIX);
+
   ntpSynced = true;
-  Serial.println("NTP: Synced -> " + timeClient.getFormattedTime());
+
+  printCurrentTime();
 }
 
 void WiFiEvent(arduino_event_id_t event)

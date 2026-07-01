@@ -19,6 +19,7 @@
 #include "controllers/SleepyPeerController.h"
 #include "controllers/DeviceController.h"
 #include "controllers/NetworkController.h"
+#include "controllers/GrafanaController.h"
 #include "controllers/MqttController.h"
 #include "middlewares/JwtMiddleware.h"
 
@@ -34,17 +35,20 @@ void setupServer()
   cors.setAllowCredentials(false);
   server.addMiddleware(&cors);
 
+  server.on(AsyncURIMatcher::exact("/api/auth/login"), HTTP_POST, AuthController::login);
+  server.on(AsyncURIMatcher::exact("/api/auth/set-password"), HTTP_POST, AuthController::setPassword).addMiddleware(&jwtAuth);
+
   server.on(AsyncURIMatcher::exact("/api/device/reboot"), HTTP_POST, DeviceController::reboot).addMiddleware(&jwtAuth);
   server.on(AsyncURIMatcher::exact("/api/device/status"), HTTP_GET, DeviceController::status).addMiddleware(&jwtAuth);
 
   server.on(AsyncURIMatcher::exact("/api/network"), HTTP_GET, NetworkController::getConfig).addMiddleware(&jwtAuth);
   server.on(AsyncURIMatcher::exact("/api/network"), HTTP_POST, NetworkController::setConfig).addMiddleware(&jwtAuth);
 
+  server.on(AsyncURIMatcher::exact("/api/grafana"), HTTP_GET, GrafanaController::getConfig).addMiddleware(&jwtAuth);
+  server.on(AsyncURIMatcher::exact("/api/grafana"), HTTP_POST, GrafanaController::setConfig).addMiddleware(&jwtAuth);
+
   server.on(AsyncURIMatcher::exact("/api/mqtt"), HTTP_GET, MqttController::getConfig).addMiddleware(&jwtAuth);
   server.on(AsyncURIMatcher::exact("/api/mqtt"), HTTP_POST, MqttController::setConfig).addMiddleware(&jwtAuth);
-
-  server.on(AsyncURIMatcher::exact("/api/auth/login"), HTTP_POST, AuthController::login);
-  server.on(AsyncURIMatcher::exact("/api/auth/set-password"), HTTP_POST, AuthController::setPassword).addMiddleware(&jwtAuth);
 
   server.on(AsyncURIMatcher::exact("/api/notifications"), HTTP_GET, NotificationsController::getConfig).addMiddleware(&jwtAuth);
   server.on(AsyncURIMatcher::exact("/api/notifications"), HTTP_POST, NotificationsController::setConfig).addMiddleware(&jwtAuth);

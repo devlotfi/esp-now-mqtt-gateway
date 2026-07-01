@@ -409,6 +409,73 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/grafana": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Grafana Cloud configuration */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Grafana config */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GrafanaConfigResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Set Grafana Cloud configuration */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["GrafanaSetConfigRequest"];
+                };
+            };
+            responses: {
+                /** @description Config saved */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Missing or invalid instanceId/apiKey */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/esp-now": {
         parameters: {
             query?: never;
@@ -1096,6 +1163,33 @@ export interface components {
             apiUrl: string;
             /** @example supersecret */
             apiSecret: string;
+        };
+        GrafanaConfigResponse: {
+            /** @example true */
+            isSet: boolean;
+            /** @description Present only when isSet is true */
+            config?: {
+                /**
+                 * @description Grafana Cloud push/write endpoint URL
+                 * @example https://influx-prod-1.grafana.net/api/v1/push/influx/write
+                 */
+                url: string;
+                /** @example 123456 */
+                instanceId: string;
+                /** @example glc_eyJvIjoiMTIzNDU2In0= */
+                apiKey: string;
+            };
+        };
+        GrafanaSetConfigRequest: {
+            /**
+             * @description Grafana Cloud push/write endpoint URL
+             * @example https://influx-prod-1.grafana.net/api/v1/push/influx/write
+             */
+            url: string;
+            /** @example 123456 */
+            instanceId: string;
+            /** @example glc_eyJvIjoiMTIzNDU2In0= */
+            apiKey: string;
         };
         Peer: {
             /**

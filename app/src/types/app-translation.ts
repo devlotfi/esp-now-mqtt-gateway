@@ -82,6 +82,11 @@ export interface AppTranslation {
   noMqttConfig2: string;
   noNotificationsConfig1: string;
   noNotificationsConfig2: string;
+  metrics: string;
+  instanceId: string;
+  apiKey: string;
+  noMetricsConfig1: string;
+  noMetricsConfig2: string;
 
   discoveryRequestTopic: string;
   discoveryResponseTopic: string;

@@ -17,6 +17,7 @@ import HeapCard from "../../components/dashboard/heap-card";
 import PsramCard from "../../components/dashboard/psram-card";
 import FlashStorageCard from "../../components/dashboard/flash-storage-card";
 import EspNowCard from "../../components/dashboard/esp-now-card";
+import MetricsCard from "../../components/dashboard/metrics-card";
 
 export const Route = createFileRoute("/dashboard/")({
   component: RouteComponent,
@@ -30,6 +31,20 @@ function RouteComponent() {
   const statusQuery = $api.useQuery(
     "get",
     "/api/device/status",
+    {
+      baseUrl: authData.apiUrl,
+      headers: {
+        Authorization: `Bearer ${authData.token}`,
+      },
+    },
+    {
+      refetchInterval: 5000,
+    },
+  );
+
+  const grafanaQuery = $api.useQuery(
+    "get",
+    "/api/grafana",
     {
       baseUrl: authData.apiUrl,
       headers: {
@@ -99,6 +114,7 @@ function RouteComponent() {
 
   if (
     statusQuery.isLoading ||
+    grafanaQuery.isLoading ||
     mqttQuery.isLoading ||
     networkQuery.isLoading ||
     notificationsQuery.isLoading ||
@@ -107,11 +123,13 @@ function RouteComponent() {
     return <LoadingScreen></LoadingScreen>;
   if (
     !statusQuery.data ||
+    !grafanaQuery.data ||
     !mqttQuery.data ||
     !networkQuery.data ||
     !notificationsQuery.data ||
     !espNowQuery.data ||
     statusQuery.isError ||
+    grafanaQuery.isError ||
     mqttQuery.isError ||
     networkQuery.isError ||
     notificationsQuery.isError ||
@@ -173,6 +191,7 @@ function RouteComponent() {
             <NotificationsCard
               notificationsData={notificationsQuery.data}
             ></NotificationsCard>
+            <MetricsCard grafanaData={grafanaQuery.data}></MetricsCard>
           </div>
         </div>
       </div>

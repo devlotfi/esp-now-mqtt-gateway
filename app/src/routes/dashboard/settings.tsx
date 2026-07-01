@@ -7,6 +7,7 @@ import NotificationsSettings from "../../components/settings/notifications-setti
 import MqttSettings from "../../components/settings/mqtt-settings";
 import NetworkSettings from "../../components/settings/network-settings";
 import EspNowSettings from "../../components/settings/esp-now-settings";
+import MetricsSettings from "../../components/settings/metrics-settings";
 
 export const Route = createFileRoute("/dashboard/settings")({
   component: RouteComponent,
@@ -30,6 +31,7 @@ function RouteComponent() {
             <NetworkSettings></NetworkSettings>
             <EspNowSettings></EspNowSettings>
             <PasswordSettings></PasswordSettings>
+            <MetricsSettings></MetricsSettings>
           </div>
         </div>
       </div>
