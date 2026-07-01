@@ -13,6 +13,7 @@
 #include "preferences/SleepyPeer.h"
 #include "EspNowMessageQueue.h"
 #include "SleepyInbox.h"
+#include "Wol.h"
 
 enum MessageType
 {
@@ -21,6 +22,7 @@ enum MessageType
   TIME_SYNC_MESSAGE = 3,
   SLEEPY_COMMAND_MESSAGE = 4,
   SLEEPY_DATA_MESSAGE = 5,
+  WOL_MESSAGE = 6,
 };
 
 struct __attribute__((packed)) MqttEspNowMessage
@@ -50,6 +52,12 @@ struct __attribute__((packed)) SleepyDataEspNowMessage
   char text[MQTT_MESSAGE_TEXT_PAYLOAD_SIZE];
 };
 
+struct __attribute__((packed)) WolEspNowMessage
+{
+  uint16_t port;
+  uint8_t mac[MAC_SIZE_BYTES];
+};
+
 struct __attribute__((packed)) EspNowMessage
 {
   MessageType type;
@@ -60,6 +68,7 @@ struct __attribute__((packed)) EspNowMessage
     TimeSyncEspNowMessage timeSyncEspNowMessage;
     SleepyCommandEspNowMessage sleepyCommandEspNowMessage;
     SleepyDataEspNowMessage sleepyDataEspNowMessage;
+    WolEspNowMessage wolEspNowMessage;
   } payload;
 };
 
@@ -200,9 +209,17 @@ void onReceive(const esp_now_recv_info_t *info, const uint8_t *data, int len)
     sleepyInbox.clear(sourceSleepyPeer->mac);
     break;
   }
+  case MessageType::WOL_MESSAGE:
+  {
+    const WolEspNowMessage &wolMsg = msg->payload.wolEspNowMessage;
+    sendWakeOnLan(wolMsg.port, wolMsg.mac);
+    break;
+  }
   default:
+  {
     Serial.printf("ESP-NOW: Unknown type %d\n", msg->type);
     break;
+  }
   }
 }
 

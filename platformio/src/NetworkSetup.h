@@ -4,13 +4,12 @@
 #include <WiFi.h>
 #include <ETH.h>
 #include <NTPClient.h>
-#include <NetworkUdp.h>
 #include "preferences/Network.h"
 #include "Mqtt.h"
 #include "Led.h"
+#include "Vars.h"
 
-static NetworkUDP ntpUDP;
-static NTPClient timeClient(ntpUDP, "pool.ntp.org", 0, 60000);
+static NTPClient timeClient(networkUDP, "pool.ntp.org", 0, 60000);
 
 void syncTime()
 {
