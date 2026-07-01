@@ -19,6 +19,7 @@
 #include "controllers/SleepyPeerController.h"
 #include "controllers/DeviceController.h"
 #include "controllers/NetworkController.h"
+#include "controllers/TimezoneController.h"
 #include "controllers/GrafanaController.h"
 #include "controllers/MqttController.h"
 #include "middlewares/JwtMiddleware.h"
@@ -43,6 +44,9 @@ void setupServer()
 
   server.on(AsyncURIMatcher::exact("/api/network"), HTTP_GET, NetworkController::getConfig).addMiddleware(&jwtAuth);
   server.on(AsyncURIMatcher::exact("/api/network"), HTTP_POST, NetworkController::setConfig).addMiddleware(&jwtAuth);
+
+  server.on(AsyncURIMatcher::exact("/api/timezone"), HTTP_GET, TimezoneController::getConfig).addMiddleware(&jwtAuth);
+  server.on(AsyncURIMatcher::exact("/api/timezone"), HTTP_POST, TimezoneController::setConfig).addMiddleware(&jwtAuth);
 
   server.on(AsyncURIMatcher::exact("/api/grafana"), HTTP_GET, GrafanaController::getConfig).addMiddleware(&jwtAuth);
   server.on(AsyncURIMatcher::exact("/api/grafana"), HTTP_POST, GrafanaController::setConfig).addMiddleware(&jwtAuth);

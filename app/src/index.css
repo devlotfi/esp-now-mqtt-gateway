@@ -54,6 +54,10 @@
   .tabs__panel {
     @apply mt-[2rem];
   }
+
+  .autocomplete__trigger {
+    @apply bg-background border border-border;
+  }
 }
 
 @layer base {

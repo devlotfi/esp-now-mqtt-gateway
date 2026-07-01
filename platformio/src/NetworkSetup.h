@@ -5,6 +5,7 @@
 #include <ETH.h>
 #include <NTPClient.h>
 #include "preferences/Network.h"
+#include "preferences/Timezone.h"
 #include "Mqtt.h"
 #include "Led.h"
 #include "Vars.h"
@@ -14,6 +15,8 @@ static NTPClient timeClient(networkUDP, "pool.ntp.org", 0, 60000);
 void syncTime()
 {
   Serial.println("NTP: Syncing time...");
+
+  TimezoneData *timezoneData = loadTimezoneData();
 
   // Keep the system clock in UTC
   timeClient.setTimeOffset(0);
@@ -35,9 +38,9 @@ void syncTime()
   settimeofday(&tv, nullptr);
 
   // Configure local timezone
-  setenv("TZ", TIMEZONE_POSIX, 1);
+  setenv("TZ", timezoneData->timezonePosix, 1);
   tzset();
-  Serial.printf("POSIX TZ: %s\n", TIMEZONE_POSIX);
+  Serial.printf("POSIX TZ: %s\n", timezoneData->timezonePosix);
 
   ntpSynced = true;
 

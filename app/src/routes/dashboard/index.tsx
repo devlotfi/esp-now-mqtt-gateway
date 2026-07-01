@@ -18,6 +18,7 @@ import PsramCard from "../../components/dashboard/psram-card";
 import FlashStorageCard from "../../components/dashboard/flash-storage-card";
 import EspNowCard from "../../components/dashboard/esp-now-card";
 import MetricsCard from "../../components/dashboard/metrics-card";
+import TimezoneCard from "../../components/dashboard/timezone-card";
 
 export const Route = createFileRoute("/dashboard/")({
   component: RouteComponent,
@@ -31,6 +32,20 @@ function RouteComponent() {
   const statusQuery = $api.useQuery(
     "get",
     "/api/device/status",
+    {
+      baseUrl: authData.apiUrl,
+      headers: {
+        Authorization: `Bearer ${authData.token}`,
+      },
+    },
+    {
+      refetchInterval: 5000,
+    },
+  );
+
+  const timezoneQuery = $api.useQuery(
+    "get",
+    "/api/timezone",
     {
       baseUrl: authData.apiUrl,
       headers: {
@@ -114,6 +129,7 @@ function RouteComponent() {
 
   if (
     statusQuery.isLoading ||
+    timezoneQuery.isLoading ||
     grafanaQuery.isLoading ||
     mqttQuery.isLoading ||
     networkQuery.isLoading ||
@@ -123,12 +139,14 @@ function RouteComponent() {
     return <LoadingScreen></LoadingScreen>;
   if (
     !statusQuery.data ||
+    !timezoneQuery.data ||
     !grafanaQuery.data ||
     !mqttQuery.data ||
     !networkQuery.data ||
     !notificationsQuery.data ||
     !espNowQuery.data ||
     statusQuery.isError ||
+    timezoneQuery.isError ||
     grafanaQuery.isError ||
     mqttQuery.isError ||
     networkQuery.isError ||
@@ -180,6 +198,7 @@ function RouteComponent() {
             ></MqttCard>
             <EthernetCard statusData={statusQuery.data.ethernet}></EthernetCard>
             <NetworkCard networkData={networkQuery.data}></NetworkCard>
+            <TimezoneCard timezoneData={timezoneQuery.data}></TimezoneCard>
           </div>
           <div className="flex flex-col flex-1 gap-[1rem] ">
             <EspNowCard espNowData={espNowQuery.data}></EspNowCard>

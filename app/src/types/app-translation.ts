@@ -87,6 +87,7 @@ export interface AppTranslation {
   apiKey: string;
   noMetricsConfig1: string;
   noMetricsConfig2: string;
+  timezone: string;
 
   discoveryRequestTopic: string;
   discoveryResponseTopic: string;

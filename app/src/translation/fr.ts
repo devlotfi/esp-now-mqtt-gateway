@@ -92,6 +92,7 @@ export const FR: AppTranslation = {
   noMetricsConfig1: "Configuration des métriques manquante",
   noMetricsConfig2:
     "Vous n'avez pas configuré vos métriques, les appareils pairs ne pourront pas enregistrer les métriques.",
+  timezone: "Fuseau horaire",
 
   discoveryRequestTopic: "Sujet de requête de découverte",
   discoveryResponseTopic: "Sujet de réponse de découverte",

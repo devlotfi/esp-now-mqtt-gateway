@@ -418,6 +418,48 @@
           }
         }
       },
+      "TimezoneConfigResponse": {
+        "type": "object",
+        "required": ["isSet", "config"],
+        "properties": {
+          "isSet": {
+            "type": "boolean",
+            "example": true
+          },
+          "config": {
+            "type": "object",
+            "required": ["timezonePosix"],
+            "properties": {
+              "timezonePosix": {
+                "type": "string",
+                "description": "POSIX TZ string; empty if not yet set",
+                "example": "CET-1CEST,M3.5.0,M10.5.0/3"
+              },
+              "iana": {
+                "type": "string",
+                "description": "Present only when isSet is true",
+                "example": "Europe/Paris"
+              }
+            }
+          }
+        }
+      },
+      "TimezoneSetConfigRequest": {
+        "type": "object",
+        "required": ["timezonePosix", "iana"],
+        "properties": {
+          "timezonePosix": {
+            "type": "string",
+            "description": "POSIX TZ string",
+            "example": "CET-1CEST,M3.5.0,M10.5.0/3"
+          },
+          "iana": {
+            "type": "string",
+            "description": "IANA timezone identifier",
+            "example": "Europe/Paris"
+          }
+        }
+      },
       "GrafanaConfigResponse": {
         "type": "object",
         "required": ["isSet"],
@@ -934,6 +976,53 @@
           },
           "404": {
             "description": "Notifications not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/timezone": {
+      "get": {
+        "summary": "Get timezone configuration",
+        "tags": ["Timezone"],
+        "responses": {
+          "200": {
+            "description": "Timezone config",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimezoneConfigResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Set timezone configuration (triggers reboot)",
+        "tags": ["Timezone"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TimezoneSetConfigRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Config saved; device will reboot"
+          },
+          "400": {
+            "description": "Missing or invalid timezonePosix or iana",
             "content": {
               "application/json": {
                 "schema": {

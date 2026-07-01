@@ -92,6 +92,7 @@ export const EN: AppTranslation = {
   noMetricsConfig1: "Metrics Config Missing",
   noMetricsConfig2:
     "You have not configured you metrics, peer devices will not be able to save metrics",
+  timezone: "Timezone",
 
   discoveryRequestTopic: "Discovery request topic",
   discoveryResponseTopic: "Discovery response topic",

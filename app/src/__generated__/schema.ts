@@ -409,6 +409,73 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/timezone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get timezone configuration */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Timezone config */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TimezoneConfigResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Set timezone configuration (triggers reboot) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["TimezoneSetConfigRequest"];
+                };
+            };
+            responses: {
+                /** @description Config saved; device will reboot */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Missing or invalid timezonePosix or iana */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/grafana": {
         parameters: {
             query?: never;
@@ -1163,6 +1230,34 @@ export interface components {
             apiUrl: string;
             /** @example supersecret */
             apiSecret: string;
+        };
+        TimezoneConfigResponse: {
+            /** @example true */
+            isSet: boolean;
+            config: {
+                /**
+                 * @description POSIX TZ string; empty if not yet set
+                 * @example CET-1CEST,M3.5.0,M10.5.0/3
+                 */
+                timezonePosix: string;
+                /**
+                 * @description Present only when isSet is true
+                 * @example Europe/Paris
+                 */
+                iana?: string;
+            };
+        };
+        TimezoneSetConfigRequest: {
+            /**
+             * @description POSIX TZ string
+             * @example CET-1CEST,M3.5.0,M10.5.0/3
+             */
+            timezonePosix: string;
+            /**
+             * @description IANA timezone identifier
+             * @example Europe/Paris
+             */
+            iana: string;
         };
         GrafanaConfigResponse: {
             /** @example true */

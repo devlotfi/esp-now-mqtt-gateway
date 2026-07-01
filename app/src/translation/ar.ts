@@ -91,6 +91,7 @@ export const AR: AppTranslation = {
   noMetricsConfig1: "إعدادات المقاييس مفقودة",
   noMetricsConfig2:
     "لم تقم بإعداد المقاييس الخاصة بك، ولن تتمكن الأجهزة النظيرة من حفظ المقاييس.",
+  timezone: "المنطقة الزمنية",
 
   discoveryRequestTopic: "موضوع طلب الاكتشاف",
   discoveryResponseTopic: "موضوع استجابة الاكتشاف",

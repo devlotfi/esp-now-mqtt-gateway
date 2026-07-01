@@ -12,6 +12,7 @@
 #include "preferences/EspNow.h"
 #include "preferences/Peer.h"
 #include "preferences/SleepyPeer.h"
+#include "preferences/Timezone.h"
 #include "EspNowMessageQueue.h"
 #include "SleepyInbox.h"
 #include "Wol.h"
@@ -130,6 +131,7 @@ void onReceive(const esp_now_recv_info_t *info, const uint8_t *data, int len)
     EspNowMessage espNowMessage = {};
     espNowMessage.type = MessageType::TIME_SYNC_MESSAGE;
     TimeSyncEspNowMessage &timeSyncMsg = espNowMessage.payload.timeSyncEspNowMessage;
+    TimezoneData *timezoneData = loadTimezoneData();
 
     time_t now;
     time(&now);
@@ -142,7 +144,7 @@ void onReceive(const esp_now_recv_info_t *info, const uint8_t *data, int len)
     struct timeval tv;
     gettimeofday(&tv, NULL);
     timeSyncMsg.epoch = tv.tv_sec;
-    strlcpy(timeSyncMsg.timezonePosix, TIMEZONE_POSIX, TIMEZONE_POSIX_SIZE);
+    strlcpy(timeSyncMsg.timezonePosix, timezoneData->timezonePosix, TIMEZONE_POSIX_SIZE);
 
     printCurrentTime();
 
