@@ -1,1 +1,0 @@
-import{T as e}from"./heroui-hqeIrt2J.js";import{O as t}from"./index-CyFu05-_.js";var n=e();function r(){return(0,n.jsx)(t,{to:`/login`})}export{r as component};
