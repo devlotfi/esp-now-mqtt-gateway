@@ -71,6 +71,7 @@ A Gateway that bridges between MQTT and ESP-NOW
 - Devices can send notifications via the gateway using [PushNotifier](https://github.com/devlotfi/push-notifier)
 - For a UI Dashboard you can use [EspCommander](https://github.com/devlotfi/esp-commander)
 - Devices can save readings into grafana cloud prometheus instance using (OpenTelemetry) format
+- Devices can send WOL (Wake-On-Lan) packets for a specific MAC address
 - To configure the gateway use the Admin Dashboard Web App
 
 <img src="https://raw.githubusercontent.com/devlotfi/esp-now-mqtt-gateway/master/github-assets/working-diagram.png">
