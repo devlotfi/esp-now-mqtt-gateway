@@ -38,14 +38,20 @@ A Gateway that bridges between MQTT and ESP-NOW
   <img height="50px" src="https://devlotfi.github.io/stack-icons/icons/gemini.svg">
   <img height="50px" src="https://devlotfi.github.io/stack-icons/icons/netlify.svg">
   <img height="50px" src="https://devlotfi.github.io/stack-icons/icons/push-notifier.svg">
+  <img height="50px" src="https://devlotfi.github.io/stack-icons/icons/grafana.svg">
+  <img height="50px" src="https://devlotfi.github.io/stack-icons/icons/prometheus.svg">
 </p>
 
 ## IOT
 
 <p float="left">
+  <img height="50px" src="https://devlotfi.github.io/stack-icons/icons/platformio.svg">
+  <img height="50px" src="https://devlotfi.github.io/stack-icons/icons/cpp.svg">
   <img height="50px" src="https://devlotfi.github.io/stack-icons/icons/arduino.svg">
   <img height="50px" src="https://devlotfi.github.io/stack-icons/icons/espressif.svg">
   <img height="50px" src="https://devlotfi.github.io/stack-icons/icons/mqtt.svg">
+  <img height="50px" src="https://devlotfi.github.io/stack-icons/icons/opentelemetry.svg">
+  <img height="50px" src="https://devlotfi.github.io/stack-icons/icons/esp-commander.svg">
 </p>
 
 ## Diagrams
@@ -63,8 +69,9 @@ A Gateway that bridges between MQTT and ESP-NOW
 - Sleepy Devices periodicly send their data that will be saved as a Retained message on the data topic
 - Sleepy Devices recive commands by sending the command the command topic, which then gets stored in the gateways until the devices requests it
 - To communicate with the gateway you can use the dedicated library in the [Releases](https://github.com/devlotfi/esp-now-mqtt-gateway/releases)
-- Devices can also send notifications via the gateway using [PushNotifier](https://github.com/devlotfi/push-notifier)
+- Devices can send notifications via the gateway using [PushNotifier](https://github.com/devlotfi/push-notifier)
 - For a UI Dashboard you can use [EspCommander](https://github.com/devlotfi/esp-commander)
+- Devices can save readings into grafana cloud prometheus instance using (OpenTelemetry) format
 - To configure the gateway use the Admin Dashboard Web App
 
 <img src="https://raw.githubusercontent.com/devlotfi/esp-now-mqtt-gateway/master/github-assets/working-diagram.png">
