@@ -86,16 +86,16 @@ A Gateway that bridges between MQTT and ESP-NOW
 
 ## Connections
 
-| W5500         | ESP32S3 (N16R8) |
-|---------------|-----------------|
-| 3.3v          | 3.3v            |
-| GND           | GND             |
-| CS            | 10              |
-| RST           | 9               |
-| MISO          | 13              |
-| MOSI          | 11              |
-| SCLK          | 12              |
-| INT           | 15              |
+| W5500 | ESP32S3 (N16R8) |
+| ----- | --------------- |
+| 3.3v  | 3.3v            |
+| GND   | GND             |
+| CS    | 10              |
+| RST   | 9               |
+| MISO  | 13              |
+| MOSI  | 11              |
+| SCLK  | 12              |
+| INT   | 15              |
 
 <img src="https://raw.githubusercontent.com/devlotfi/esp-now-mqtt-gateway/master/github-assets/fritzing.png">
 
@@ -113,3 +113,4 @@ Some images of the final build
 <img src="https://raw.githubusercontent.com/devlotfi/esp-now-mqtt-gateway/master/github-assets/preview-4.png">
 <img src="https://raw.githubusercontent.com/devlotfi/esp-now-mqtt-gateway/master/github-assets/preview-5.png">
 <img src="https://raw.githubusercontent.com/devlotfi/esp-now-mqtt-gateway/master/github-assets/preview-6.png">
+<img src="https://raw.githubusercontent.com/devlotfi/esp-now-mqtt-gateway/master/github-assets/preview-7.png">
