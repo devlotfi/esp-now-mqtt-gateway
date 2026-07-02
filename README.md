@@ -35,7 +35,6 @@ A Gateway that bridges between MQTT and ESP-NOW
 ## Services
 
 <p float="left">
-  <img height="50px" src="https://devlotfi.github.io/stack-icons/icons/gemini.svg">
   <img height="50px" src="https://devlotfi.github.io/stack-icons/icons/netlify.svg">
   <img height="50px" src="https://devlotfi.github.io/stack-icons/icons/push-notifier.svg">
   <img height="50px" src="https://devlotfi.github.io/stack-icons/icons/grafana.svg">
