@@ -20,7 +20,7 @@ void saveNotificationsData(const NotificationsData *data)
   if (written != sizeof(NotificationsData))
     return;
   if (!notificationsDataCache)
-    notificationsDataCache = (NotificationsData *)malloc(sizeof(NotificationsData));
+    notificationsDataCache = (NotificationsData *)heap_caps_malloc(sizeof(NotificationsData), MALLOC_CAP_SPIRAM);
   if (notificationsDataCache)
     memcpy(notificationsDataCache, data, sizeof(NotificationsData));
 }
@@ -30,7 +30,7 @@ NotificationsData *loadNotificationsData()
   if (notificationsDataCache)
     return notificationsDataCache;
 
-  notificationsDataCache = (NotificationsData *)malloc(sizeof(NotificationsData));
+  notificationsDataCache = (NotificationsData *)heap_caps_malloc(sizeof(NotificationsData), MALLOC_CAP_SPIRAM);
   if (!notificationsDataCache)
     return nullptr;
   notificationsDataCache->isSet = false;

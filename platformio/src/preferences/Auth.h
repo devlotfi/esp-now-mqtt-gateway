@@ -19,7 +19,7 @@ void saveAuthData(const AuthData *data)
   if (written != sizeof(AuthData))
     return;
   if (!authDataCache)
-    authDataCache = (AuthData *)malloc(sizeof(AuthData));
+    authDataCache = (AuthData *)heap_caps_malloc(sizeof(AuthData), MALLOC_CAP_SPIRAM);
   if (authDataCache)
     memcpy(authDataCache, data, sizeof(AuthData));
 }
@@ -29,7 +29,7 @@ AuthData *loadAuthData()
   if (authDataCache)
     return authDataCache;
 
-  authDataCache = (AuthData *)malloc(sizeof(AuthData));
+  authDataCache = (AuthData *)heap_caps_malloc(sizeof(AuthData), MALLOC_CAP_SPIRAM);
   if (!authDataCache)
     return nullptr;
   uint8_t salt[PASSWORD_SALT_SIZE];

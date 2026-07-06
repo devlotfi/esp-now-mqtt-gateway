@@ -65,7 +65,7 @@ void saveNetworkData(const NetworkData *data)
   if (written != sizeof(NetworkData))
     return;
   if (!networkDataCache)
-    networkDataCache = (NetworkData *)malloc(sizeof(NetworkData));
+    networkDataCache = (NetworkData *)heap_caps_malloc(sizeof(NetworkData), MALLOC_CAP_SPIRAM);
   if (networkDataCache)
     memcpy(networkDataCache, data, sizeof(NetworkData));
 }
@@ -75,7 +75,7 @@ NetworkData *loadNetworkData()
   if (networkDataCache)
     return networkDataCache;
 
-  networkDataCache = (NetworkData *)malloc(sizeof(NetworkData));
+  networkDataCache = (NetworkData *)heap_caps_malloc(sizeof(NetworkData), MALLOC_CAP_SPIRAM);
   if (!networkDataCache)
     return nullptr;
   networkDataCache->ipAssignment = IPAssignment::DHCP;

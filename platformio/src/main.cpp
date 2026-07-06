@@ -13,6 +13,8 @@
 #include "Watchdog.h"
 #include "EspNowMessageQueue.h"
 #include "SleepyInbox.h"
+#include "Grafana.h"
+#include "Notifications.h"
 
 void setupLookup()
 {
@@ -77,6 +79,9 @@ void setup()
   Serial.println("NETWORK-INTERFACE: Setup started");
   setupNetwork();
   Serial.println("NETWORK-INTERFACE: Setup completed");
+
+  initGrafanaWorker();
+  initNotificationsWorker();
 
   // http server setup
   Serial.println("HTTP-SERVER: Setup started");

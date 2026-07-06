@@ -29,7 +29,7 @@ void saveSleepyPeerData(const SleepyPeerData *data)
   if (written != sizeof(SleepyPeerData))
     return;
   if (!sleepyPeerDataCache)
-    sleepyPeerDataCache = (SleepyPeerData *)malloc(sizeof(SleepyPeerData));
+    sleepyPeerDataCache = (SleepyPeerData *)heap_caps_malloc(sizeof(SleepyPeerData), MALLOC_CAP_SPIRAM);
   if (sleepyPeerDataCache)
     memcpy(sleepyPeerDataCache, data, sizeof(SleepyPeerData));
 }
@@ -39,7 +39,7 @@ SleepyPeerData *loadSleepyPeerData()
   if (sleepyPeerDataCache)
     return sleepyPeerDataCache;
 
-  sleepyPeerDataCache = (SleepyPeerData *)malloc(sizeof(SleepyPeerData));
+  sleepyPeerDataCache = (SleepyPeerData *)heap_caps_malloc(sizeof(SleepyPeerData), MALLOC_CAP_SPIRAM);
   if (!sleepyPeerDataCache)
     return nullptr;
   sleepyPeerDataCache->sleepyPeerCount = 0;

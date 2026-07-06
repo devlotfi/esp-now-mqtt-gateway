@@ -22,12 +22,12 @@ uint8_t *queueStorage = nullptr;
 bool initQueue()
 {
   size_t itemSize = sizeof(QueueMessage);
-  queueControl = (StaticQueue_t *)malloc(sizeof(StaticQueue_t));
+  queueControl = (StaticQueue_t *)heap_caps_malloc(sizeof(StaticQueue_t), MALLOC_CAP_SPIRAM);
   if (!queueControl)
     return false;
 
   // Queue items storage (PSRAM)
-  queueStorage = (uint8_t *)malloc(ESP_NOW_MAX_QUEUE_SIZE * itemSize);
+  queueStorage = (uint8_t *)heap_caps_malloc(ESP_NOW_MAX_QUEUE_SIZE * itemSize, MALLOC_CAP_SPIRAM);
   if (!queueStorage)
   {
     free(queueControl);

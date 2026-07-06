@@ -71,14 +71,33 @@ static void mqttEventHandler(void *args, esp_event_base_t base,
       break;
     }
 
-    String topic = String(event->topic, event->topic_len);
-    String message = String(event->data, event->data_len);
-    Serial.printf("MQTT: topic -> %s, data -> %s\n", topic.c_str(), message.c_str());
+    // Bound-check against our fixed buffers instead of using String (which
+    // would allocate/free from internal heap on every single message).
+    if (event->topic_len >= TOPIC_SIZE)
+    {
+      Serial.println("MQTT: Topic too long, dropping");
+      break;
+    }
+    if (event->data_len >= MQTT_MESSAGE_TEXT_PAYLOAD_SIZE)
+    {
+      Serial.println("MQTT: Payload too long, dropping");
+      break;
+    }
+
+    char topic[TOPIC_SIZE];
+    memcpy(topic, event->topic, event->topic_len);
+    topic[event->topic_len] = '\0';
+
+    char message[MQTT_MESSAGE_TEXT_PAYLOAD_SIZE];
+    memcpy(message, event->data, event->data_len);
+    message[event->data_len] = '\0';
+
+    Serial.printf("MQTT: topic -> %s, data -> %s\n", topic, message);
 
     MqttData *mqttData = loadMqttData();
     SleepyPeerData *sleepyPeerData = loadSleepyPeerData();
 
-    if (mqttData->isSet && mqttData->useSleepyPeerDiscovery && strncmp(mqttData->discoveryRequestTopic, topic.c_str(), TOPIC_SIZE) == 0)
+    if (mqttData->isSet && mqttData->useSleepyPeerDiscovery && strncmp(mqttData->discoveryRequestTopic, topic, TOPIC_SIZE) == 0)
     {
       for (size_t i = 0; i < sleepyPeerData->sleepyPeerCount; i++)
       {
@@ -108,14 +127,14 @@ static void mqttEventHandler(void *args, esp_event_base_t base,
     for (size_t i = 0; i < sleepyPeerData->sleepyPeerCount; i++)
     {
       auto &sleepyPeer = sleepyPeerData->sleepyPeerList[i];
-      if (strncmp(sleepyPeer.commandTopic, topic.c_str(), TOPIC_SIZE) == 0)
+      if (strncmp(sleepyPeer.commandTopic, topic, TOPIC_SIZE) == 0)
       {
-        sleepyInbox.set(sleepyPeer.mac, message.c_str());
+        sleepyInbox.set(sleepyPeer.mac, message);
         Serial.println("MQTT: Saved in sleepy inbox");
       }
     }
 
-    auto mapping = topicToMacsMap.getMapping(topic.c_str());
+    auto mapping = topicToMacsMap.getMapping(topic);
     if (mapping == nullptr)
       break;
 
@@ -125,8 +144,8 @@ static void mqttEventHandler(void *args, esp_event_base_t base,
 
     MqttEspNowMessage &mqttMsg = espNowMessage.payload.mqttEspNowMessage;
 
-    strlcpy(mqttMsg.topic, topic.c_str(), TOPIC_SIZE - 1);
-    strlcpy(mqttMsg.text, message.c_str(), MQTT_MESSAGE_TEXT_PAYLOAD_SIZE - 1);
+    strlcpy(mqttMsg.topic, topic, TOPIC_SIZE - 1);
+    strlcpy(mqttMsg.text, message, MQTT_MESSAGE_TEXT_PAYLOAD_SIZE - 1);
 
     for (size_t i = 0; i < mapping->macSet.count; i++)
     {

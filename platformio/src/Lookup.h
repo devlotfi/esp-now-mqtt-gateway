@@ -9,7 +9,7 @@ class TopicSet
 {
 public:
   size_t count = 0;
-  char set[TOPIC_LIST_SIZE * PEER_LIST_SIZE][TOPIC_SIZE];
+  char (*set)[TOPIC_SIZE] = (char (*)[TOPIC_SIZE])heap_caps_malloc(sizeof(char[TOPIC_LIST_SIZE * PEER_LIST_SIZE][TOPIC_SIZE]), MALLOC_CAP_SPIRAM);
 
   void clear()
   {
@@ -49,7 +49,7 @@ class MacSet
 {
 public:
   size_t count = 0;
-  uint8_t set[PEER_LIST_SIZE][MAC_SIZE_BYTES];
+  uint8_t (*set)[MAC_SIZE_BYTES] = (uint8_t (*)[MAC_SIZE_BYTES])heap_caps_malloc(sizeof(uint8_t[PEER_LIST_SIZE][MAC_SIZE_BYTES]), MALLOC_CAP_SPIRAM);
 
   void clear()
   {
@@ -91,7 +91,7 @@ class TopicToMacsMap
 {
 public:
   size_t count = 0;
-  Mapping map[TOPIC_LIST_SIZE * PEER_LIST_SIZE];
+  Mapping *map = (Mapping *)heap_caps_malloc(sizeof(Mapping[TOPIC_LIST_SIZE * PEER_LIST_SIZE]), MALLOC_CAP_SPIRAM);
 
   void clear()
   {

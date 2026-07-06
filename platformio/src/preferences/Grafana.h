@@ -21,7 +21,7 @@ void saveGrafanaData(const GrafanaData *data)
   if (written != sizeof(GrafanaData))
     return;
   if (!grafanaDataCache)
-    grafanaDataCache = (GrafanaData *)malloc(sizeof(GrafanaData));
+    grafanaDataCache = (GrafanaData *)heap_caps_malloc(sizeof(GrafanaData), MALLOC_CAP_SPIRAM);
   if (grafanaDataCache)
     memcpy(grafanaDataCache, data, sizeof(GrafanaData));
 }
@@ -31,7 +31,7 @@ GrafanaData *loadGrafanaData()
   if (grafanaDataCache)
     return grafanaDataCache;
 
-  grafanaDataCache = (GrafanaData *)malloc(sizeof(GrafanaData));
+  grafanaDataCache = (GrafanaData *)heap_caps_malloc(sizeof(GrafanaData), MALLOC_CAP_SPIRAM);
   if (!grafanaDataCache)
     return nullptr;
   grafanaDataCache->isSet = false;

@@ -8,6 +8,8 @@
 #include <esp_now.h>
 #include <uri/UriBraces.h>
 #include <etl/string.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/queue.h>
 #include "esp_http_client.h"
 #include "esp_crt_bundle.h"
 #include "Properties.h"
@@ -16,6 +18,8 @@
 #include "preferences/Grafana.h"
 #include "Lookup.h"
 #include "EspNow.h"
+
+#define GRAFANA_QUEUE_LENGTH 10
 
 // Corrected: Handlers process data during esp_http_client_perform()
 esp_err_t grafana_http_event_handler(esp_http_client_event_t *evt)
@@ -54,7 +58,7 @@ esp_err_t grafana_http_event_handler(esp_http_client_event_t *evt)
   return ESP_OK;
 }
 
-struct GrafanaTaskArgs
+struct GrafanaQueueItem
 {
   char url[GRAFANA_URL_SIZE];
   char instanceId[GRAFANA_INSTANCE_ID_SIZE];
@@ -62,58 +66,49 @@ struct GrafanaTaskArgs
   char body[GRAFANA_BODY_SIZE];
 };
 
-static void grafanaTask(void *pvParameters)
-{
-  GrafanaTaskArgs *args = (GrafanaTaskArgs *)pvParameters;
+static QueueHandle_t grafanaQueue = nullptr;
+static esp_http_client_handle_t grafanaClient = nullptr;
 
+static bool sendGrafanaRequest(GrafanaQueueItem *item)
+{
   const int MAX_RETRIES = 3;
   const int RETRY_DELAY_MS = 2000;
 
   esp_err_t err = ESP_FAIL;
   int attempt = 0;
 
+  etl::string<2048> authorization = "Bearer ";
+  authorization += item->instanceId;
+  authorization += ":";
+  authorization += item->apiKey;
+
   while (attempt < MAX_RETRIES)
   {
-    esp_http_client_config_t config = {
-        .url = args->url,
-        .method = HTTP_METHOD_POST,
-        .event_handler = grafana_http_event_handler,
-        .crt_bundle_attach = esp_crt_bundle_attach,
-    };
+    // Reconfigure the persistent client for this request instead of
+    // creating/destroying a new one every time.
+    esp_http_client_set_url(grafanaClient, item->url);
+    esp_http_client_set_method(grafanaClient, HTTP_METHOD_POST);
+    esp_http_client_set_header(grafanaClient, "Authorization", authorization.c_str());
+    esp_http_client_set_header(grafanaClient, "Content-Type", "application/json");
+    esp_http_client_set_post_field(grafanaClient, item->body, strlen(item->body));
 
-    esp_http_client_handle_t client = esp_http_client_init(&config);
-
-    // Set headers
-    etl::string<2048> authorization = "Bearer ";
-    authorization += args->instanceId;
-    authorization += ":";
-    authorization += args->apiKey;
-    esp_http_client_set_header(client, "Authorization", authorization.c_str());
-    esp_http_client_set_header(client, "Content-Type", "application/json");
-
-    // Attach the JSON body
-    esp_http_client_set_post_field(client, args->body, strlen(args->body));
-
-    // Log request
     Serial.println("\n========== HTTP REQUEST ==========");
     Serial.printf("Attempt : %d\n", attempt + 1);
-    Serial.printf("URL     : %s\n", args->url);
+    Serial.printf("URL     : %s\n", item->url);
     Serial.println("Headers:");
     Serial.printf("  Authorization: %s\n", authorization.c_str());
     Serial.println("  Content-Type: application/json");
     Serial.println("Body:");
-    Serial.println(args->body);
+    Serial.println(item->body);
     Serial.println("==================================");
 
-    err = esp_http_client_perform(client);
+    err = esp_http_client_perform(grafanaClient);
 
     if (err == ESP_OK)
     {
-      int status = esp_http_client_get_status_code(client);
+      int status = esp_http_client_get_status_code(grafanaClient);
       Serial.printf("HTTP Status = %d\n", status);
-
-      esp_http_client_cleanup(client);
-      break; // Success, exit retry loop
+      return true;
     }
     else
     {
@@ -121,7 +116,11 @@ static void grafanaTask(void *pvParameters)
                     attempt + 1,
                     esp_err_to_name(err));
 
-      esp_http_client_cleanup(client);
+      // FIX: close (but don't cleanup) the connection after a failure so the
+      // next attempt/request opens a fresh socket instead of reusing one
+      // that's potentially in a bad state. The client handle itself persists.
+      esp_http_client_close(grafanaClient);
+
       attempt++;
 
       if (attempt < MAX_RETRIES)
@@ -131,37 +130,90 @@ static void grafanaTask(void *pvParameters)
     }
   }
 
-  if (err != ESP_OK)
-  {
-    Serial.println("HTTP request ultimately failed after retries");
-  }
-
-  free(args);
-  vTaskDelete(nullptr);
+  Serial.println("HTTP request ultimately failed after retries");
+  return false;
 }
 
-void saveGrafanaMetric(GrafanaData *grafanaData, const char *body)
+static void grafanaWorkerTask(void *pvParameters)
 {
-  GrafanaTaskArgs *args = (GrafanaTaskArgs *)malloc(sizeof(GrafanaTaskArgs));
-  if (!args)
+  // Created once, lives for the lifetime of the device.
+  esp_http_client_config_t config = {
+      .url = "https://localhost", // placeholder; overwritten per-request via set_url
+      .method = HTTP_METHOD_POST,
+      .event_handler = grafana_http_event_handler,
+      .crt_bundle_attach = esp_crt_bundle_attach,
+      .keep_alive_enable = true,
+  };
+
+  grafanaClient = esp_http_client_init(&config);
+  if (!grafanaClient)
   {
-    Serial.println("ERROR: OUT_OF_MEMORY");
+    Serial.println("ERROR: failed to init grafana http client, worker exiting");
+    vTaskDelete(nullptr);
     return;
   }
 
-  // FIX: Pass standard sizeof() without "- 1" to strlcpy
-  strlcpy(args->url, grafanaData->url, sizeof(args->url));
-  strlcpy(args->instanceId, grafanaData->instanceId, sizeof(args->instanceId));
-  strlcpy(args->apiKey, grafanaData->apiKey, sizeof(args->apiKey));
-  strlcpy(args->body, body, sizeof(args->body));
+  GrafanaQueueItem *item;
+
+  for (;;)
+  {
+    // Blocks here indefinitely - no CPU/heap churn between requests.
+    if (xQueueReceive(grafanaQueue, &item, portMAX_DELAY) == pdTRUE)
+    {
+      sendGrafanaRequest(item);
+      heap_caps_free(item);
+    }
+  }
+}
+
+// Call once from setup().
+void initGrafanaWorker()
+{
+  if (grafanaQueue != nullptr)
+  {
+    return; // already initialized
+  }
+
+  grafanaQueue = xQueueCreateWithCaps(
+      GRAFANA_QUEUE_LENGTH,
+      sizeof(GrafanaQueueItem *),
+      MALLOC_CAP_SPIRAM);
+  if (!grafanaQueue)
+  {
+    Serial.println("ERROR: failed to create grafana queue");
+    return;
+  }
 
   xTaskCreatePinnedToCoreWithCaps(
-      grafanaTask,
-      "save_grafana_metric_worker",
-      8192,
-      args,
+      grafanaWorkerTask,
+      "grafana_worker",
+      16384,
+      nullptr,
       1,
       nullptr,
       tskNO_AFFINITY,
       MALLOC_CAP_SPIRAM);
+}
+
+// Non-blocking: enqueues the metric and returns immediately.
+void saveGrafanaMetric(GrafanaData *grafanaData, const char *body)
+{
+  if (grafanaQueue == nullptr)
+  {
+    Serial.println("ERROR: grafana worker not initialized - call initGrafanaWorker() in setup()");
+    return;
+  }
+
+  GrafanaQueueItem *item = (GrafanaQueueItem *)heap_caps_malloc(sizeof(GrafanaQueueItem), MALLOC_CAP_SPIRAM);
+  strlcpy(item->url, grafanaData->url, sizeof(item->url));
+  strlcpy(item->instanceId, grafanaData->instanceId, sizeof(item->instanceId));
+  strlcpy(item->apiKey, grafanaData->apiKey, sizeof(item->apiKey));
+  strlcpy(item->body, body, sizeof(item->body));
+
+  // Item is copied by value into the queue's internal storage - no malloc/free per call.
+  if (xQueueSend(grafanaQueue, &item, pdMS_TO_TICKS(1000)) != pdTRUE)
+  {
+    heap_caps_free(item);
+    Serial.println("ERROR: grafana queue full, dropping metric");
+  }
 }

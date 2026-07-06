@@ -26,7 +26,7 @@ void saveMqttData(const MqttData *data)
   if (written != sizeof(MqttData))
     return;
   if (!mqttDataCache)
-    mqttDataCache = (MqttData *)malloc(sizeof(MqttData));
+    mqttDataCache = (MqttData *)heap_caps_malloc(sizeof(MqttData), MALLOC_CAP_SPIRAM);
   if (mqttDataCache)
     memcpy(mqttDataCache, data, sizeof(MqttData));
 }
@@ -36,7 +36,7 @@ MqttData *loadMqttData()
   if (mqttDataCache)
     return mqttDataCache;
 
-  mqttDataCache = (MqttData *)malloc(sizeof(MqttData));
+  mqttDataCache = (MqttData *)heap_caps_malloc(sizeof(MqttData), MALLOC_CAP_SPIRAM);
   if (!mqttDataCache)
     return nullptr;
   mqttDataCache->isSet = false;

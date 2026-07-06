@@ -29,7 +29,7 @@ void savePeerData(const PeerData *data)
   if (written != sizeof(PeerData))
     return;
   if (!peerDataCache)
-    peerDataCache = (PeerData *)malloc(sizeof(PeerData));
+    peerDataCache = (PeerData *)heap_caps_malloc(sizeof(PeerData), MALLOC_CAP_SPIRAM);
   if (peerDataCache)
     memcpy(peerDataCache, data, sizeof(PeerData));
 }
@@ -39,7 +39,7 @@ PeerData *loadPeerData()
   if (peerDataCache)
     return peerDataCache;
 
-  peerDataCache = (PeerData *)malloc(sizeof(PeerData));
+  peerDataCache = (PeerData *)heap_caps_malloc(sizeof(PeerData), MALLOC_CAP_SPIRAM);
   if (!peerDataCache)
     return nullptr;
   peerDataCache->peerCount = 0;

@@ -21,7 +21,7 @@ void saveEspNowData(const EspNowData *data)
   if (written != sizeof(EspNowData))
     return;
   if (!espNowDataCache)
-    espNowDataCache = (EspNowData *)malloc(sizeof(EspNowData));
+    espNowDataCache = (EspNowData *)heap_caps_malloc(sizeof(EspNowData), MALLOC_CAP_SPIRAM);
   if (espNowDataCache)
     memcpy(espNowDataCache, data, sizeof(EspNowData));
 }
@@ -31,7 +31,7 @@ EspNowData *loadEspNowData()
   if (espNowDataCache)
     return espNowDataCache;
 
-  espNowDataCache = (EspNowData *)malloc(sizeof(EspNowData));
+  espNowDataCache = (EspNowData *)heap_caps_malloc(sizeof(EspNowData), MALLOC_CAP_SPIRAM);
   if (!espNowDataCache)
     return nullptr;
   espNowDataCache->channel = 1;

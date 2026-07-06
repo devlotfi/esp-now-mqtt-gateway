@@ -20,7 +20,7 @@ public:
   static void init()
   {
     sleepyInboxCount = 0;
-    sleepyInbox = (SleepyPeerInbox *)malloc(sizeof(SleepyPeerInbox) * SLEEPY_PEER_LIST_SIZE);
+    sleepyInbox = (SleepyPeerInbox *)heap_caps_malloc(sizeof(SleepyPeerInbox) * SLEEPY_PEER_LIST_SIZE, MALLOC_CAP_SPIRAM);
 
     SleepyPeerData *sleepyPeerData = loadSleepyPeerData();
     for (size_t i = 0; i < sleepyPeerData->sleepyPeerCount; i++)

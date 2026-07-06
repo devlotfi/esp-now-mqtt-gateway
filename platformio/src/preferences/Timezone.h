@@ -20,7 +20,7 @@ void saveTimezoneData(const TimezoneData *data)
   if (written != sizeof(TimezoneData))
     return;
   if (!timezoneDataCache)
-    timezoneDataCache = (TimezoneData *)malloc(sizeof(TimezoneData));
+    timezoneDataCache = (TimezoneData *)heap_caps_malloc(sizeof(TimezoneData), MALLOC_CAP_SPIRAM);
   if (timezoneDataCache)
     memcpy(timezoneDataCache, data, sizeof(TimezoneData));
 }
@@ -30,7 +30,7 @@ TimezoneData *loadTimezoneData()
   if (timezoneDataCache)
     return timezoneDataCache;
 
-  timezoneDataCache = (TimezoneData *)malloc(sizeof(TimezoneData));
+  timezoneDataCache = (TimezoneData *)heap_caps_malloc(sizeof(TimezoneData), MALLOC_CAP_SPIRAM);
   if (!timezoneDataCache)
     return nullptr;
   timezoneDataCache->isSet = false;
