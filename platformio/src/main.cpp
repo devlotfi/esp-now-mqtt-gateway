@@ -1,6 +1,7 @@
 #include <time.h>
 #include <esp_now.h>
 #include <esp_wifi.h>
+#include <esp_task_wdt.h>
 #include "Properties.h"
 #include "Vars.h"
 #include "Api.h"
@@ -13,8 +14,7 @@
 #include "Watchdog.h"
 #include "EspNowMessageQueue.h"
 #include "SleepyInbox.h"
-#include "Grafana.h"
-#include "Notifications.h"
+#include "HttpDispatcher.h"
 
 void setupLookup()
 {
@@ -26,6 +26,7 @@ void setupLookup()
 void setup()
 {
   Serial.begin(115200);
+  esp_task_wdt_delete(NULL);
 
   // Watchdog setup
   Serial.println("WATCHDOG: Setup started");
@@ -80,8 +81,14 @@ void setup()
   setupNetwork();
   Serial.println("NETWORK-INTERFACE: Setup completed");
 
-  initGrafanaWorker();
-  initNotificationsWorker();
+  Serial.println("NTP-UPDATER: Setup started");
+  initNtpUpdateTask();
+  Serial.println("NTP-UPDATER: Setup completed");
+
+  // http dispatcher task
+  Serial.println("HTTP-DISPATCHER: Init task");
+  initHttpDispatcherWorker();
+  Serial.println("HTTP-DISPATCHER: Task init completed");
 
   // http server setup
   Serial.println("HTTP-SERVER: Setup started");
@@ -91,7 +98,5 @@ void setup()
 
 void loop()
 {
-  if (!ethernetConnected)
-    return;
-  timeClient.update();
+  vTaskDelay(pdMS_TO_TICKS(10));
 }

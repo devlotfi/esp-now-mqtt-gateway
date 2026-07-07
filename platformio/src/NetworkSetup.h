@@ -10,7 +10,37 @@
 #include "Led.h"
 #include "Vars.h"
 
+#define NTP_UPDATE_TASK_STACK_SIZE 4096
+#define NTP_UPDATE_INTERVAL_MS 60000
+
 static NTPClient timeClient(networkUDP, "pool.ntp.org", 0, 60000);
+
+static void ntpUpdateTask(void *pvParameters)
+{
+  for (;;)
+  {
+    if (ethernetConnected)
+    {
+      timeClient.update();
+    }
+
+    vTaskDelay(pdMS_TO_TICKS(NTP_UPDATE_INTERVAL_MS));
+  }
+}
+
+// Call once from setup().
+void initNtpUpdateTask()
+{
+  xTaskCreatePinnedToCoreWithCaps(
+      ntpUpdateTask,
+      "ntp_update_worker",
+      NTP_UPDATE_TASK_STACK_SIZE,
+      nullptr,
+      1,
+      nullptr,
+      tskNO_AFFINITY,
+      MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+}
 
 void syncTime()
 {

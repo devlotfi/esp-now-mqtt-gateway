@@ -15,7 +15,7 @@
 #include "preferences/Notifications.h"
 #include "Lookup.h"
 #include "EspNow.h"
-#include "Notifications.h"
+#include "HttpDispatcher.h"
 
 class NotificationsController
 {
@@ -75,7 +75,7 @@ public:
       return;
     }
 
-    sendTestNotification(notificationsData);
+    sendTestNotification();
     request->send(200);
   }
 };

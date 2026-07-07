@@ -6,13 +6,13 @@
 #include "Vars.h"
 #include "Api.h"
 #include "Lookup.h"
-#include "Notifications.h"
-#include "Grafana.h"
+#include "HttpDispatcher.h"
 #include "preferences/Notifications.h"
 #include "preferences/EspNow.h"
 #include "preferences/Peer.h"
 #include "preferences/SleepyPeer.h"
 #include "preferences/Timezone.h"
+#include "preferences/Grafana.h"
 #include "EspNowMessageQueue.h"
 #include "SleepyInbox.h"
 #include "Wol.h"
@@ -122,7 +122,7 @@ void onReceive(const esp_now_recv_info_t *info, const uint8_t *data, int len)
       return;
     }
 
-    sendNotification(notificationsData, notificationMsg.title, notificationMsg.body);
+    sendNotification(notificationMsg.title, notificationMsg.body);
     break;
   }
   case MessageType::TIME_SYNC_MESSAGE:
@@ -235,7 +235,7 @@ void onReceive(const esp_now_recv_info_t *info, const uint8_t *data, int len)
       return;
     }
 
-    saveGrafanaMetric(grafanaData, metricMsg.body);
+    saveGrafanaMetric(metricMsg.body);
     break;
   }
   default:
