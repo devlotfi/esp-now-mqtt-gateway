@@ -54,6 +54,12 @@ A Gateway that bridges between MQTT and ESP-NOW
   <img height="50px" src="https://devlotfi.github.io/stack-icons/icons/esp-commander.svg">
 </p>
 
+## Docs
+
+<p float="left">
+  <img height="50px" src="https://devlotfi.github.io/stack-icons/icons/docusaurus.svg">
+</p>
+
 ## Diagrams
 
 <p float="left">
@@ -64,6 +70,13 @@ A Gateway that bridges between MQTT and ESP-NOW
 # Docs
 
 The docs are available [Here](https://esp-now-mqtt-gateway-docs.netlify.app)
+
+# Examples
+
+A few practical examples
+
+- [ESP Desk Util](https://github.com/devlotfi/esp-desk-util)
+- [ESP FIsh Feeder](https://github.com/devlotfi/esp-fish-feeder)
 
 # How does the system work ?
 
