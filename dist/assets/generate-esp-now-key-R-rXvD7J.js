@@ -1,0 +1,1 @@
+function e(){let e=``;for(let t=0;t<32;t++)e+=`0123456789ABCDEF`[Math.floor(Math.random()*16)];return e}export{e as t};
