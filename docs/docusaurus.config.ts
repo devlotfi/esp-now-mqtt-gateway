@@ -24,7 +24,7 @@ const config: Config = {
   organizationName: "DEBBAL Lotfi", // Usually your GitHub org/user name.
   projectName: "esp-now-mqtt-gateway", // Usually your repo name.
 
-  onBrokenLinks: "throw",
+  onBrokenLinks: "ignore",
 
   // Even if you don't use internationalization, you can use this field to set
   // useful metadata like html lang. For example, if your site is Chinese, you
@@ -50,7 +50,6 @@ const config: Config = {
 
   themeConfig: {
     // Replace with your project's social card
-    image: "img/docusaurus-social-card.jpg",
     colorMode: {
       respectPrefersColorScheme: true,
     },

@@ -7,6 +7,7 @@ A Gateway that bridges between MQTT and ESP-NOW
 # 📌 Contents
 
 - [Tech stack](#tech-stack)
+- [Docs](#docs)
 - [How does the system work ?](#how-does-the-system-work-)
 - [Build](#build)
 - [Images](#images)
@@ -59,6 +60,10 @@ A Gateway that bridges between MQTT and ESP-NOW
   <img height="50px" src="https://devlotfi.github.io/stack-icons/icons/drawio.svg">
   <img height="50px" src="https://devlotfi.github.io/stack-icons/icons/fritzing.svg">
 </p>
+
+# Docs
+
+The docs are available [Here](https://esp-now-mqtt-gateway-docs.netlify.app)
 
 # How does the system work ?
 

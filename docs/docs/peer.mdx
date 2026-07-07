@@ -1,0 +1,168 @@
+---
+id: peer
+title: Peer Class
+sidebar_position: 1
+---
+
+# `Peer` (Peer.h)
+
+Everything in this library is namespaced under `EspNowMqttGateway`. `Peer` is a class used purely through **static** members — you never instantiate it.
+
+```cpp
+using namespace EspNowMqttGateway;
+```
+
+## `PeerConfig`
+
+The struct you fill in and pass to `Peer::init()`.
+
+```cpp
+struct PeerConfig {
+  const char *pmk;
+  const char *lmk;
+  const char *gatewayMac;
+  const char *peerMac;
+  uint8_t channel;
+  void (*handleRecieve)(const char *, const char *);
+  void (*handleCommand)(const char *);
+};
+```
+
+| Field           | Type                                           | Description                                                               |
+| --------------- | ---------------------------------------------- | ------------------------------------------------------------------------- |
+| `pmk`           | `const char*`                                  | 32-character hex string — the shared ESP-NOW Primary Master Key           |
+| `lmk`           | `const char*`                                  | 32-character hex string — the Local Master Key for this peer/gateway pair |
+| `gatewayMac`    | `const char*`                                  | Gateway's MAC address, `"AA:BB:CC:DD:EE:FF"` format                       |
+| `peerMac`       | `const char*`                                  | MAC address this device should present on its STA interface               |
+| `channel`       | `uint8_t`                                      | Wi-Fi channel both devices are fixed to                                   |
+| `handleRecieve` | `void(*)(const char *topic, const char *text)` | Called when a `TEXT_MESSAGE` arrives from the gateway                     |
+| `handleCommand` | `void(*)(const char *text)`                    | Called when a `SLEEPY_COMMAND_MESSAGE` arrives from the gateway           |
+
+## Static state
+
+`Peer` exposes its parsed configuration and sync state as public static fields, in case you need to read them at runtime:
+
+| Field           | Type          | Notes                                                                             |
+| --------------- | ------------- | --------------------------------------------------------------------------------- |
+| `pmk`           | `uint8_t[16]` | Parsed PMK bytes                                                                  |
+| `lmk`           | `uint8_t[16]` | Parsed LMK bytes                                                                  |
+| `gatewayMac`    | `uint8_t[6]`  | Parsed gateway MAC                                                                |
+| `peerMac`       | `uint8_t[6]`  | Parsed peer MAC                                                                   |
+| `channel`       | `uint8_t`     | Active channel                                                                    |
+| `timezonePosix` | `char[64]`    | Current POSIX TZ string, defaults to `"UTC0"` until a time sync applies a new one |
+| `lastSyncEpoch` | `time_t`      | Epoch of the last successful time sync, `0` if never synced                       |
+
+## `Peer::init(PeerConfig &config)`
+
+Call this once, from `setup()`.
+
+```cpp
+static void init(PeerConfig &peerConfig);
+```
+
+What it does, in order:
+
+1. Logs the raw `pmk`, `lmk`, `gatewayMac`, `peerMac`, and `channel` values to `Serial` (useful for confirming what actually reached the config struct).
+2. Parses `pmk`/`lmk` hex strings into raw bytes with `keyHexToBytes()`, and `gatewayMac`/`peerMac` strings into raw bytes with `macStringToBytes()`. **Parsing failures are not surfaced as a return value** — see [Troubleshooting](../troubleshooting).
+3. Stores `channel` and both callback pointers.
+4. Sets Wi-Fi to `WIFI_STA`, overrides the station MAC to `peerMac` via `esp_wifi_set_mac`, pins the channel with `esp_wifi_set_channel`, and disables power save (`WIFI_PS_NONE`).
+5. Calls `esp_now_init()`. On failure, logs `"ESP-NOW init failed"` and returns early — no queue or callbacks get set up.
+6. Installs the PMK with `esp_now_set_pmk()`.
+7. Registers the gateway as an **encrypted** ESP-NOW peer (`peerInfo.encrypt = true`), using the LMK, on the configured channel. Logs `"Failed to add peer"` on error.
+8. Registers `onRecieve` and `onSent` as the receive/send callbacks.
+9. Calls `initQueue()` to allocate the send queue and start the sender task.
+
+## `Peer::timeSync()`
+
+```cpp
+static void timeSync();
+```
+
+Call this repeatedly from `loop()` (or a timer). It self-throttles to run its actual check at most once every 2 seconds, and requests a fresh sync from the gateway when the local clock looks unset or more than 24 hours have passed since the last sync. See [Time Synchronization](../time-sync) for the full state machine.
+
+## Outbound message builders
+
+Each of these builds an `EspNowMessage` of the corresponding `MessageType`, fills in the relevant payload fields, and enqueues it to the gateway via `enqueueMessage()`. All of them print `"ESP-NOW: Packet accepted"` or `"ESP-NOW: Send failed"` depending on whether `enqueueMessage()` accepted the frame into the queue (this reflects **queueing** success, not final radio delivery — see [Message Queue & Delivery](../message-queue)).
+
+### `Peer::mqttMessage(topic, text)`
+
+```cpp
+static void mqttMessage(const char *topic, const char *text);
+```
+
+Sends a `TEXT_MESSAGE`. `topic` and `text` are copied with `strlcpy`, truncated to `ESP_NOW_MQTT_GATEWAY_TOPIC_SIZE - 1` and `ESP_NOW_MQTT_GATEWAY_MQTT_MESSAGE_TEXT_PAYLOAD_SIZE - 1` respectively.
+
+### `Peer::notificationMessage(title, body)`
+
+```cpp
+static void notificationMessage(const char *title, const char *body);
+```
+
+Sends a `NOTIFICATION_MESSAGE`. `title`/`body` are truncated to `ESP_NOW_MQTT_GATEWAY_NOTIFICATION_TITLE_SIZE - 1` / `ESP_NOW_MQTT_GATEWAY_NOTIFICATION_BODY_SIZE - 1`.
+
+### `Peer::timeSyncMessage()`
+
+```cpp
+static void timeSyncMessage();
+```
+
+Sends an empty `TIME_SYNC_MESSAGE` — a request for the gateway to reply with the current epoch and timezone. Normally you don't call this directly; `Peer::timeSync()` calls it for you when a sync is due.
+
+### `Peer::sleepyDataMessage(text)`
+
+```cpp
+static void sleepyDataMessage(const char *text);
+```
+
+Sends a `SLEEPY_DATA_MESSAGE` — intended for a device that reports data and then goes back to sleep, with no reply expected. Truncated to `ESP_NOW_MQTT_GATEWAY_MQTT_MESSAGE_TEXT_PAYLOAD_SIZE - 1` and explicitly null-terminated.
+
+### `Peer::sleepyCommandMessage()`
+
+```cpp
+static void sleepyCommandMessage();
+```
+
+Sends an empty `SLEEPY_COMMAND_MESSAGE` — a request asking the gateway whether it has a queued command for this device. The gateway is expected to answer with a `SLEEPY_COMMAND_MESSAGE` of its own carrying the command text, which this peer's `onRecieve` routes to your `handleCommand` callback.
+
+### `Peer::wolMessage(port, mac)`
+
+```cpp
+static void wolMessage(uint16_t port, const uint8_t mac[MAC_SIZE_BYTES]);
+```
+
+Sends a `WOL_MESSAGE`, asking the gateway to emit a Wake-on-LAN magic packet on `port` targeting `mac`.
+
+### `Peer::metricMessage(body)`
+
+```cpp
+static void metricMessage(const char body[GRAFANA_BODY_SIZE]);
+```
+
+Sends a `METRIC_MESSAGE` — a preformatted body (e.g. Grafana/InfluxDB line protocol) up to `GRAFANA_BODY_SIZE` bytes, copied with `strlcpy`.
+
+## Callbacks
+
+### `onSent`
+
+```cpp
+void onSent(const esp_now_send_info_t *tx_info, esp_now_send_status_t status);
+```
+
+Registered automatically by `init()`. Logs `"Success"` or `"Fail"` based on the ESP-NOW driver's delivery status. This is informational only — it does **not** feed back into the queue's retry logic (see [Message Queue & Delivery](../message-queue)).
+
+### Inbound dispatch: `onRecieve`
+
+```cpp
+void onRecieve(const esp_now_recv_info_t *info, const uint8_t *data, int len);
+```
+
+Registered automatically by `init()`. Validates that `len == sizeof(EspNowMessage)`, otherwise logs `"ESP-NOW: Invalid frame size"` and returns. Then dispatches on `msg->type`:
+
+| `MessageType`                                                                                  | Behavior                                                                                       |
+| ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `TEXT_MESSAGE`                                                                                 | Copies `topic`/`text` into static buffers, logs them, calls `Peer::handleRecieve(topic, text)` |
+| `TIME_SYNC_MESSAGE`                                                                            | Applies `epoch`/`timezonePosix` to the system clock — see [Time Synchronization](../time-sync) |
+| `SLEEPY_COMMAND_MESSAGE`                                                                       | Copies `text` into a static buffer, calls `Peer::handleCommand(text)`                          |
+| Anything else (`NOTIFICATION_MESSAGE`, `SLEEPY_DATA_MESSAGE`, `WOL_MESSAGE`, `METRIC_MESSAGE`) | Falls through to `default:`, logs `"ESP-NOW: Unknown type %d"`                                 |
+
+The last row is expected in normal operation: those four types are designed to be sent **from** the peer **to** the gateway, not the other way around, so the peer's dispatcher has no dedicated handling for them.

@@ -1,0 +1,124 @@
+---
+id: message-types
+title: Message Types & Wire Format
+sidebar_position: 2
+---
+
+# Message Types & Wire Format (Types.h)
+
+All structs in `Types.h` are `__attribute__((packed))` — no compiler-inserted padding — so the byte layout is identical on both peer and gateway as long as they're built with the same `Config.h` sizes and the same struct definitions.
+
+## `MessageType`
+
+```cpp
+enum MessageType {
+  TEXT_MESSAGE = 1,
+  NOTIFICATION_MESSAGE = 2,
+  TIME_SYNC_MESSAGE = 3,
+  SLEEPY_COMMAND_MESSAGE = 4,
+  SLEEPY_DATA_MESSAGE = 5,
+  WOL_MESSAGE = 6,
+  METRIC_MESSAGE = 7
+};
+```
+
+| Value | Type | Direction (peer perspective) | Built by |
+|---|---|---|---|
+| 1 | `TEXT_MESSAGE` | Both — sent via `mqttMessage()`, received and dispatched to `handleRecieve` | `Peer::mqttMessage` |
+| 2 | `NOTIFICATION_MESSAGE` | Peer → Gateway only | `Peer::notificationMessage` |
+| 3 | `TIME_SYNC_MESSAGE` | Both — peer sends an empty request, gateway replies with epoch + TZ | `Peer::timeSyncMessage` |
+| 4 | `SLEEPY_COMMAND_MESSAGE` | Both — peer sends an empty poll, gateway replies with command text, dispatched to `handleCommand` | `Peer::sleepyCommandMessage` |
+| 5 | `SLEEPY_DATA_MESSAGE` | Peer → Gateway only | `Peer::sleepyDataMessage` |
+| 6 | `WOL_MESSAGE` | Peer → Gateway only | `Peer::wolMessage` |
+| 7 | `METRIC_MESSAGE` | Peer → Gateway only | `Peer::metricMessage` |
+
+## Payload structs
+
+### `MqttEspNowMessage` (type `TEXT_MESSAGE`)
+
+```cpp
+struct MqttEspNowMessage {
+  char topic[ESP_NOW_MQTT_GATEWAY_TOPIC_SIZE];
+  char text[ESP_NOW_MQTT_GATEWAY_MQTT_MESSAGE_TEXT_PAYLOAD_SIZE];
+};
+```
+
+### `NotificationEspNowMessage` (type `NOTIFICATION_MESSAGE`)
+
+```cpp
+struct NotificationEspNowMessage {
+  char title[ESP_NOW_MQTT_GATEWAY_NOTIFICATION_TITLE_SIZE];
+  char body[ESP_NOW_MQTT_GATEWAY_NOTIFICATION_BODY_SIZE];
+};
+```
+
+### `TimeSyncEspNowMessage` (type `TIME_SYNC_MESSAGE`)
+
+```cpp
+struct TimeSyncEspNowMessage {
+  uint32_t epoch;
+  char timezonePosix[64];
+};
+```
+
+When the peer *sends* this type (via `timeSyncMessage()`), the struct is zero-initialized — it's purely a request marker; the gateway is expected to fill in `epoch` and `timezonePosix` in its reply.
+
+### `SleepyCommandEspNowMessage` (type `SLEEPY_COMMAND_MESSAGE`)
+
+```cpp
+struct SleepyCommandEspNowMessage {
+  char text[ESP_NOW_MQTT_GATEWAY_MQTT_MESSAGE_TEXT_PAYLOAD_SIZE];
+};
+```
+
+Same pattern: empty on the outbound poll, populated by the gateway's reply.
+
+### `SleepyDataEspNowMessage` (type `SLEEPY_DATA_MESSAGE`)
+
+```cpp
+struct SleepyDataEspNowMessage {
+  char text[ESP_NOW_MQTT_GATEWAY_MQTT_MESSAGE_TEXT_PAYLOAD_SIZE];
+};
+```
+
+### `WolEspNowMessage` (type `WOL_MESSAGE`)
+
+```cpp
+struct WolEspNowMessage {
+  uint16_t port;
+  uint8_t mac[MAC_SIZE_BYTES];
+};
+```
+
+### `MetricEspNowMessage` (type `METRIC_MESSAGE`)
+
+```cpp
+struct MetricEspNowMessage {
+  char body[GRAFANA_BODY_SIZE];
+};
+```
+
+## The envelope: `EspNowMessage`
+
+```cpp
+struct EspNowMessage {
+  MessageType type;
+  union {
+    MqttEspNowMessage mqttEspNowMessage;
+    NotificationEspNowMessage notificationEspNowMessage;
+    TimeSyncEspNowMessage timeSyncEspNowMessage;
+    SleepyCommandEspNowMessage sleepyCommandEspNowMessage;
+    SleepyDataEspNowMessage sleepyDataEspNowMessage;
+    WolEspNowMessage wolEspNowMessage;
+    MetricEspNowMessage metricEspNowMessage;
+  } payload;
+};
+```
+
+Because `payload` is a `union`, `sizeof(EspNowMessage)` is `sizeof(MessageType) + sizeof(largest member)` — currently the `MqttEspNowMessage` member dominates with the default sizes. Every send and every receive moves the **entire** `EspNowMessage` over the air (`sizeof(EspNowMessage)` bytes), regardless of which member is actually populated — smaller message types simply carry unused trailing bytes.
+
+:::info Why a fixed-size envelope
+`onRecieve` validates incoming frames with a single check: `len != sizeof(EspNowMqttGateway::EspNowMessage)`. A fixed envelope size means that check alone is enough to reject malformed or foreign frames before the switch on `type` ever runs.
+:::
+
+See [Configuration](../configuration) for how the individual size constants are chosen, and [Peer Class](./peer) for how each type is built and consumed.

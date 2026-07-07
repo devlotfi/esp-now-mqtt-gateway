@@ -1,0 +1,142 @@
+---
+id: examples
+title: Examples
+sidebar_position: 9
+---
+
+# Examples
+
+## 1. Always-on sensor node
+
+Reports a reading periodically and keeps its clock in sync.
+
+```cpp
+#include "EspNowMqttGateway.h"
+using namespace EspNowMqttGateway;
+
+void onMessage(const char *topic, const char *text) {
+  Serial.printf("[gateway->peer] %s = %s\n", topic, text);
+}
+
+void onCommand(const char *text) {
+  // Not used by this device, but a callback is still required.
+}
+
+void setup() {
+  Serial.begin(115200);
+
+  PeerConfig config = {
+    .pmk = "00112233445566778899aabbccddeeff",
+    .lmk = "ffeeddccbbaa99887766554433221100",
+    .gatewayMac = "AA:BB:CC:DD:EE:FF",
+    .peerMac = "11:22:33:44:55:01",
+    .channel = 6,
+    .handleRecieve = onMessage,
+    .handleCommand = onCommand,
+  };
+
+  Peer::init(config);
+}
+
+void loop() {
+  Peer::timeSync();
+
+  static unsigned long last = 0;
+  if (millis() - last > 30000) {
+    last = millis();
+    float tempC = readTemperature(); // your own sensor code
+    char payload[16];
+    snprintf(payload, sizeof(payload), "%.1f", tempC);
+    Peer::mqttMessage("sensors/garage/temperature", payload);
+  }
+}
+```
+
+## 2. Sleepy device: report data, poll for a command, then deep-sleep
+
+A battery-powered node that wakes up, sends one reading, asks whether the gateway has a command for it, waits briefly for the reply, and goes back to sleep.
+
+```cpp
+#include "EspNowMqttGateway.h"
+using namespace EspNowMqttGateway;
+
+volatile bool commandReceived = false;
+
+void onMessage(const char *topic, const char *text) {}
+
+void onCommand(const char *text) {
+  Serial.printf("Command from gateway: %s\n", text);
+  commandReceived = true;
+  // e.g. parse text and act on it before sleeping
+}
+
+void setup() {
+  Serial.begin(115200);
+
+  PeerConfig config = {
+    .pmk = "00112233445566778899aabbccddeeff",
+    .lmk = "aa11bb22cc33dd44ee55ff6600112233",
+    .gatewayMac = "AA:BB:CC:DD:EE:FF",
+    .peerMac = "11:22:33:44:55:02",
+    .channel = 6,
+    .handleRecieve = onMessage,
+    .handleCommand = onCommand,
+  };
+
+  Peer::init(config);
+
+  Peer::sleepyDataMessage("battery=3.71V,moisture=42");
+  Peer::sleepyCommandMessage();
+
+  unsigned long start = millis();
+  while (!commandReceived && millis() - start < 3000) {
+    delay(10);
+  }
+
+  esp_sleep_enable_timer_wakeup(15ULL * 60 * 1000000); // 15 minutes
+  esp_deep_sleep_start();
+}
+
+void loop() {
+  // Never reached — device deep-sleeps at the end of setup().
+}
+```
+
+:::note
+This pattern polls with a fixed timeout rather than blocking forever, since the gateway may have no command queued. Tune the 3-second window to your radio conditions and retry behavior (see [Message Queue & Delivery](./message-queue)).
+:::
+
+## 3. Triggering Wake-on-LAN from a peer
+
+Useful for a physical button or PIR-triggered node that wakes a PC or NAS on the same network as the gateway.
+
+```cpp
+void wakeMyDesktop() {
+  uint8_t targetMac[6] = { 0xDE, 0xAD, 0xBE, 0xEF, 0x00, 0x01 };
+  Peer::wolMessage(9, targetMac); // classic WoL UDP port
+}
+```
+
+## 4. Pushing a metrics payload
+
+```cpp
+void reportMetrics() {
+  char body[GRAFANA_BODY_SIZE];
+  snprintf(body, sizeof(body),
+           "sensor,location=garage temperature=21.4,humidity=55 %llu",
+           (unsigned long long)time(nullptr));
+  Peer::metricMessage(body);
+}
+```
+
+## 5. Sending a notification
+
+```cpp
+void alertLowBattery(float volts) {
+  char body[64];
+  snprintf(body, sizeof(body), "Battery at %.2fV", volts);
+  Peer::notificationMessage("Low battery", body);
+}
+```
+
+Next: [Troubleshooting](./troubleshooting).

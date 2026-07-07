@@ -1,0 +1,66 @@
+---
+id: configuration
+title: Configuration Reference
+sidebar_position: 5
+---
+
+# Configuration Reference
+
+All compile-time constants live in `Config.h`. Some are fixed; others are wrapped in `#ifndef` and can be overridden by `#define`-ing them **before** `#include "EspNowMqttGateway.h"`.
+
+## Debug flag
+
+| Define | Meaning |
+|---|---|
+| `ESP_NOW_MQTT_GATEWAY_DEBUG` | Present (defined) by default. Reserved for gating verbose logging. Undefine it before including the header if you want to build it out of your own conditional logging. |
+
+## Fixed constants
+
+These are **not** guarded by `#ifndef` — they cannot be overridden without editing `Config.h` directly.
+
+| Define | Value | Purpose |
+|---|---|---|
+| `MAC_SIZE_BYTES` | `6` | Length of a raw MAC address |
+| `MAC_SIZE_STRING` | `18` | Length of a `"AA:BB:CC:DD:EE:FF"` string, including the null terminator |
+| `ESP_NOW_KEY_SIZE_BYTES` | `16` | Raw PMK/LMK length (AES-128 key) |
+| `ESP_NOW_KEY_SIZE_STRING` | `33` | Length of a 32-hex-character key string, including the null terminator |
+| `ESP_NOW_MAX_QUEUE_SIZE` | `10` | Number of slots in the outbound FreeRTOS queue |
+| `ESP_NOW_MAX_RETRIES` | `10` | Max local retry attempts per queued message before it's dropped |
+| `ESP_NOW_MAX_PAYLOAD_SIZE` | `1400` | Hard ceiling on any single ESP-NOW frame's payload (below the 250-byte classic ESP-NOW limit does not apply here — this project targets the ESP32 long-payload extension) |
+| `GRAFANA_BODY_SIZE` | `1200` | Fixed size of the `MetricEspNowMessage.body` field |
+| `TIMEZONE_POSIX_SIZE` | `64` | Fixed size of the POSIX TZ string carried in a time-sync message |
+
+## Overridable sizes
+
+These use `#ifndef` guards, so you can redefine them before including the library header:
+
+| Define | Default | Purpose |
+|---|---|---|
+| `ESP_NOW_MQTT_GATEWAY_TOPIC_SIZE` | `48` | Max length (incl. null) of an MQTT topic string in `MqttEspNowMessage` |
+| `ESP_NOW_MQTT_GATEWAY_MQTT_MESSAGE_TEXT_PAYLOAD_SIZE` | `1300` | Max length (incl. null) shared by MQTT message text, sleepy-data text, and sleepy-command text |
+| `ESP_NOW_MQTT_GATEWAY_NOTIFICATION_TITLE_SIZE` | `128` | Max length (incl. null) of a notification title |
+| `ESP_NOW_MQTT_GATEWAY_NOTIFICATION_BODY_SIZE` | `1200` | Max length (incl. null) of a notification body |
+
+```cpp
+// Override before including the umbrella header
+#define ESP_NOW_MQTT_GATEWAY_TOPIC_SIZE 64
+#define ESP_NOW_MQTT_GATEWAY_NOTIFICATION_TITLE_SIZE 96
+
+#include "EspNowMqttGateway.h"
+```
+
+## How these sizes interact
+
+`EspNowMessage` is a `packed` struct containing a `MessageType` plus a `union` of all payload structs. Its total size is therefore driven by the **largest** union member. With the defaults:
+
+- `MqttEspNowMessage` ≈ `48 + 1300` bytes
+- `NotificationEspNowMessage` ≈ `128 + 1200` bytes
+- `MetricEspNowMessage` = `1200` bytes
+
+All of these comfortably fit under `ESP_NOW_MAX_PAYLOAD_SIZE` (1400), which is also the ceiling enforced by `enqueueMessage()`. If you raise any of the overridable sizes, re-check that `sizeof(EspNowMessage)` still stays at or below `ESP_NOW_MAX_PAYLOAD_SIZE`, or `enqueueMessage()` will start rejecting every send.
+
+:::caution Keep peer and gateway in lockstep
+Every one of these defines affects the packed wire layout. The peer and the gateway must be compiled with **identical** values for all of them, or messages will be misread, corrupted, or rejected outright due to size mismatches in `onRecieve`.
+:::
+
+Next: [API Reference → Peer](./api-reference/peer).

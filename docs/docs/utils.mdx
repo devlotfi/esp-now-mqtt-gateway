@@ -1,0 +1,89 @@
+---
+id: utils
+title: Utilities
+sidebar_position: 3
+---
+
+# Utilities (Utils.h)
+
+Small, dependency-free helpers used internally by `Peer::init()`, and available to your own code if you need them.
+
+## `printCurrentTime()`
+
+```cpp
+void printCurrentTime();
+```
+
+Reads the current system time and prints both the UTC and local representations to `Serial`:
+
+```
+Current time:
+UTC   : 2026-07-07 10:15:32 UTC
+Local : 2026-07-07 12:15:32 CEST
+```
+
+The local time uses whatever POSIX `TZ` was previously set with `setenv("TZ", ...)` + `tzset()` — normally done for you by the `TIME_SYNC_MESSAGE` handler in `onRecieve`. If no timezone has ever been applied, local and UTC will be the same.
+
+## Key helpers
+
+### `isValidEspNowKey(const char *key)`
+
+```cpp
+bool isValidEspNowKey(const char *key);
+```
+
+Returns `true` only if `key` is non-null, exactly 32 characters long, and every character is a valid hex digit (`0-9`, `a-f`, `A-F`).
+
+### `keyHexToBytes(const char *hex, uint8_t key[16])`
+
+```cpp
+bool keyHexToBytes(const char *hex, uint8_t key[16]);
+```
+
+Validates `hex` with `isValidEspNowKey()`, then decodes each pair of hex characters into one byte of `key`. Returns `false` (leaving `key` untouched) if validation fails.
+
+```cpp
+uint8_t pmk[16];
+if (!keyHexToBytes("00112233445566778899aabbccddeeff", pmk)) {
+  Serial.println("Invalid PMK");
+}
+```
+
+## MAC address helpers
+
+### `isValidMacAddress(const char *mac)`
+
+```cpp
+bool isValidMacAddress(const char *mac);
+```
+
+Returns `true` only if `mac` is non-null, exactly 17 characters (`MAC_SIZE_STRING - 1`), has a `:` at every third position (indices 2, 5, 8, 11, 14), and every other character is a valid hex digit.
+
+### `macStringToBytes(const char *macStr, uint8_t mac[6])`
+
+```cpp
+bool macStringToBytes(const char *macStr, uint8_t mac[6]);
+```
+
+Validates `macStr` with `isValidMacAddress()`, then parses each of the six colon-separated hex octets into `mac`. Returns `false` (leaving `mac` untouched) if validation fails.
+
+```cpp
+uint8_t gatewayMac[6];
+if (!macStringToBytes("AA:BB:CC:DD:EE:FF", gatewayMac)) {
+  Serial.println("Invalid gateway MAC");
+}
+```
+
+## Internal helper
+
+### `isHexChar(char c)`
+
+```cpp
+static bool isHexChar(char c);
+```
+
+Used internally by both validators above; not typically called directly from application code.
+
+:::tip
+All four validators return a plain `bool` and otherwise leave their output buffer untouched on failure — they never `Serial.print` a warning themselves. If you call them directly, check the return value; if you rely on `Peer::init()` to call them, see [Troubleshooting](../troubleshooting) for why a bad key or MAC can currently fail silently.
+:::

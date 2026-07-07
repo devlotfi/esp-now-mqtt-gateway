@@ -1,0 +1,83 @@
+---
+id: quick-start
+title: Quick Start
+sidebar_position: 3
+---
+
+# Quick Start
+
+This walks through the smallest sketch that initializes a peer, keeps its clock in sync, and sends one MQTT message.
+
+## 1. Generate keys and gather addresses
+
+You need:
+
+- A **PMK** (Primary Master Key) — 32 hex characters (16 bytes), shared by every peer and the gateway.
+- An **LMK** (Local Master Key) — 32 hex characters (16 bytes), the session key for this specific peer/gateway pair.
+- The **gateway's MAC address** — `AA:BB:CC:DD:EE:FF` format.
+- The **MAC address this peer should present** on its Wi-Fi station interface (the library sets this explicitly with `esp_wifi_set_mac`, so it does not have to match the chip's factory MAC).
+- The **Wi-Fi channel** both devices are fixed to.
+
+## 2. Write the sketch
+
+```cpp
+#include "EspNowMqttGateway.h"
+
+using namespace EspNowMqttGateway;
+
+void onMessage(const char *topic, const char *text) {
+  Serial.printf("Gateway -> peer, topic=%s text=%s\n", topic, text);
+}
+
+void onCommand(const char *text) {
+  Serial.printf("Command received: %s\n", text);
+}
+
+void setup() {
+  Serial.begin(115200);
+
+  PeerConfig config = {
+    .pmk = "00112233445566778899aabbccddeeff",
+    .lmk = "ffeeddccbbaa99887766554433221100",
+    .gatewayMac = "AA:BB:CC:DD:EE:FF",
+    .peerMac = "11:22:33:44:55:66",
+    .channel = 6,
+    .handleRecieve = onMessage,
+    .handleCommand = onCommand,
+  };
+
+  Peer::init(config);
+}
+
+void loop() {
+  // Keep the peer's clock synced with the gateway.
+  Peer::timeSync();
+
+  // Send a reading every 10 seconds.
+  static unsigned long last = 0;
+  if (millis() - last > 10000) {
+    last = millis();
+    Peer::mqttMessage("sensors/livingroom/temperature", "21.4");
+  }
+}
+```
+
+:::note
+The PMK/LMK strings above are 33 characters shown for illustration — count carefully: they must be **exactly 32 hex characters**. `Peer::init()` logs the raw config values it received (see [Troubleshooting](./troubleshooting) if key/MAC parsing silently fails).
+:::
+
+## 3. What happens on `Peer::init()`
+
+1. The hex key strings and MAC strings are parsed into raw bytes.
+2. The Wi-Fi station MAC is overridden to `peerMac`, and the interface is pinned to `channel` with power-save disabled.
+3. ESP-NOW is initialized, the PMK is installed, and the gateway is registered as an **encrypted** peer using the LMK.
+4. Send/receive callbacks are registered.
+5. The background send queue and sender task are created.
+
+From that point on, calling any of the `Peer::*Message()` methods enqueues a frame; a dedicated FreeRTOS task drains the queue and retries delivery in the background (see [Message Queue & Delivery](./message-queue)).
+
+## Next steps
+
+- [Architecture](./architecture) for the full picture of how peer and gateway interact
+- [Time Synchronization](./time-sync) for how `Peer::timeSync()` decides when to resync
+- [API Reference → Peer](./api-reference/peer) for every method signature

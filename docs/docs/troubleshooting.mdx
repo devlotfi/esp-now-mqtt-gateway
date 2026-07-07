@@ -1,0 +1,51 @@
+---
+id: troubleshooting
+title: Troubleshooting
+sidebar_position: 10
+---
+
+# Troubleshooting
+
+## `Peer::init()` runs, but nothing ever sends
+
+Check `Serial` output right after boot — `Peer::init()` logs the raw `pmk`, `lmk`, `gatewayMac`, `peerMac`, and `channel` values it received. Common causes:
+
+- **A key isn't exactly 32 hex characters**, or a MAC isn't exactly `AA:BB:CC:DD:EE:FF` format. `keyHexToBytes()` / `macStringToBytes()` return `false` on invalid input, but `Peer::init()` does not currently check that return value — parsing silently fails and the corresponding byte array is left as whatever it was before (typically all zeros on a fresh boot). The result is a peer that thinks it initialized fine but is using a garbage key or MAC.
+  - Fix: validate your config strings yourself before calling `init()`, using `isValidEspNowKey()` / `isValidMacAddress()` from `Utils.h`, and log/halt if they fail.
+- **`esp_now_init()` failed.** Look for `"ESP-NOW init failed"` in the log — if you see it, no queue, no callbacks, and no peer were set up. This can happen if Wi-Fi mode wasn't cleanly applied before `esp_now_init()`, e.g. if another part of your sketch also touches `WiFi.mode()`.
+- **`"Failed to add peer"`** — usually a channel or memory issue in the ESP-NOW peer table. Double-check `channel` matches the gateway exactly.
+
+## Messages are "accepted" but the gateway never sees them
+
+`"ESP-NOW: Packet accepted"` only means `enqueueMessage()` successfully placed the frame on the local queue — it does **not** mean the gateway received it. Two layers can still lose the message silently from the peer's perspective:
+
+1. `senderTask` retries `esp_now_send()` locally, but only reacts to **local** driver errors (queue full, out of memory, unknown peer). If `esp_now_send()` returns `ESP_OK` but the frame never physically reaches the gateway, that isn't retried by the queue.
+2. Check the `onSent` log line (`"Success"` / `"Fail"`) — a `"Fail"` there means the frame left the radio but wasn't acknowledged by the gateway. See [Message Queue & Delivery](./message-queue) for why this doesn't automatically re-queue.
+
+If you need guaranteed delivery, add an application-level acknowledgement (e.g. gateway echoes a confirmation message back) rather than relying solely on this queue's local retry.
+
+## `"ESP-NOW: Send failed"` right when you call a `Peer::*Message()` method
+
+This means `enqueueMessage()` returned `false` immediately, before the message ever reached the sender task. Two possible causes:
+
+- **Queue is full.** With the default `ESP_NOW_MAX_QUEUE_SIZE` of 10, a burst of sends faster than the sender task can drain them (each attempt takes at least one `esp_now_send()` call, plus up to 500 ms of retry backoff on failure) will start being rejected. Space out sends, or raise `ESP_NOW_MAX_QUEUE_SIZE` in `Config.h`.
+- **Payload too large.** `enqueueMessage()` rejects anything over `ESP_NOW_MAX_PAYLOAD_SIZE` (1400 bytes). This should not normally happen unless you've changed `Config.h` sizes such that `sizeof(EspNowMessage)` exceeds that ceiling — see [Configuration](./configuration).
+- **Queue was never created.** If `initQueue()` failed (e.g. `malloc` failure) during `init()`, `sendQueue` stays `nullptr` and every send fails. This is rare on a normally provisioned ESP32 but worth checking if you've shrunk available heap elsewhere.
+
+## `"ESP-NOW: Invalid frame size"` on the peer
+
+The peer received a frame whose length doesn't match `sizeof(EspNowMqttGateway::EspNowMessage)`. This almost always means the peer and gateway were built with **different** `Config.h` values (topic size, payload size, notification sizes, etc.), which changes the packed struct's total size on one side but not the other. Rebuild both sides from the same configuration.
+
+## `"ESP-NOW: Unknown type %d"` on the peer
+
+Expected for `NOTIFICATION_MESSAGE`, `SLEEPY_DATA_MESSAGE`, `WOL_MESSAGE`, and `METRIC_MESSAGE` if they're ever echoed back to a peer — the peer's `onRecieve` only has cases for `TEXT_MESSAGE`, `TIME_SYNC_MESSAGE`, and `SLEEPY_COMMAND_MESSAGE` (see [Peer Class → Inbound dispatch](./api-reference/peer#inbound-dispatch-onrecieve)). If you see this for a type you *do* expect the peer to receive, double check the gateway isn't mistakenly relaying a peer-outbound message type back to the peer.
+
+## Time never seems to sync
+
+- Confirm `Peer::timeSync()` is actually being called from `loop()` — it does nothing until called, and does its real work at most once per 2 seconds.
+- Confirm the gateway actually replies to a `TIME_SYNC_MESSAGE` request with `epoch`/`timezonePosix` populated — the peer only applies time on **receiving** a `TIME_SYNC_MESSAGE`, it never assumes success just because it sent a request.
+- If the device reboots frequently (e.g. deep-sleep cycles), remember `Peer::lastSyncEpoch` resets to `0` on every boot, so every wake cycle will trigger a fresh sync request per the "first sync" branch in [Time Synchronization](./time-sync).
+
+## Local time looks wrong but UTC looks right
+
+This means the clock synced but the timezone didn't apply as expected — check the exact POSIX TZ string the gateway is sending (`Peer::timezonePosix` after a sync). POSIX TZ strings use an unusual sign convention (e.g. `UTC-2` means 2 hours *ahead* of UTC), which is a common source of confusion when generating these strings on the gateway side.

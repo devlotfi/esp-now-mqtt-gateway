@@ -1,0 +1,44 @@
+---
+id: security
+title: Security & Encryption
+sidebar_position: 8
+---
+
+# Security & Encryption
+
+ESP-NOW supports encrypting unicast traffic between two registered peers using a two-key scheme. This library wires that scheme up for you in `Peer::init()`.
+
+## PMK vs LMK
+
+| Key | Set with | Scope | Purpose |
+|---|---|---|---|
+| **PMK** (Primary Master Key) | `esp_now_set_pmk()` | One per device, shared across your whole deployment | Used by the ESP-NOW driver as part of encrypting/establishing the per-peer session |
+| **LMK** (Local Master Key) | `peerInfo.lmk` on the gateway peer entry, with `peerInfo.encrypt = true` | One per peer/gateway pair | The actual key used to encrypt payloads between this specific peer and the gateway |
+
+In this library, both are supplied to `Peer::init()` as 32-character hex strings via `PeerConfig::pmk` and `PeerConfig::lmk`, and converted to raw 16-byte keys by `keyHexToBytes()` (see [Utilities](./api-reference/utils)).
+
+```cpp
+PeerConfig config = {
+  .pmk = "00112233445566778899aabbccddeeff", // shared across the deployment
+  .lmk = "ffeeddccbbaa99887766554433221100", // unique to this peer
+  // ...
+};
+```
+
+## Key format rules
+
+- Exactly **32 hexadecimal characters** (`0-9`, `a-f`, `A-F`) — case-insensitive.
+- Decoded two characters at a time into one byte each, producing a 16-byte (128-bit) key.
+- `isValidEspNowKey()` rejects anything that isn't exactly 32 valid hex characters — including strings that are too short, too long, or contain non-hex characters.
+
+## What's encrypted
+
+Only traffic to/from peers registered with `peerInfo.encrypt = true` is encrypted. `Peer::init()` always sets this flag when adding the gateway, so every message this library sends or receives to/from the gateway is encrypted with the LMK.
+
+## Practical recommendations
+
+- **Never reuse an LMK across multiple peers.** Give every physical device its own LMK so that compromising one device's key doesn't expose traffic from the others. The PMK can reasonably be shared, since it isn't the payload encryption key.
+- **Treat both keys as secrets.** They are currently passed as plain string literals in firmware source in the example configuration — consider provisioning them at flash/build time (e.g. from a secrets file excluded from version control, or NVS storage set during manufacturing) rather than hardcoding them in a checked-in sketch.
+- **Keep the channel and keys consistent** between the peer and the gateway — a mismatch on any of `pmk`, `lmk`, or `channel` will prevent the encrypted link from forming, typically surfacing as `"Failed to add peer"` or silently undelivered frames.
+
+See [Troubleshooting](./troubleshooting) for what happens when a key or MAC fails validation.

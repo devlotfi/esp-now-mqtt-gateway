@@ -1,0 +1,78 @@
+---
+id: message-queue
+title: Message Queue & Delivery
+sidebar_position: 6
+---
+
+# Message Queue & Delivery (EspNowMessageQueue.h)
+
+Every `Peer::*Message()` call is non-blocking from your sketch's point of view. Actual radio transmission — and retrying — happens on a separate FreeRTOS task.
+
+## `QueueMessage`
+
+```cpp
+struct QueueMessage {
+  uint8_t peer[6];
+  uint8_t data[ESP_NOW_MAX_PAYLOAD_SIZE];
+  size_t len;
+  uint8_t retries;
+};
+```
+
+Each queued item carries its own copy of the destination MAC and the full payload bytes — the queue does not reference caller memory, so it's safe for the caller's buffers to go out of scope immediately after enqueueing.
+
+## `initQueue()`
+
+Called once by `Peer::init()`. It:
+
+1. Allocates a `StaticQueue_t` control block with `malloc`.
+2. Allocates the queue's backing storage — `ESP_NOW_MAX_QUEUE_SIZE * sizeof(QueueMessage)` bytes — also with `malloc` (the source comments this storage as PSRAM-backed; confirm your board/SDK heap configuration routes large `malloc` calls to PSRAM if you're relying on that).
+3. Creates the queue with `xQueueCreateStatic()` over that storage.
+4. Starts `senderTask` with a 4096-byte stack at priority 1.
+
+If either allocation fails, `initQueue()` returns `false` and no queue/task is created — every subsequent `enqueueMessage()` call will then fail because `sendQueue` is `nullptr`.
+
+With the default `ESP_NOW_MAX_QUEUE_SIZE` (10) and `ESP_NOW_MAX_PAYLOAD_SIZE` (1400), the queue reserves roughly **14 KB** of heap for message storage alone.
+
+## `enqueueMessage(peer, data, len)`
+
+```cpp
+bool enqueueMessage(const uint8_t *peer, const uint8_t *data, size_t len);
+```
+
+- Returns `false` immediately if the queue was never created, or if `len > ESP_NOW_MAX_PAYLOAD_SIZE`.
+- Otherwise copies `peer` and up to `len` bytes of `data` into a `QueueMessage`, sets `retries = 0`, and calls `xQueueSend(sendQueue, &msg, 0)` — a **zero-timeout** send. If the queue is already full, this returns `false` right away rather than waiting for space.
+
+This is why every `Peer::*Message()` builder prints `"ESP-NOW: Send failed"` when the queue is full or the payload is oversized, rather than blocking your `loop()`.
+
+## `senderTask`
+
+```cpp
+void senderTask(void *parameter);
+```
+
+Runs forever:
+
+1. Blocks on `xQueueReceive(sendQueue, &msg, portMAX_DELAY)` — sleeps until a message is available.
+2. While `msg.retries < ESP_NOW_MAX_RETRIES` and not yet delivered:
+   - Calls `esp_now_send(msg.peer, msg.data, msg.len)`.
+   - If the call returns anything other than `ESP_OK` (a **local** rejection — e.g. no memory, peer not found — not a remote delivery failure), increments `retries`, waits 50 ms, and tries again.
+   - If the call returns `ESP_OK`, the message is considered delivered **from the sender task's point of view** and the loop moves to the next queued message.
+3. If all `ESP_NOW_MAX_RETRIES` attempts are exhausted without an `ESP_OK` return, logs `"Message dropped after retries"` and moves on.
+
+### What this retry loop does *not* cover
+
+`esp_now_send()` returning `ESP_OK` only means the driver accepted the frame for transmission — it does not mean the gateway received it. Actual over-the-air delivery status arrives later, asynchronously, in the `onSent` callback (`ESP_NOW_SEND_SUCCESS` / fail), which currently only logs the result and does **not** feed back into `senderTask`'s retry counter. In practice this means:
+
+- Local radio/driver-level failures (busy, out of memory, peer not registered) **are** retried, up to `ESP_NOW_MAX_RETRIES` times with a 50 ms gap.
+- Frames that are accepted locally but never actually reach the gateway (e.g. it's out of range, powered off, or the frame is lost in the air) are **not** automatically retried by this queue — you'll see a `"Fail"` log line from `onSent`, but the message itself has already been treated as sent and removed from the queue.
+
+If your application needs guaranteed end-to-end delivery, build an acknowledgement/retry protocol at the message level (e.g. have the gateway echo back a confirmation `TEXT_MESSAGE` and have your sketch re-send if no ack arrives within a timeout).
+
+## Practical implications
+
+- **Ordering:** messages are delivered to `esp_now_send()` in FIFO order, one at a time — a slow retry loop on one message (up to `10 × 50 ms` = 500 ms in the worst case) delays every message queued behind it.
+- **Backpressure:** with a 10-slot queue, a burst of more than 10 sends in quick succession will start failing at the `enqueueMessage()` step; check the return value if you need to know whether a send was even accepted into the pipeline.
+- **Single sender task:** all message types share the same queue and the same task — there's no separate priority lane for, say, `WOL_MESSAGE` vs. routine telemetry.
+
+Next: [Time Synchronization](./time-sync).

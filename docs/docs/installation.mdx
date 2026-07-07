@@ -1,0 +1,60 @@
+---
+id: installation
+title: Installation
+sidebar_position: 2
+---
+
+# Installation
+
+The Peer Library is header-only — there is no `.cpp`/library archive to compile separately. You add the headers to your project and include a single entry point.
+
+## Files in the library
+
+| File | Purpose |
+|---|---|
+| `Config.h` | Compile-time size/limit constants, overridable before include |
+| `Types.h` | `MessageType` enum and the packed `EspNowMessage` wire format |
+| `Utils.h` | MAC/key parsing, validation, and time-printing helpers |
+| `EspNowMessageQueue.h` | FreeRTOS queue + background sender task with retries |
+| `Peer.h` | The public `Peer` class and `PeerConfig` struct |
+| `EspNowMqttGateway.h` | Convenience header that includes all of the above |
+
+## Adding it to an Arduino / PlatformIO project
+
+1. Copy the six headers into your project, e.g. `lib/EspNowMqttGateway/` (PlatformIO) or a folder next to your sketch (Arduino IDE).
+2. Include the umbrella header from your sketch:
+
+```cpp
+#include "EspNowMqttGateway.h"
+```
+
+This pulls in `Config.h`, `Types.h`, `Utils.h`, and `Peer.h` in the right order. `EspNowMessageQueue.h` is included transitively by `Peer.h`.
+
+3. Make sure your board target is an ESP32 variant that supports ESP-NOW (all current ESP32/ESP32-S/ESP32-C parts do).
+
+## Dependencies
+
+Everything the library needs ships with the ESP32 Arduino core, so there is nothing extra to install:
+
+- `Arduino.h`
+- `WiFi.h`, `esp_wifi.h`, `esp_now.h`
+- FreeRTOS (`xQueueCreateStatic`, `xTaskCreate`) — part of the core
+
+## Overriding size limits before including
+
+Several buffer sizes in `Config.h` are wrapped in `#ifndef` guards, so you can override them **before** including the library:
+
+```cpp
+#define ESP_NOW_MQTT_GATEWAY_TOPIC_SIZE 64
+#define ESP_NOW_MQTT_GATEWAY_MQTT_MESSAGE_TEXT_PAYLOAD_SIZE 900
+
+#include "EspNowMqttGateway.h"
+```
+
+See [Configuration](./configuration) for the full list of what can and can't be overridden, and how the sizes relate to `ESP_NOW_MAX_PAYLOAD_SIZE`.
+
+:::caution
+Both the peer and the gateway must agree on every `Config.h` value that affects the wire format (topic size, payload size, notification sizes, etc.). Changing a size on only one side of the link will desynchronize the packed struct layout and corrupt or reject messages.
+:::
+
+Next: [Quick Start](./quick-start).
