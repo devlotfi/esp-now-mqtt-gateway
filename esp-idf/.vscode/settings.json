@@ -1,0 +1,17 @@
+{
+  "C_Cpp.intelliSenseEngine": "default",
+  "idf.extensionActivationMode": "always",
+  "idf.openOcdConfigs": ["board/esp32s3-builtin.cfg"],
+  "idf.port": "/dev/ttyACM0",
+  "idf.currentSetup": "/home/lotfi/.espressif/v5.5.4/esp-idf",
+  "idf.customExtraVars": {
+    "IDF_TARGET": "esp32s3"
+  },
+  "clangd.path": "/home/lotfi/.espressif/tools/esp-clang/esp-19.1.2_20250312/esp-clang/bin/clangd",
+  "clangd.arguments": [
+    "--background-index",
+    "--query-driver=**",
+    "--compile-commands-dir=/home/lotfi/Projects/esp-now-mqtt-gateway/esp-now-mqtt-gateway/build"
+  ],
+  "idf.flashType": "UART"
+}

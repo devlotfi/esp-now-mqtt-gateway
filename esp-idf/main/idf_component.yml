@@ -1,0 +1,5 @@
+dependencies:
+  espressif/arduino-esp32: "^3.3.10"
+  esp32async/asynctcp: "^3.5.0"
+  esp32async/espasyncwebserver: "^3.11.2"
+  bblanchon/arduinojson: "^7.4.3"
