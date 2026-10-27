@@ -54,12 +54,6 @@ A Gateway that bridges between MQTT and ESP-NOW
   <img height="50px" src="https://devlotfi.github.io/stack-icons/icons/esp-commander.svg">
 </p>
 
-## Docs
-
-<p float="left">
-  <img height="50px" src="https://devlotfi.github.io/stack-icons/icons/docusaurus.svg">
-</p>
-
 ## Diagrams
 
 <p float="left">
@@ -69,7 +63,9 @@ A Gateway that bridges between MQTT and ESP-NOW
 
 # Docs
 
-The docs are available [Here](https://esp-now-mqtt-gateway-docs.netlify.app)
+The docs are available [Here](https://github.com/devlotfi/esp-now-mqtt-gateway/blob/main/docs/intro.md)
+
+llms.txt are available [Here](https://github.com/devlotfi/esp-now-mqtt-gateway/blob/main/docs/llms.txt)
 
 # Examples
 

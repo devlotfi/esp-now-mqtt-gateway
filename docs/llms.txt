@@ -1,0 +1,21 @@
+# ESP-NOW MQTT Gateway Peer Library
+
+> Documentation for the header-only ESP32 Peer Library used to communicate with an ESP-NOW MQTT Gateway.
+
+The Peer Library runs on ESP32 leaf devices. It provides encrypted ESP-NOW messaging, queued delivery, message builders, callbacks, and time synchronization with a gateway. The gateway translates messages between ESP-NOW and MQTT.
+
+## Documentation
+
+- [Introduction](intro.md): Overview of the Peer Library, its capabilities, requirements, and message flow.
+- [Installation](installation.md): Library files, Arduino and PlatformIO setup, dependencies, and size-limit overrides.
+- [Quick Start](quick-start.md): Keys and addresses, a minimal peer sketch, and initialization behavior.
+- [Architecture](architecture.md): Peer/gateway topology, library layers, security model, inbound dispatch, and message sending.
+- [Configuration Reference](configuration.md): Fixed and overridable constants, payload sizing, and keeping peer and gateway builds in sync.
+- [Message Types and Wire Format](message-types.md): Message type values, payload structures, and the fixed-size `EspNowMessage` envelope.
+- [Peer Class](peer.md): `PeerConfig`, initialization, static state, message builders, callbacks, and inbound dispatch.
+- [Utilities](utils.md): Time-printing, key and MAC validation, and conversion helpers.
+- [Message Queue and Delivery](message-queue.md): Queue allocation, enqueue behavior, sender task retries, delivery limitations, and backpressure.
+- [Time Synchronization](time-sync.md): Sync request timing, gateway responses, clock and timezone updates, and usage in sketches.
+- [Security and Encryption](security.md): PMK and LMK roles, key format, encrypted traffic, and key-management recommendations.
+- [Examples](examples.md): Always-on and sleepy sensor sketches, Wake-on-LAN, metrics, and notifications.
+- [Troubleshooting](troubleshooting.md): Common initialization, send, frame-size, message-type, and time-sync issues.
