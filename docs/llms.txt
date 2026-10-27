@@ -1,3 +1,4 @@
+
 # ESP-NOW MQTT Gateway Peer Library
 
 > Documentation for the header-only ESP32 Peer Library used to communicate with an ESP-NOW MQTT Gateway.
@@ -6,16 +7,16 @@ The Peer Library runs on ESP32 leaf devices. It provides encrypted ESP-NOW messa
 
 ## Documentation
 
-- [Introduction](intro.md): Overview of the Peer Library, its capabilities, requirements, and message flow.
-- [Installation](installation.md): Library files, Arduino and PlatformIO setup, dependencies, and size-limit overrides.
-- [Quick Start](quick-start.md): Keys and addresses, a minimal peer sketch, and initialization behavior.
-- [Architecture](architecture.md): Peer/gateway topology, library layers, security model, inbound dispatch, and message sending.
-- [Configuration Reference](configuration.md): Fixed and overridable constants, payload sizing, and keeping peer and gateway builds in sync.
-- [Message Types and Wire Format](message-types.md): Message type values, payload structures, and the fixed-size `EspNowMessage` envelope.
-- [Peer Class](peer.md): `PeerConfig`, initialization, static state, message builders, callbacks, and inbound dispatch.
-- [Utilities](utils.md): Time-printing, key and MAC validation, and conversion helpers.
-- [Message Queue and Delivery](message-queue.md): Queue allocation, enqueue behavior, sender task retries, delivery limitations, and backpressure.
-- [Time Synchronization](time-sync.md): Sync request timing, gateway responses, clock and timezone updates, and usage in sketches.
-- [Security and Encryption](security.md): PMK and LMK roles, key format, encrypted traffic, and key-management recommendations.
-- [Examples](examples.md): Always-on and sleepy sensor sketches, Wake-on-LAN, metrics, and notifications.
-- [Troubleshooting](troubleshooting.md): Common initialization, send, frame-size, message-type, and time-sync issues.
+- [Introduction](https://devlotfi.github.io/esp-now-mqtt-gateway/intro.md): Overview, capabilities, requirements, and message flow.
+- [Installation](https://devlotfi.github.io/esp-now-mqtt-gateway/installation.md): Arduino and PlatformIO setup, dependencies, and size-limit overrides.
+- [Quick Start](https://devlotfi.github.io/esp-now-mqtt-gateway/quick-start.md): Keys, addresses, a minimal peer sketch, and initialization.
+- [Architecture](https://devlotfi.github.io/esp-now-mqtt-gateway/architecture.md): Peer/gateway topology, security, and message flow.
+- [Configuration Reference](https://devlotfi.github.io/esp-now-mqtt-gateway/configuration.md): Constants, payload sizing, and build synchronization.
+- [Message Types and Wire Format](https://devlotfi.github.io/esp-now-mqtt-gateway/message-types.md): Message types, payload structures, and the message envelope.
+- [Peer Class](https://devlotfi.github.io/esp-now-mqtt-gateway/peer.md): Configuration, initialization, builders, callbacks, and dispatch.
+- [Utilities](https://devlotfi.github.io/esp-now-mqtt-gateway/utils.md): Time, key, MAC, and conversion helpers.
+- [Message Queue and Delivery](https://devlotfi.github.io/esp-now-mqtt-gateway/message-queue.md): Queueing, retries, delivery limitations, and backpressure.
+- [Time Synchronization](https://devlotfi.github.io/esp-now-mqtt-gateway/time-sync.md): Sync requests, clock updates, and usage.
+- [Security and Encryption](https://devlotfi.github.io/esp-now-mqtt-gateway/security.md): PMK, LMK, encrypted traffic, and key management.
+- [Examples](https://devlotfi.github.io/esp-now-mqtt-gateway/examples.md): Sensor sketches, Wake-on-LAN, metrics, and notifications.
+- [Troubleshooting](https://devlotfi.github.io/esp-now-mqtt-gateway/troubleshooting.md): Common setup, messaging, and time-sync issues.
