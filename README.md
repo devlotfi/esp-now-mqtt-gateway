@@ -63,9 +63,8 @@ A Gateway that bridges between MQTT and ESP-NOW
 
 # Docs
 
-The docs are available [Here](https://github.com/devlotfi/esp-now-mqtt-gateway/blob/main/docs/intro.md)
-
-llms.txt are available [Here](https://devlotfi.github.io/esp-now-mqtt-gateway/llms.txt)
+- [Docs](https://github.com/devlotfi/esp-now-mqtt-gateway/blob/main/docs/intro.md)
+- [llms.txt](https://devlotfi.github.io/esp-now-mqtt-gateway/llms.txt)
 
 # Examples
 
